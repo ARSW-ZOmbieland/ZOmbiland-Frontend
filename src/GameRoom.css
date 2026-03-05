@@ -1,0 +1,117 @@
+.game-room-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  width: 100vw;
+  background-image: url('/sala-juego.gif');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Semi-transparent overlay to make buttons pop more (optional) */
+.game-room-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 1;
+}
+
+.game-room-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  align-items: center;
+  background: rgba(20, 20, 20, 0.7);
+  padding: 50px 80px;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(5px);
+  border: 2px solid rgba(80, 200, 120, 0.3);
+}
+
+.game-btn {
+  width: 280px;
+  padding: 18px 24px;
+  font-size: 22px;
+  font-weight: bold;
+  font-family: 'Rubik', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  color: white;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+}
+
+.game-btn::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: all 0.5s ease;
+}
+
+.game-btn:hover::after {
+  left: 100%;
+}
+
+.create-btn {
+  background: linear-gradient(135deg, #228B22 0%, #006400 100%);
+  border: 2px solid #32CD32;
+}
+
+.create-btn:hover {
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 0 15px 25px rgba(50, 205, 50, 0.5);
+}
+
+.create-btn:active {
+  transform: translateY(2px);
+}
+
+.join-btn {
+  background: linear-gradient(135deg, #8B0000 0%, #4A0000 100%);
+  border: 2px solid #FF4500;
+}
+
+.join-btn:hover {
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 0 15px 25px rgba(255, 69, 0, 0.5);
+}
+
+.join-btn:active {
+  transform: translateY(2px);
+}
+
+/* Animations */
+@keyframes fadeInSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.game-room-content {
+  animation: fadeInSlideUp 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}

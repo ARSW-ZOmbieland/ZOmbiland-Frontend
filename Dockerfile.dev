@@ -1,0 +1,6 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+# We will start a dev server
+CMD ["npm", "install", "&&", "npm", "run", "dev", "--", "--host"]
