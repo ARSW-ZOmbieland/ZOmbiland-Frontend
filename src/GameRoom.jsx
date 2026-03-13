@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import './GameRoom.css';
 
-function GameRoom() {
+function GameRoom({ onConfirm }) {
     // Posibles vistas: 'menu', 'creating', 'joining', 'character-selection'
     const [view, setView] = useState('menu');
     const [roomCode, setRoomCode] = useState('');
@@ -74,7 +74,7 @@ function GameRoom() {
                             className="game-btn create-btn" 
                             disabled={!selectedCharacter}
                             style={{ opacity: selectedCharacter ? 1 : 0.5, cursor: selectedCharacter ? 'pointer' : 'not-allowed' }}
-                            onClick={() => alert(`¡Listo para jugar con ${selectedCharacter.toUpperCase()}!`)}
+                            onClick={() => onConfirm(selectedCharacter)}
                         >
                             Confirmar Personaje
                         </button>
