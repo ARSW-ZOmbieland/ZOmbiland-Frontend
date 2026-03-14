@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import Login from './Login';
-import GameRoom from './GameRoom';
-import BunkerRoom from './components/BunkerRoom';
-import WorldMap from './components/WorldMap';
+import Login from './pages/Login/Login';
+import GameRoom from './pages/Game/GameRoom';
+import BunkerRoom from './features/game/components/BunkerRoom';
+import WorldMap from './features/game/components/WorldMap';
 import './App.css';
 
 function App() {
