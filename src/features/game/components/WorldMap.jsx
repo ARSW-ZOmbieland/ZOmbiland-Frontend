@@ -8,8 +8,8 @@ const WorldMap = ({ onExit, character }) => {
 
   const handleCollideSpecial = useCallback((x, y, cell) => {
     const cellID = typeof cell === 'object' ? cell.p : cell;
-    // Exit gate check (typically at the end of the map)
-    if (cellID === TILE_TYPES.BUNKER_DOOR && (x > 10 || y > 10)) {
+    // Exit gate check: It's a bunker door and it's NOT the entry door near (2,1)
+    if (cellID === TILE_TYPES.BUNKER_DOOR && (x + y > 10)) {
       onExit();
     }
   }, [onExit]);

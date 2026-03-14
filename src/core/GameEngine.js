@@ -26,8 +26,12 @@ const generateWorldMap = () => {
     }
     // Entry Point (from bunker)
     map[1][1] = TILE_TYPES.BUNKER_DOOR;
-    // Exit Point (to next level)
-    map[48][48] = TILE_TYPES.BUNKER_DOOR;
+    
+    // Exit Point (Randomized inside the map, avoiding corners/start)
+    const exitX = Math.floor(Math.random() * 40) + 5;
+    const exitY = Math.floor(Math.random() * 40) + 5;
+    map[exitY][exitX] = TILE_TYPES.BUNKER_DOOR;
+
     return map;
 };
 
