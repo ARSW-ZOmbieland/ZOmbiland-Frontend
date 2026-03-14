@@ -83,8 +83,7 @@ function App() {
           </div>
           <button
             onClick={() => {
-              fetch('http://localhost:8080/logout', { method: 'POST', credentials: 'include' })
-                .then(() => window.location.reload());
+              window.location.href = 'http://localhost:8080/logout';
             }}
             style={{
               background: '#8B0000',

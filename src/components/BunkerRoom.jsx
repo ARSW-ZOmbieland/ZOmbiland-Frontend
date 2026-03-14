@@ -32,9 +32,12 @@ const BunkerRoom = ({ onTeleport, character }) => {
           setPlayerState(prev => ({ ...prev, isMoving: false }));
         }, 200);
 
+        const cell = matrix[newY]?.[newX];
+        const cellID = typeof cell === 'object' ? cell.p : cell;
+
         if (isWalkable(matrix, newX, newY)) {
           setPlayerPos({ x: newX, y: newY });
-        } else if (matrix[newY]?.[newX] === TILE_TYPES.BUNKER_DOOR) {
+        } else if (cellID === TILE_TYPES.BUNKER_DOOR) {
           onTeleport();
         }
       }

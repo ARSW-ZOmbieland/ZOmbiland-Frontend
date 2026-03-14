@@ -33,9 +33,12 @@ const WorldMap = ({ onExit, character }) => {
           setPlayerState(prev => ({ ...prev, isMoving: false }));
         }, 200);
 
+        const cell = matrix[newY]?.[newX];
+        const cellID = typeof cell === 'object' ? cell.p : cell;
+
         if (isWalkable(matrix, newX, newY)) {
           setPlayerPos({ x: newX, y: newY });
-        } else if (matrix[newY]?.[newX] === TILE_TYPES.BUNKER_DOOR && (newX > 10 || newY > 10)) {
+        } else if (cellID === TILE_TYPES.BUNKER_DOOR && (newX > 10 || newY > 10)) {
             // If it's the exit door at the far end (48,48)
             onExit();
         }
