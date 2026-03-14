@@ -1,4 +1,4 @@
-export const TILE_SIZE = 70;
+export const TILE_SIZE = 95;
 export const VIEWPORT_TILES = 9;
 
 export const GROUND_ASSETS = {

@@ -1,10 +1,12 @@
 .game-viewport {
-  width: 630px; /* 9 tiles * 70px */
-  height: 630px; /* 9 tiles * 70px */
+  width: 855px; /* 9 tiles * 95px */
+  height: 855px; /* 9 tiles * 95px */
+  max-width: 95vw;
+  max-height: 90vh; /* Keep it within screen height */
   overflow: hidden;
   position: relative;
   background-color: #0a0a0a;
-  border: 4px solid #32CD32; /* Strong green border to see the area */
+  border: 4px solid #32CD32;
   box-shadow: 0 0 50px rgba(50, 205, 50, 0.2);
   margin: 0 auto;
   border-radius: 8px;
@@ -13,19 +15,19 @@
 
 .game-map-container {
   position: relative;
-  transition: transform 0.15s ease-out;
+  transition: transform 0.1s ease-out;
   will-change: transform;
 }
 
 .tile {
-  width: 70px;
-  height: 70px;
+  width: 95px;
+  height: 95px;
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #2a1f1a; /* Earthy fallback color */
-  border: 1px solid rgba(255,255,255,0.05); /* Grid lines */
+  background-color: #2a1f1a;
+  border: 1px solid rgba(255,255,255,0.05);
 }
 
 .tile-image {
@@ -47,10 +49,10 @@
 }
 
 .sprite-image {
-  width: 84px; /* Slightly larger than the tile to look better */
-  height: 84px;
+  width: 114px; /* Proportional to 95px tile */
+  height: 114px;
   object-fit: contain;
-  margin-top: -14px; /* Offset to feel more grounded */
+  margin-top: -19px;
 }
 
 /* Vignette effect to focus on the 5x5 area */

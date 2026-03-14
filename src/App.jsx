@@ -5,11 +5,21 @@ import BunkerRoom from './features/game/components/BunkerRoom';
 import WorldMap from './features/game/components/WorldMap';
 import './App.css';
 
+import HUD from './features/game/components/HUD';
+
 function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [gameState, setGameState] = useState('LOBBY'); // LOBBY, BUNKER_START, WORLD_MAP, BUNKER_END
   const [selectedCharacter, setSelectedCharacter] = useState(null);
+
+  // Player Stats for HUD
+  const [stats, setStats] = useState({
+    health: 100,
+    stamina: 100,
+    medkits: 1,
+    weapons: 1
+  });
 
   const handleTeleport = () => {
     setGameState('WORLD_MAP');
@@ -26,6 +36,11 @@ function App() {
 
   const handleRestart = () => {
     setGameState('LOBBY');
+  };
+
+  const handleLogout = () => {
+    // Direct redirect to backend logout for clean session handling
+    window.location.href = 'http://localhost:8080/logout';
   };
 
   useEffect(() => {
@@ -60,6 +75,8 @@ function App() {
   const userPhoto = user?.photoURL || user?.imageUrl || '/assets/props/police/police_radio.png';
 
   if (user) {
+    const isPlaying = gameState === 'BUNKER_START' || gameState === 'WORLD_MAP';
+
     return (
       <div style={{ position: 'relative', height: '100vh', width: '100%', backgroundColor: '#000', overflow: 'hidden' }}>
         {/* User overlay widget */}
@@ -67,7 +84,7 @@ function App() {
           position: 'absolute',
           top: '20px',
           right: '20px',
-          zIndex: 100,
+          zIndex: 1100, // Above HUD
           background: 'rgba(0,0,0,0.8)',
           padding: '10px 20px',
           borderRadius: '12px',
@@ -82,10 +99,7 @@ function App() {
             {selectedCharacter && <div style={{ color: '#32CD32', fontSize: '0.8rem' }}>Superviviente: {selectedCharacter}</div>}
           </div>
           <button
-            onClick={() => {
-              fetch('http://localhost:8080/logout', { method: 'POST', credentials: 'include' })
-                .then(() => window.location.reload());
-            }}
+            onClick={handleLogout}
             style={{
               background: '#8B0000',
               color: 'white',
@@ -98,6 +112,16 @@ function App() {
             Salir
           </button>
         </div>
+
+        {/* HUD Layer - only visible when playing */}
+        {isPlaying && (
+          <HUD 
+            health={stats.health} 
+            stamina={stats.stamina} 
+            medkits={stats.medkits} 
+            weapons={stats.weapons} 
+          />
+        )}
 
         {/* Game Flow Integration */}
         {gameState === 'LOBBY' && (

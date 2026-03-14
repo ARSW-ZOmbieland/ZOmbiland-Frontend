@@ -1,0 +1,130 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+
+.game-hud {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none; /* Let clicks pass through to the game */
+  padding: 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  z-index: 1000;
+  font-family: 'Orbitron', sans-serif;
+}
+
+.hud-panel {
+  background: rgba(13, 13, 20, 0.4);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 20px;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  pointer-events: auto; /* Buttons inside HUD should be clickable */
+}
+
+/* LEFT PANEL (Inventory) */
+.left-panel {
+  box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5), inset 2px 2px 5px rgba(255, 255, 255, 0.05);
+}
+
+.hud-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.icon-wrapper {
+  width: 50px;
+  height: 50px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.icon-wrapper img {
+  width: 70%;
+  height: 70%;
+  object-fit: contain;
+  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.5));
+}
+
+.counter-stack {
+  display: flex;
+  flex-direction: column;
+}
+
+.counter-stack .label {
+  font-size: 0.6rem;
+  color: var(--text-secondary);
+  letter-spacing: 1px;
+}
+
+.counter-stack .count {
+  font-size: 1.4rem;
+  color: var(--text-primary);
+  font-weight: bold;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+
+/* RIGHT PANEL (Status) */
+.right-panel {
+  align-items: flex-end;
+  box-shadow: 10px 0 30px rgba(0, 0, 0, 0.5), inset -2px 2px 5px rgba(255, 255, 255, 0.05);
+}
+
+.timer-display {
+  font-size: 2rem;
+  color: #32CD32;
+  text-shadow: 0 0 15px rgba(50, 205, 50, 0.5);
+  margin-bottom: 10px;
+}
+
+.status-bars {
+  width: 250px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.bar-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.bar-label {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+}
+
+.bar-container {
+  height: 12px;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.bar-fill {
+  height: 100%;
+  border-radius: 6px;
+  transition: width 0.3s ease;
+}
+
+.health-fill {
+  background: linear-gradient(90deg, #8B0000, #FF3B3B);
+  box-shadow: 0 0 15px rgba(255, 59, 59, 0.4);
+}
+
+.stamina-fill {
+  background: linear-gradient(90deg, #228B22, #32CD32);
+  box-shadow: 0 0 15px rgba(50, 205, 50, 0.4);
+}
