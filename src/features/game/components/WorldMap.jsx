@@ -1,10 +1,10 @@
 import React, { useState, useCallback } from 'react';
 import GameMap from './GameMap';
-import { WORLD_MAP_MATRIX, TILE_TYPES } from '../../../core/GameEngine';
+import { generateWorldMap, TILE_TYPES } from '../../../core/GameEngine';
 import { usePlayerMovement } from '../../../hooks/usePlayerMovement';
 
 const WorldMap = ({ onExit, character }) => {
-  const [matrix] = useState(WORLD_MAP_MATRIX);
+  const [matrix] = useState(() => generateWorldMap());
 
   const handleCollideSpecial = useCallback((x, y, cell) => {
     const cellID = typeof cell === 'object' ? cell.p : cell;

@@ -5,7 +5,7 @@ export const TILE_TYPES = {
     BARRICADE: 11,
 };
 
-const generateWorldMap = () => {
+export const generateWorldMap = () => {
     const size = 50;
     const map = [];
     for (let y = 0; y < size; y++) {
@@ -34,8 +34,6 @@ const generateWorldMap = () => {
 
     return map;
 };
-
-export const WORLD_MAP_MATRIX = generateWorldMap();
 
 export const INITIAL_BUNKER_MATRIX = [
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
