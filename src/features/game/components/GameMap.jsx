@@ -16,8 +16,8 @@ const GameMap = memo(({ matrix, playerPos, playerSprite }) => {
   const startY = Math.max(0, playerPos.y - centerY - 1);
   const endY = Math.min(rows, playerPos.y + centerY + 2);
 
-  const translateX = (centerX - playerPos.x) * TILE_SIZE;
-  const translateY = (centerY - playerPos.y) * TILE_SIZE;
+  const translateX = `calc((${centerX} - ${playerPos.x}) * var(--tile-size))`;
+  const translateY = `calc((${centerY} - ${playerPos.y}) * var(--tile-size))`;
 
   const renderPlayer = (x, y) => {
     if (!playerSprite || !playerSprite.character) return null;
@@ -45,9 +45,9 @@ const GameMap = memo(({ matrix, playerPos, playerSprite }) => {
       <div 
         className="game-map-container" 
         style={{ 
-          width: `${cols * TILE_SIZE}px`,
-          height: `${rows * TILE_SIZE}px`,
-          transform: `translate(${translateX}px, ${translateY}px)`,
+          width: `calc(${cols} * var(--tile-size))`,
+          height: `calc(${rows} * var(--tile-size))`,
+          transform: `translate(${translateX}, ${translateY})`,
           position: 'relative'
         }}
       >
@@ -62,8 +62,8 @@ const GameMap = memo(({ matrix, playerPos, playerSprite }) => {
               className="tile"
               style={{
                 position: 'absolute',
-                left: `${x * TILE_SIZE}px`,
-                top: `${y * TILE_SIZE}px`
+                left: `calc(${x} * var(--tile-size))`,
+                top: `calc(${y} * var(--tile-size))`
               }}
             >
               {/* Layer 1: Ground */}

@@ -7,12 +7,50 @@
   width: 100%;
   height: 100%;
   pointer-events: none;
-  padding: 50px 80px; /* Increased horizontal padding to move away from corners */
+  padding: 50px 80px;
   display: flex;
   justify-content: space-between;
-  align-items: center; /* Center vertically to match user's "more centered" request */
+  align-items: center;
   z-index: 1000;
   font-family: 'Orbitron', sans-serif;
+}
+
+@media (max-width: 1024px) {
+  .game-hud {
+    padding: 20px 40px;
+  }
+}
+
+@media (max-width: 768px) {
+  .game-hud {
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    padding: 10px;
+    gap: 10px;
+  }
+
+  .hud-panel {
+    flex-direction: row !important;
+    justify-content: space-around;
+    align-items: center;
+    padding: 10px !important;
+    gap: 10px !important;
+  }
+
+  .left-panel {
+    order: 2;
+    margin-bottom: 80px;
+  }
+
+  .right-panel {
+    order: 1;
+    align-items: center !important;
+  }
+  
+  .status-bars {
+    width: 150px !important;
+  }
 }
 
 .hud-panel {
@@ -24,10 +62,10 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
-  pointer-events: auto; /* Buttons inside HUD should be clickable */
+  pointer-events: auto;
 }
 
-/* LEFT PANEL (Inventory) - ENHANCED */
+/* LEFT PANEL (Inventory) */
 .left-panel {
   box-shadow: -15px 0 40px rgba(0, 0, 0, 0.7), inset 2px 2px 5px rgba(255, 255, 255, 0.05);
   padding: 25px;
@@ -56,6 +94,21 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
   position: relative;
   overflow: hidden;
+}
+
+@media (max-width: 768px) {
+  .icon-wrapper {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .hud-item {
+    gap: 10px;
+  }
+  
+  .count {
+    font-size: 1.2rem !important;
+  }
 }
 
 .medkit-icon {
@@ -94,6 +147,12 @@
   margin-bottom: 2px;
 }
 
+@media (max-width: 768px) {
+  .counter-stack .label {
+    display: none;
+  }
+}
+
 .count {
   font-size: 2.2rem;
   font-weight: 900;
@@ -121,6 +180,13 @@
   color: #32CD32;
   text-shadow: 0 0 15px rgba(50, 205, 50, 0.5);
   margin-bottom: 10px;
+}
+
+@media (max-width: 768px) {
+  .timer-display {
+    font-size: 1.2rem;
+    margin-bottom: 0;
+  }
 }
 
 .status-bars {

@@ -4,8 +4,8 @@ import GameRoom from './pages/Game/GameRoom';
 import BunkerRoom from './features/game/components/BunkerRoom';
 import WorldMap from './features/game/components/WorldMap';
 import './App.css';
-
 import HUD from './features/game/components/HUD';
+import { API_BASE_URL } from './config/constants';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -40,12 +40,12 @@ function App() {
 
   const handleLogout = () => {
     // Direct redirect to backend logout for clean session handling
-    window.location.href = 'http://localhost:8080/logout';
+    window.location.href = `${API_BASE_URL}/logout`;
   };
 
   useEffect(() => {
     // Check if user is authenticated upon load
-    fetch('http://localhost:8080/api/auth/user', {
+    fetch(`${API_BASE_URL}/api/auth/user`, {
       credentials: 'include'
     })
       .then(response => {
@@ -80,35 +80,13 @@ function App() {
     return (
       <div style={{ position: 'relative', height: '100vh', width: '100%', backgroundColor: '#000', overflow: 'hidden' }}>
         {/* User overlay widget */}
-        <div style={{
-          position: 'absolute',
-          top: '20px',
-          right: '20px',
-          zIndex: 1100, // Above HUD
-          background: 'rgba(0,0,0,0.8)',
-          padding: '10px 20px',
-          borderRadius: '12px',
-          border: '1px solid #32CD32',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '15px'
-        }}>
-          <img src={userPhoto} alt={userName} style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }} />
-          <div style={{ color: 'white', fontSize: '0.9rem' }}>
+        <div className="user-overlay">
+          <img src={userPhoto} alt={userName} className="user-photo" />
+          <div className="user-info">
             <strong>{userName}</strong>
             {selectedCharacter && <div style={{ color: '#32CD32', fontSize: '0.8rem' }}>Superviviente: {selectedCharacter}</div>}
           </div>
-          <button
-            onClick={handleLogout}
-            style={{
-              background: '#8B0000',
-              color: 'white',
-              border: 'none',
-              padding: '6px 12px',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontWeight: 'bold'
-            }}>
+          <button onClick={handleLogout} className="logout-btn">
             Salir
           </button>
         </div>

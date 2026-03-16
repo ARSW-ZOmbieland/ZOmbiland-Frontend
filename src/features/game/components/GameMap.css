@@ -1,8 +1,30 @@
+:root {
+  --tile-size: 95px;
+  --sprite-size: 114px;
+  --sprite-offset: -19px;
+}
+
+@media (max-width: 768px) {
+  :root {
+    --tile-size: 60px;
+    --sprite-size: 72px;
+    --sprite-offset: -12px;
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    --tile-size: 45px;
+    --sprite-size: 54px;
+    --sprite-offset: -9px;
+  }
+}
+
 .game-viewport {
-  width: 855px; /* 9 tiles * 95px */
-  height: 855px; /* 9 tiles * 95px */
+  width: calc(9 * var(--tile-size));
+  height: calc(9 * var(--tile-size));
   max-width: 95vw;
-  max-height: 90vh; /* Keep it within screen height */
+  max-height: 80vh;
   overflow: hidden;
   position: relative;
   background-color: #0a0a0a;
@@ -20,8 +42,8 @@
 }
 
 .tile {
-  width: 95px;
-  height: 95px;
+  width: var(--tile-size);
+  height: var(--tile-size);
   position: relative;
   display: flex;
   align-items: center;
@@ -49,13 +71,13 @@
 }
 
 .sprite-image {
-  width: 114px; /* Proportional to 95px tile */
-  height: 114px;
+  width: var(--sprite-size);
+  height: var(--sprite-size);
   object-fit: contain;
-  margin-top: -19px;
+  margin-top: var(--sprite-offset);
 }
 
-/* Vignette effect to focus on the 5x5 area */
+/* Vignette effect to focus on the area */
 .vision-vignette {
   position: absolute;
   top: 0;

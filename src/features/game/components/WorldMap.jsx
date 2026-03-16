@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import GameMap from './GameMap';
+import TouchControls from './TouchControls';
 import { generateWorldMap, TILE_TYPES } from '../../../core/GameEngine';
 import { usePlayerMovement } from '../../../hooks/usePlayerMovement';
 
@@ -14,7 +15,7 @@ const WorldMap = ({ onExit, character }) => {
     }
   }, [onExit]);
 
-  const { playerPos, playerState } = usePlayerMovement(
+  const { playerPos, playerState, handleManualMove } = usePlayerMovement(
     { x: 2, y: 1 }, 
     character, 
     matrix, 
@@ -32,6 +33,7 @@ const WorldMap = ({ onExit, character }) => {
           isMoving: playerState.isMoving
         }}
       />
+      <TouchControls onMove={handleManualMove} />
     </div>
   );
 };

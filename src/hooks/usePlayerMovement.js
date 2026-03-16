@@ -17,51 +17,67 @@ export const usePlayerMovement = (initialPos, character, matrix, onCollideSpecia
   
   const moveTimer = useRef(null);
 
+  const handleManualMove = (direction) => {
+    let newX = playerPos.x;
+    let newY = playerPos.y;
+    let dx = 0;
+    let dy = 0;
+
+    switch (direction) {
+      case 'arriba': dy = -1; break;
+      case 'abajo': dy = 1; break;
+      case 'izquierda': dx = -1; break;
+      case 'derecha': dx = 1; break;
+      default: return;
+    }
+
+    newX += dx;
+    newY += dy;
+
+    // Special mapping for character sprites
+    const mappedDir = (character === 'maria' && direction === 'abajo') ? 'adelante' : direction;
+
+    if (newX !== playerPos.x || newY !== playerPos.y) {
+      setPlayerState({ direction: mappedDir, isMoving: true });
+      
+      if (moveTimer.current) clearTimeout(moveTimer.current);
+      moveTimer.current = setTimeout(() => {
+        setPlayerState(prev => ({ ...prev, isMoving: false }));
+      }, 2000);
+
+      if (isWalkable(matrix, newX, newY)) {
+        setPlayerPos({ x: newX, y: newY });
+      } else if (onCollideSpecial) {
+        onCollideSpecial(newX, newY, matrix[newY]?.[newX]);
+      }
+    }
+  };
+
   useEffect(() => {
     const handleKeyDown = (e) => {
-      let newX = playerPos.x;
-      let newY = playerPos.y;
-      let newDir = playerState.direction;
-
       const keys = {
-        ArrowUp: { dy: -1, dir: 'arriba' },
-        ArrowDown: { dy: 1, dir: 'abajo' },
-        ArrowLeft: { dx: -1, dir: 'izquierda' },
-        ArrowRight: { dx: 1, dir: 'derecha' }
+        ArrowUp: 'arriba',
+        ArrowDown: 'abajo',
+        ArrowLeft: 'izquierda',
+        ArrowRight: 'derecha',
+        w: 'arriba',
+        s: 'abajo',
+        a: 'izquierda',
+        d: 'derecha'
       };
 
-      const move = keys[e.key];
-      if (!move) return;
-
-      if (move.dy) newY += move.dy;
-      if (move.dx) newX += move.dx;
-      newDir = move.dir;
-
-      // Special mapping for Maria's front sprite
-      const mappedDir = (character === 'maria' && newDir === 'abajo') ? 'adelante' : newDir;
-
-      if (newX !== playerPos.x || newY !== playerPos.y) {
-        setPlayerState({ direction: mappedDir, isMoving: true });
-        
-        clearTimeout(moveTimer.current);
-        moveTimer.current = setTimeout(() => {
-          setPlayerState(prev => ({ ...prev, isMoving: false }));
-        }, 2000); // The 2-second idle delay
-
-        if (isWalkable(matrix, newX, newY)) {
-          setPlayerPos({ x: newX, y: newY });
-        } else if (onCollideSpecial) {
-          onCollideSpecial(newX, newY, matrix[newY]?.[newX]);
-        }
+      const dir = keys[e.key];
+      if (dir) {
+        handleManualMove(dir);
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
-      clearTimeout(moveTimer.current);
+      if (moveTimer.current) clearTimeout(moveTimer.current);
     };
-  }, [playerPos, playerState.direction, character, matrix, onCollideSpecial]);
+  }, [playerPos, character, matrix, onCollideSpecial]);
 
-  return { playerPos, playerState, setPlayerPos };
+  return { playerPos, playerState, setPlayerPos, handleManualMove };
 };

@@ -237,7 +237,7 @@
   flex-direction: column;
   gap: 20px;
   align-items: center;
-  background: rgba(20, 20, 20, 0.85); /* Un poco más oscuro para que resalten las imágenes */
+  background: rgba(20, 20, 20, 0.85);
   padding: 40px 60px;
   border-radius: 20px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9), inset 0 0 15px rgba(255, 255, 255, 0.1);
@@ -245,7 +245,48 @@
   border: 1px solid rgba(255, 255, 255, 0.2);
   color: white;
   text-align: center;
-  max-width: 90vw; /* Más ancho para que quepan los 4 */
+  max-width: 95vw;
+}
+
+@media (max-width: 768px) {
+  .game-room-content {
+    padding: 30px 20px !important;
+    width: 90% !important;
+  }
+  
+  .character-selection-content-wide {
+    padding: 20px 10px !important;
+    width: 95% !important;
+  }
+  
+  .title-glow {
+    font-size: 1.5rem !important;
+  }
+  
+  .characters-grid {
+    gap: 10px !important;
+  }
+  
+  .character-img {
+    width: 100px !important;
+  }
+  
+  .character-name {
+    font-size: 1rem !important;
+  }
+
+  .game-btn {
+    width: 100% !important;
+    max-width: 280px;
+    padding: 12px 15px !important;
+    font-size: 16px !important;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+  }
 }
 
 .subtitle {

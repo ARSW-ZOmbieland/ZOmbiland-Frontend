@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import GameMap from './GameMap';
+import TouchControls from './TouchControls';
 import { INITIAL_BUNKER_MATRIX, TILE_TYPES } from '../../../core/GameEngine';
 import { usePlayerMovement } from '../../../hooks/usePlayerMovement';
 
@@ -13,7 +14,7 @@ const BunkerRoom = ({ onTeleport, character }) => {
     }
   }, [onTeleport]);
 
-  const { playerPos, playerState } = usePlayerMovement(
+  const { playerPos, playerState, handleManualMove } = usePlayerMovement(
     { x: 1, y: 1 }, 
     character, 
     matrix, 
@@ -31,6 +32,7 @@ const BunkerRoom = ({ onTeleport, character }) => {
           isMoving: playerState.isMoving
         }}
       />
+      <TouchControls onMove={handleManualMove} />
     </div>
   );
 };

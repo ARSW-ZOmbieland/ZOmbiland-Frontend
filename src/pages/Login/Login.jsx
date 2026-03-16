@@ -1,10 +1,11 @@
 import React from 'react';
 import './Login.css';
+import { API_BASE_URL } from '../../config/constants';
 
 const Login = () => {
     const handleGoogleLogin = () => {
         // Redirigir al endpoint de OAuth2 del backend de Spring Boot
-        window.location.href = 'http://localhost:8080/oauth2/authorization/google';
+        window.location.href = `${API_BASE_URL}/oauth2/authorization/google`;
     };
 
     return (
