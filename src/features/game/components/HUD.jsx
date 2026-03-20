@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './HUD.css';
 
-const HUD = ({ health = 100, stamina = 100, medkits = 2, weapons = 1 }) => {
+const HUD = ({ health = 100, stamina = 100, medkits = 2, weapons = 1, roomCode }) => {
   const [time, setTime] = useState(0);
 
   useEffect(() => {
@@ -19,6 +19,14 @@ const HUD = ({ health = 100, stamina = 100, medkits = 2, weapons = 1 }) => {
 
   return (
     <div className="game-hud">
+      {/* Top Center: Room Code */}
+      {roomCode && (
+        <div style={{ position: 'absolute', top: '10px', left: '50%', transform: 'translateX(-50%)', padding: '5px 15px', backgroundColor: 'rgba(0,0,0,0.6)', border: '1px solid #32CD32', borderRadius: '8px', color: '#fff', zIndex: 100, display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 0 10px rgba(50, 205, 50, 0.4)' }}>
+          <span style={{ fontSize: '0.8rem', color: '#aaa', textTransform: 'uppercase' }}>Código Sala:</span>
+          <strong style={{ fontSize: '1.5rem', color: '#32CD32', letterSpacing: '2px' }}>{roomCode}</strong>
+        </div>
+      )}
+
       {/* Left Panel: Inventory */}
       <div className="hud-panel left-panel">
         <div className="hud-item inventory-item">

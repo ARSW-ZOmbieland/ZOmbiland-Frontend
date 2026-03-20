@@ -6,12 +6,14 @@ import WorldMap from './features/game/components/WorldMap';
 import './App.css';
 import HUD from './features/game/components/HUD';
 import { API_BASE_URL } from './config/constants';
+import ErrorBoundary from './components/ErrorBoundary';
 
 function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [gameState, setGameState] = useState('LOBBY'); // LOBBY, BUNKER_START, WORLD_MAP, BUNKER_END
   const [selectedCharacter, setSelectedCharacter] = useState(null);
+  const [roomCode, setRoomCode] = useState(null);
 
   // Player Stats for HUD
   const [stats, setStats] = useState({
@@ -29,8 +31,9 @@ function App() {
     setGameState('BUNKER_END');
   };
 
-  const handleStartGame = (character) => {
+  const handleStartGame = (character, code) => {
     setSelectedCharacter(character);
+    setRoomCode(code);
     setGameState('BUNKER_START');
   };
 
@@ -97,7 +100,8 @@ function App() {
             health={stats.health} 
             stamina={stats.stamina} 
             medkits={stats.medkits} 
-            weapons={stats.weapons} 
+            weapons={stats.weapons}
+            roomCode={roomCode}
           />
         )}
 
@@ -107,11 +111,9 @@ function App() {
         )}
 
         {gameState === 'BUNKER_START' && (
-          <BunkerRoom onTeleport={handleTeleport} character={selectedCharacter} />
-        )}
-
-        {gameState === 'WORLD_MAP' && (
-          <WorldMap onExit={handleWorldExit} character={selectedCharacter} />
+          <ErrorBoundary>
+            <BunkerRoom onTeleport={handleTeleport} character={selectedCharacter} roomCode={roomCode} />
+          </ErrorBoundary>
         )}
 
         {gameState === 'BUNKER_END' && (

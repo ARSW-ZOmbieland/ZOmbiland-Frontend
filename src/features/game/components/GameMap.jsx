@@ -2,7 +2,7 @@ import React, { memo } from 'react';
 import './GameMap.css';
 import { TILE_SIZE, VIEWPORT_TILES, GROUND_ASSETS, PROP_ASSETS } from '../../../config/constants';
 
-const GameMap = memo(({ matrix, playerPos, playerSprite }) => {
+const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {} }) => {
   if (!matrix || matrix.length === 0 || !playerPos) return null;
 
   const rows = matrix.length;
@@ -76,6 +76,17 @@ const GameMap = memo(({ matrix, playerPos, playerSprite }) => {
               
               {/* Layer 3: Player */}
               {renderPlayer(x, y)}
+              
+              {/* Layer 4: Other Players */}
+              {Object.values(otherPlayers).filter(p => Math.floor(p.x) === x && Math.floor(p.y) === y).map(p => {
+                const action = p.action || 'abajo';
+                const pAsset = `/personajes/${p.playerId}/${action}.gif`;
+                return (
+                  <div key={p.playerId} className="other-player-sprite" style={{ zIndex: 9, position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}>
+                    <img src={pAsset} alt="other-player" className="sprite-image" style={{ width: '100%', height: '100%', objectFit: 'contain' }} onError={(e) => { e.target.onerror = null; e.target.src=`/personajes/${p.playerId}/no-seleccion.png`; }} />
+                  </div>
+                );
+              })}
             </div>
           );
         })}

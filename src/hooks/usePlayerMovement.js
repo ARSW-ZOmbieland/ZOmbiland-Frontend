@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { isWalkable } from '../core/GameEngine';
+import webSocketService from '../core/WebSocketService';
 
 /**
  * Custom hook to handle player movement logic shared between maps.
@@ -7,8 +8,9 @@ import { isWalkable } from '../core/GameEngine';
  * @param {string} character - 'maria', 'alex', etc.
  * @param {Array} matrix - The map grid
  * @param {Function} onCollideSpecial - Callback for special tiles (doors, exits)
+ * @param {string} roomCode - The active room code
  */
-export const usePlayerMovement = (initialPos, character, matrix, onCollideSpecial) => {
+export const usePlayerMovement = (initialPos, character, matrix, onCollideSpecial, roomCode) => {
   const [playerPos, setPlayerPos] = useState(initialPos);
   const [playerState, setPlayerState] = useState({
     direction: 'abajo',
@@ -47,6 +49,16 @@ export const usePlayerMovement = (initialPos, character, matrix, onCollideSpecia
 
       if (isWalkable(matrix, newX, newY)) {
         setPlayerPos({ x: newX, y: newY });
+        
+        if (roomCode) {
+            webSocketService.sendMessage('/app/game.action', {
+                playerId: character,
+                roomCode: roomCode,
+                x: newX,
+                y: newY,
+                action: mappedDir
+            });
+        }
       } else if (onCollideSpecial) {
         onCollideSpecial(newX, newY, matrix[newY]?.[newX]);
       }

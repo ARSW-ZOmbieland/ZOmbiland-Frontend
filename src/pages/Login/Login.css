@@ -21,8 +21,8 @@
     height: 100%;
     /* Una capa oscura progresiva para asegurar el contraste de la tarjeta */
     background: linear-gradient(135deg,
-            rgba(15, 15, 20, 0.6) 0%,
-            rgba(5, 5, 10, 0.8) 100%);
+            rgba(15, 15, 20, 0.4) 0%,
+            rgba(5, 5, 10, 0.6) 100%);
     z-index: 1;
 }
 

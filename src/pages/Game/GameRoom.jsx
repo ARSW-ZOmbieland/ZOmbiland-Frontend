@@ -1,23 +1,50 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../../config/constants';
 import './GameRoom.css';
 
 function GameRoom({ onConfirm }) {
-    // Posibles vistas: 'menu', 'creating', 'joining', 'character-selection'
-    const [view, setView] = useState('menu');
+    const [view, setView] = useState('menu'); // 'menu', 'creating', 'joining', 'character-selection'
     const [roomCode, setRoomCode] = useState('');
     const [joinCode, setJoinCode] = useState('');
+    const characters = ['andres', 'juanpablo', 'maria', 'tomas'];
+    const [selectedCharacter, setSelectedCharacter] = useState(null);
+    const [takenCharacters, setTakenCharacters] = useState([]);
+
+    useEffect(() => {
+        if (view === 'character-selection') {
+            const activeCode = roomCode || joinCode;
+            fetch(`${API_BASE_URL}/api/game/rooms/${activeCode}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (Array.isArray(data)) setTakenCharacters(data);
+                })
+                .catch(err => console.error("Error fetching room info:", err));
+            
+            // Poll every 3 seconds while in character selection to update taken characters
+            const interval = setInterval(() => {
+                fetch(`${API_BASE_URL}/api/game/rooms/${activeCode}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (Array.isArray(data)) setTakenCharacters(data);
+                        // If selected character becomes taken by someone else, deselect it
+                        if (data.includes(selectedCharacter)) {
+                            setSelectedCharacter(null);
+                        }
+                    })
+                    .catch(err => console.error("Error polling room info:", err));
+            }, 3000);
+            return () => clearInterval(interval);
+        }
+    }, [view, roomCode, joinCode, selectedCharacter]);
 
     const handleCreateRoom = () => {
         setView('creating');
-        // Simulamos un retraso de "conexión al servidor"
         setTimeout(() => {
-            const fakeCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-            setRoomCode(fakeCode);
+            const newCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+            setRoomCode(newCode);
+            // UX: Auto advance after a brief read of the code
+            setTimeout(() => setView('character-selection'), 2000);
         }, 1500);
-    };
-
-    const handleJoinClick = () => {
-        setView('joining');
     };
 
     const handleJoinSubmit = (e) => {
@@ -27,124 +54,152 @@ function GameRoom({ onConfirm }) {
         }
     };
 
-    const handleCancel = () => {
+    const handleReset = () => {
         setView('menu');
         setRoomCode('');
         setJoinCode('');
+        setSelectedCharacter(null);
     };
 
-    const handleProceedToCharacterSelection = () => {
-        setView('character-selection');
+    const confirmSelection = () => {
+        const activeCode = roomCode || joinCode;
+        onConfirm(selectedCharacter, activeCode);
     };
 
-    // Personajes disponibles
-    const characters = ['andres', 'juanpablo', 'maria', 'tomas'];
-    const [selectedCharacter, setSelectedCharacter] = useState(null);
-
-    // Renderizado según la vista
-    if (view === 'character-selection') {
-        return (
-            <div className="game-room-container character-selection-bg">
-                <div className="character-selection-content-wide fade-in">
-                    <h2 className="title-glow">Selecciona tu Sobreviviente</h2>
-                    <p className="subtitle">Sala conectada. ¿Quién serás en esta partida?</p>
-                    
-                    <div className="characters-grid">
-                        {characters.map((char) => (
-                            <div 
-                                key={char} 
-                                className={`character-card ${selectedCharacter === char ? 'selected' : ''}`}
-                                onClick={() => setSelectedCharacter(char)}
-                            >
-                                <img 
-                                    src={`/personajes/${char}/${selectedCharacter === char ? 'si-seleccion.png' : 'no-seleccion.png'}`} 
-                                    alt={char} 
-                                    className="character-img"
-                                />
-                                <h3 className="character-name">{char}</h3>
-                            </div>
-                        ))}
-                    </div>
-
-                    <div className="action-buttons mt-20">
-                        <button className="game-btn cancel-btn" onClick={handleCancel}>
-                            Abandonar Sala
-                        </button>
-                        <button 
-                            className="game-btn create-btn" 
-                            disabled={!selectedCharacter}
-                            style={{ opacity: selectedCharacter ? 1 : 0.5, cursor: selectedCharacter ? 'pointer' : 'not-allowed' }}
-                            onClick={() => onConfirm(selectedCharacter)}
-                        >
-                            Confirmar Personaje
-                        </button>
-                    </div>
-                </div>
-            </div>
-        );
-    }
+    // Determine current step for progress indicator
+    const currentStep = view === 'menu' ? 1 
+                      : (view === 'creating' || view === 'joining') ? 2 
+                      : 3;
 
     return (
-        <div className="game-room-container main-bg">
-            <div className="game-room-content fade-in">
+        <div className={`game-room-container ${view === 'character-selection' ? 'character-selection-bg' : 'main-bg'}`}>
+            <div className="game-room-box fade-in">
                 
-                {view === 'menu' && (
-                    <>
-                        <h1 className="title-glow">Menú Principal</h1>
-                        <button className="game-btn create-btn" onClick={handleCreateRoom}>
-                            Crear sala
-                        </button>
-                        <button className="game-btn join-btn" onClick={handleJoinClick}>
-                            Unirse a sala
-                        </button>
-                    </>
-                )}
+                {/* UX: Progress Indicators */}
+                <div className="progress-indicator">
+                    <div className={`step ${currentStep >= 1 ? 'active' : ''}`}>1. Conexión</div>
+                    <div className="step-line"></div>
+                    <div className={`step ${currentStep >= 2 ? 'active' : ''}`}>2. Sala</div>
+                    <div className="step-line"></div>
+                    <div className={`step ${currentStep >= 3 ? 'active' : ''}`}>3. Superviviente</div>
+                </div>
 
-                {view === 'creating' && (
-                    <div className="creating-view">
-                        <h2 className="title-glow">Creando tu refugio...</h2>
-                        
-                        {!roomCode ? (
-                            <div className="spinner"></div>
-                        ) : (
-                            <div className="room-code-display fade-in">
-                                <p>Código de la sala:</p>
-                                <h3>{roomCode}</h3>
-                                <button className="game-btn create-btn" onClick={handleProceedToCharacterSelection}>
-                                    Entrar a la Sala
+                <div className="view-content">
+                    {/* MENU VIEW */}
+                    {view === 'menu' && (
+                        <div className="step-view fade-in">
+                            <h1 className="title-glow">Punto de Encuentro</h1>
+                            <p className="subtitle">¿Crearás un nuevo refugio o te unirás a uno?</p>
+                            
+                            <div className="menu-options">
+                                <button className="game-btn primary-btn" onClick={handleCreateRoom}>
+                                    Crear Nueva Sala
+                                </button>
+                                <span className="divider">O</span>
+                                <button className="game-btn secondary-btn" onClick={() => setView('joining')}>
+                                    Unirse con Código
                                 </button>
                             </div>
-                        )}
-                        
-                        <button className="game-btn cancel-btn mt-20" onClick={handleCancel}>
-                            Cancelar
-                        </button>
-                    </div>
-                )}
+                        </div>
+                    )}
 
-                {view === 'joining' && (
-                    <div className="joining-view">
-                        <h2 className="title-glow">Unirse a Refugio</h2>
-                        <form onSubmit={handleJoinSubmit} className="join-form">
-                            <input 
-                                type="text" 
-                                placeholder="Ingresa el código..." 
-                                value={joinCode}
-                                onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-                                className="join-input"
-                                maxLength={10}
-                                required
-                            />
-                            <button type="submit" className="game-btn join-btn">
-                                Entrar
-                            </button>
-                        </form>
-                        <button className="game-btn cancel-btn mt-20" onClick={handleCancel}>
-                            Atrás
-                        </button>
-                    </div>
-                )}
+                    {/* CREATING ROOM VIEW */}
+                    {view === 'creating' && (
+                        <div className="step-view fade-in">
+                            <h2 className="title-glow">Generando Sala...</h2>
+                            
+                            {!roomCode ? (
+                                <div className="loader-container">
+                                    <div className="spinner"></div>
+                                    <p>Estableciendo conexión segura...</p>
+                                </div>
+                            ) : (
+                                <div className="code-reveal pop-in">
+                                    <p>Tu código de sala es:</p>
+                                    <div className="code-box">{roomCode}</div>
+                                    <p className="success-text">¡Sala lista! Pasando a selección...</p>
+                                </div>
+                            )}
+                            <button className="text-btn mt-auto" onClick={handleReset}>Cancelar</button>
+                        </div>
+                    )}
 
+                    {/* JOINING ROOM VIEW */}
+                    {view === 'joining' && (
+                        <div className="step-view fade-in">
+                            <h2 className="title-glow">Unirse a Refugio</h2>
+                            <p className="subtitle">Ingresa el código que te compartieron</p>
+                            
+                            <form onSubmit={handleJoinSubmit} className="ux-form">
+                                <div className="input-group">
+                                    <input 
+                                        type="text" 
+                                        id="join-code"
+                                        placeholder="EJ: XJ9A2" 
+                                        value={joinCode}
+                                        onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+                                        maxLength={8}
+                                        required
+                                        autoFocus
+                                    />
+                                    <label htmlFor="join-code">Código de Sala</label>
+                                </div>
+                                
+                                <button type="submit" className="game-btn primary-btn" disabled={joinCode.length < 3}>
+                                    Entrar a la Sala
+                                </button>
+                            </form>
+                            
+                            <button className="text-btn mt-auto" onClick={handleReset}>Atrás</button>
+                        </div>
+                    )}
+
+                    {/* CHARACTER SELECTION VIEW */}
+                    {view === 'character-selection' && (
+                        <div className="step-view fade-in character-step">
+                            <div className="selection-header">
+                                <h2 className="title-glow">Selecciona tu Rol</h2>
+                                <div className="active-room-badge">
+                                    SALA: <span>{roomCode || joinCode}</span>
+                                </div>
+                            </div>
+                            
+                            <div className="characters-grid">
+                                {characters.map((char) => {
+                                    const isTaken = takenCharacters.includes(char);
+                                    return (
+                                    <div 
+                                        key={char} 
+                                        className={`char-card ${selectedCharacter === char ? 'selected' : ''} ${isTaken ? 'taken' : ''}`}
+                                        onClick={() => { if (!isTaken) setSelectedCharacter(char); }}
+                                    >
+                                        <div className="char-image-wrapper">
+                                            <img 
+                                                src={`/personajes/${char}/${selectedCharacter === char ? 'si-seleccion.png' : 'no-seleccion.png'}`} 
+                                                alt={char} 
+                                            />
+                                        </div>
+                                        <h3 className="char-name">{char} {isTaken && "(Ocupado)"}</h3>
+                                        <div className="char-overlay"></div>
+                                    </div>
+                                )})}
+                            </div>
+
+                            <div className="action-row mt-auto">
+                                <button className="text-btn text-danger" onClick={handleReset}>
+                                    Abandonar Sala
+                                </button>
+                                <button 
+                                    className="game-btn accept-btn" 
+                                    disabled={!selectedCharacter}
+                                    onClick={confirmSelection}
+                                >
+                                    Confirmar Despliegue
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );
