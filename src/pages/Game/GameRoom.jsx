@@ -163,6 +163,13 @@ function GameRoom({ onConfirm }) {
                                     SALA: <span>{roomCode || joinCode}</span>
                                 </div>
                             </div>
+
+                            {takenCharacters.length >= 4 && (
+                                <div className="room-full-alert pop-in">
+                                    <h3>Sala Llena</h3>
+                                    <p>Esta sala ya tiene 4 supervivientes asignados.</p>
+                                </div>
+                            )}
                             
                             <div className="characters-grid">
                                 {characters.map((char) => {
@@ -191,7 +198,7 @@ function GameRoom({ onConfirm }) {
                                 </button>
                                 <button 
                                     className="game-btn accept-btn" 
-                                    disabled={!selectedCharacter}
+                                    disabled={!selectedCharacter || takenCharacters.length >= 4}
                                     onClick={confirmSelection}
                                 >
                                     Confirmar Despliegue
