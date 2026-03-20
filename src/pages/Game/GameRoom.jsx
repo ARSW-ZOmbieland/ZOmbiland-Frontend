@@ -9,6 +9,7 @@ function GameRoom({ onConfirm }) {
     const characters = ['andres', 'juanpablo', 'maria', 'tomas'];
     const [selectedCharacter, setSelectedCharacter] = useState(null);
     const [takenCharacters, setTakenCharacters] = useState([]);
+    const [joinError, setJoinError] = useState('');
 
     useEffect(() => {
         if (view === 'character-selection') {
@@ -41,16 +42,39 @@ function GameRoom({ onConfirm }) {
         setView('creating');
         setTimeout(() => {
             const newCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-            setRoomCode(newCode);
-            // UX: Auto advance after a brief read of the code
-            setTimeout(() => setView('character-selection'), 2000);
+            
+            fetch(`${API_BASE_URL}/api/game/rooms/create`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ roomCode: newCode })
+            }).then(() => {
+                setRoomCode(newCode);
+                setTimeout(() => setView('character-selection'), 2000);
+            }).catch(err => {
+                console.error("Failed to create room", err);
+                setView('menu');
+            });
         }, 1500);
     };
 
-    const handleJoinSubmit = (e) => {
+    const handleJoinSubmit = async (e) => {
         e.preventDefault();
+        setJoinError('');
         if (joinCode.trim().length > 0) {
-            setView('character-selection');
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/game/rooms/${joinCode}/exists`);
+                if (!res.ok) {
+                    throw new Error("Bad response from server");
+                }
+                const exists = await res.json();
+                if (exists === true) {
+                    setView('character-selection');
+                } else {
+                    setJoinError('Sala no encontrada. Revisa el código.');
+                }
+            } catch (err) {
+                setJoinError('Error de conexión. ¿Reiniciaste el backend?');
+            }
         }
     };
 
@@ -144,6 +168,8 @@ function GameRoom({ onConfirm }) {
                                     />
                                     <label htmlFor="join-code">Código de Sala</label>
                                 </div>
+                                
+                                {joinError && <div className="join-error-msg fade-in">{joinError}</div>}
                                 
                                 <button type="submit" className="game-btn primary-btn" disabled={joinCode.length < 3}>
                                     Entrar a la Sala

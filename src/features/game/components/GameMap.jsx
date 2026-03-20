@@ -28,6 +28,7 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {} }) =>
 
     return (
       <div className="player-sprite" style={{ zIndex: 10 }}>
+        <div className="player-indicator"></div>
         <img src={assetPath} alt="player" className="sprite-image" />
       </div>
     );
@@ -82,8 +83,8 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {} }) =>
                 const action = p.action || 'abajo';
                 const pAsset = `/personajes/${p.playerId}/${action}.gif`;
                 return (
-                  <div key={p.playerId} className="other-player-sprite" style={{ zIndex: 9, position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}>
-                    <img src={pAsset} alt="other-player" className="sprite-image" style={{ width: '100%', height: '100%', objectFit: 'contain' }} onError={(e) => { e.target.onerror = null; e.target.src=`/personajes/${p.playerId}/no-seleccion.png`; }} />
+                  <div key={p.playerId} className="player-sprite" style={{ zIndex: 9 }}>
+                    <img src={pAsset} alt="other-player" className="sprite-image" onError={(e) => { e.target.onerror = null; e.target.src=`/personajes/${p.playerId}/no-seleccion.png`; }} />
                   </div>
                 );
               })}
