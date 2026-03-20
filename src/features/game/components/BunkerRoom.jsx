@@ -73,7 +73,8 @@ const BunkerRoom = ({ onTeleport, character, roomCode }) => {
     character, 
     matrix, 
     handleCollideSpecial,
-    roomCode
+    roomCode,
+    otherPlayers
   );
 
   return (

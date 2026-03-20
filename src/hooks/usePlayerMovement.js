@@ -10,7 +10,7 @@ import webSocketService from '../core/WebSocketService';
  * @param {Function} onCollideSpecial - Callback for special tiles (doors, exits)
  * @param {string} roomCode - The active room code
  */
-export const usePlayerMovement = (initialPos, character, matrix, onCollideSpecial, roomCode) => {
+export const usePlayerMovement = (initialPos, character, matrix, onCollideSpecial, roomCode, otherPlayers = {}) => {
   const [playerPos, setPlayerPos] = useState(initialPos);
   const [playerState, setPlayerState] = useState({
     direction: 'abajo',
@@ -48,16 +48,28 @@ export const usePlayerMovement = (initialPos, character, matrix, onCollideSpecia
       }, 2000);
 
       if (isWalkable(matrix, newX, newY)) {
-        setPlayerPos({ x: newX, y: newY });
-        
-        if (roomCode) {
-            webSocketService.sendMessage('/app/game.action', {
-                playerId: character,
-                roomCode: roomCode,
-                x: newX,
-                y: newY,
-                action: mappedDir
-            });
+        let isOccupied = false;
+        if (otherPlayers) {
+          for (const id in otherPlayers) {
+            if (otherPlayers[id].x === newX && otherPlayers[id].y === newY) {
+              isOccupied = true;
+              break;
+            }
+          }
+        }
+
+        if (!isOccupied) {
+          setPlayerPos({ x: newX, y: newY });
+          
+          if (roomCode) {
+              webSocketService.sendMessage('/app/game.action', {
+                  playerId: character,
+                  roomCode: roomCode,
+                  x: newX,
+                  y: newY,
+                  action: mappedDir
+              });
+          }
         }
       } else if (onCollideSpecial) {
         onCollideSpecial(newX, newY, matrix[newY]?.[newX]);
