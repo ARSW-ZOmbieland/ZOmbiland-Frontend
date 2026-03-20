@@ -7,10 +7,12 @@ import './App.css';
 import HUD from './features/game/components/HUD';
 import { API_BASE_URL } from './config/constants';
 import ErrorBoundary from './components/ErrorBoundary';
+import { useAssetPreload } from './hooks/useAssetPreload';
 
 function App() {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [authLoading, setAuthLoading] = useState(true);
+  const { progress, isLoaded: assetsLoaded } = useAssetPreload();
   const [gameState, setGameState] = useState('LOBBY'); // LOBBY, BUNKER_START, WORLD_MAP, BUNKER_END
   const [selectedCharacter, setSelectedCharacter] = useState(null);
   const [roomCode, setRoomCode] = useState(null);
@@ -57,18 +59,26 @@ function App() {
       })
       .then(data => {
         setUser(data);
-        setLoading(false);
+        setAuthLoading(false);
       })
       .catch(() => {
         setUser(null);
-        setLoading(false);
+        setAuthLoading(false);
       });
   }, []);
 
-  if (loading) {
+  if (authLoading || !assetsLoaded) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: '#05050A', color: 'white' }}>
-        <h2 className="title-glow">Cargando...</h2>
+      <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: '#05050A', color: 'white' }}>
+        <h2 className="title-glow">Cargando ZOmbiland...</h2>
+        {!assetsLoaded && (
+          <div style={{ marginTop: '20px', textAlign: 'center' }}>
+            <p style={{ color: '#32CD32', fontSize: '1.2rem', marginBottom: '10px' }}>Almacenando Texturas en Caché: {progress}%</p>
+            <div style={{ width: '300px', height: '10px', backgroundColor: '#333', borderRadius: '5px', overflow: 'hidden' }}>
+              <div style={{ width: `${progress}%`, height: '100%', backgroundColor: '#32CD32', transition: 'width 0.2s' }}></div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }

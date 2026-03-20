@@ -13,6 +13,7 @@ export const PROP_ASSETS = {
   12: '/assets/environment/trees/tree_dead_01.png',
   13: '/assets/vehicles/car_burned.png',
   14: '/assets/props/barricades/barricade_military.png',
+  15: '/assets/tiles/ground/ground_stone.png',
 };
 
 // Map of all assets for easier pre-loading or type checking
