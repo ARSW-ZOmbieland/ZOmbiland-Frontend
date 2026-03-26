@@ -72,7 +72,7 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {} }) =>
               
               {/* Layer 2: Prop */}
               {propID && (
-                <img src={PROP_ASSETS[propID]} alt="prop" className="tile-image" style={{ position: 'absolute', zIndex: 5, top: 0, left: 0 }} />
+                <img src={PROP_ASSETS[propID]} alt="prop" className={`tile-image ${propID >= 20 && propID <= 22 ? 'bush-prop' : ''} ${propID >= 30 && propID <= 34 ? 'tree-prop' : ''} ${propID >= 40 && propID <= 49 ? 'bunker-prop' : ''} ${propID >= 50 && propID <= 59 ? 'forest-prop' : ''}`} style={{ position: 'absolute', zIndex: 5, top: 0, left: 0 }} />
               )}
               
               {/* Layer 3: Player */}

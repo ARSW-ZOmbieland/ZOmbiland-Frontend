@@ -38,19 +38,20 @@ export const generateWorldMap = () => {
 
 export const INITIAL_BUNKER_MATRIX = [
     [15, 15, 15, 15, 10, 10, 15, 15, 15, 15], // Puerta de salida al World Map (10)
-    [15, 0, 0, 0, 0, 0, 0, 0, 0, 15],
-    [15, 0, 0, 0, 0, 0, 0, 0, 0, 15],
-    [15, 0, 0, 0, 0, 0, 0, 0, 0, 15],
-    [15, 0, 0, 0, 0, 0, 0, 0, 0, 15],
-    [15, 0, 0, 0, 0, 0, 0, 0, 0, 15], // Cerrado (sin puerta)
-    [15, 0, 0, 0, 0, 0, 0, 0, 0, 15],
-    [15, 0, 0, 0, 0, 0, 0, 0, 0, 15],
-    [15, 0, 0, 0, 0, 0, 0, 0, 0, 15],
-    [15, 15, 15, 15, 15, 15, 15, 15, 15, 15],
+    [15,  0,  0,  0,  0,  0,  0,  0,  0, 15],
+    [15, 40,  0,  0,  0,  0,  0,  0, 42, 15], // Cama (40) y Storage (42)
+    [15,  0,  0,  0,  0,  0,  0,  0,  0, 15],
+    [15,  0,  0,  0, 41, 41,  0,  0,  0, 15], // Consola (41)
+    [15,  0,  0,  0, 43, 43,  0,  0,  0, 15], // Weapons table (43)
+    [15,  0,  0,  0,  0,  0,  0,  0,  0, 15],
+    [15, 40,  0,  0,  0,  0,  0,  0, 42, 15], // Cama (40) y Storage (42)
+    [15,  0,  0,  0,  0,  0,  0,  0,  0, 15],    [15, 15, 15, 15, 15, 15, 15, 15, 15, 15],
 ];
 
 export const isWalkable = (matrix, x, y) => {
     if (y < 0 || y >= matrix.length || x < 0 || x >= matrix[0].length) return false;
     const tile = matrix[y][x];
+    if (typeof tile === 'object') return false; // Future object handling
+    if (tile >= 20 && tile <= 22) return true;  // Bushes are walkable
     return tile < 10; // Simple collision logic: types >= 10 are solid or interactive
 };
