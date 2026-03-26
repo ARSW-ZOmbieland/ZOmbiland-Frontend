@@ -126,6 +126,12 @@ function App() {
           </ErrorBoundary>
         )}
 
+        {gameState === 'WORLD_MAP' && (
+          <ErrorBoundary>
+            <WorldMap onExit={handleWorldExit} character={selectedCharacter} roomCode={roomCode} />
+          </ErrorBoundary>
+        )}
+
         {gameState === 'BUNKER_END' && (
           <div style={{ 
             height: '100%', 

@@ -5,6 +5,11 @@ export const GROUND_ASSETS = {
   0: '/assets/tiles/ground/ground_clean.png',
   1: '/assets/tiles/ground/ground_stone.png',
   2: '/assets/tiles/ground/ground_dirty.png',
+  3: '/assets/tiles/ground/ground_blood.png',
+  4: '/assets/tiles/ground/ground_cracked.png',
+  5: '/assets/tiles/ground/ground_dark.png',
+  6: '/assets/tiles/ground/ground_destroyed.png',
+  7: '/assets/tiles/ground/ground_heavy_blood.png',
 };
 
 export const PROP_ASSETS = {

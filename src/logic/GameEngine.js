@@ -3,10 +3,9 @@ export const TILE_TYPES = {
     GROUND_STONE: 1,
     BUNKER_DOOR: 10,
     BARRICADE: 11,
-    WALL: 15,
 };
 
-export const generateWorldMap = () => {
+const generateWorldMap = () => {
     const size = 50;
     const map = [];
     for (let y = 0; y < size; y++) {
@@ -27,26 +26,24 @@ export const generateWorldMap = () => {
     }
     // Entry Point (from bunker)
     map[1][1] = TILE_TYPES.BUNKER_DOOR;
-    
-    // Exit Point (Randomized inside the map, avoiding corners/start)
-    const exitX = Math.floor(Math.random() * 40) + 5;
-    const exitY = Math.floor(Math.random() * 40) + 5;
-    map[exitY][exitX] = TILE_TYPES.BUNKER_DOOR;
-
+    // Exit Point (to next level)
+    map[48][48] = TILE_TYPES.BUNKER_DOOR;
     return map;
 };
 
+export const WORLD_MAP_MATRIX = generateWorldMap();
+
 export const INITIAL_BUNKER_MATRIX = [
-    [15, 15, 15, 15, 10, 10, 15, 15, 15, 15], // Puerta de salida al World Map (10)
-    [15, 0, 0, 0, 0, 0, 0, 0, 0, 15],
-    [15, 0, 0, 0, 0, 0, 0, 0, 0, 15],
-    [15, 0, 0, 0, 0, 0, 0, 0, 0, 15],
-    [15, 0, 0, 0, 0, 0, 0, 0, 0, 15],
-    [15, 0, 0, 0, 0, 0, 0, 0, 0, 15], // Cerrado (sin puerta)
-    [15, 0, 0, 0, 0, 0, 0, 0, 0, 15],
-    [15, 0, 0, 0, 0, 0, 0, 0, 0, 15],
-    [15, 0, 0, 0, 0, 0, 0, 0, 0, 15],
-    [15, 15, 15, 15, 15, 15, 15, 15, 15, 15],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 10], // Door to World
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
 ];
 
 export const isWalkable = (matrix, x, y) => {
