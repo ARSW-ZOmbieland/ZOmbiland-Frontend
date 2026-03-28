@@ -2,6 +2,18 @@ import React, { memo } from 'react';
 import './GameMap.css';
 import { TILE_SIZE, VIEWPORT_TILES, GROUND_ASSETS, PROP_ASSETS } from '../../../config/constants';
 
+const HealthBar = ({ health }) => {
+  const color = health > 50 ? '#00ff00' : health > 20 ? '#ffff00' : '#ff0000';
+  return (
+    <div className="health-bar-container">
+      <div 
+        className="health-bar-fill" 
+        style={{ width: `${health}%`, backgroundColor: color }}
+      ></div>
+    </div>
+  );
+};
+
 const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zombies = [] }) => {
   if (!matrix || matrix.length === 0 || !playerPos) return null;
 
@@ -23,11 +35,12 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
     if (!playerSprite || !playerSprite.character) return null;
     if (playerPos.x !== x || playerPos.y !== y) return null;
 
-    const { character, direction, isMoving } = playerSprite;
+    const { character, direction, isMoving, health } = playerSprite;
     const assetPath = isMoving ? `/personajes/${character}/${direction}.gif` : `/personajes/${character}/no-seleccion.png`;
 
     return (
       <div className="player-sprite" style={{ zIndex: y * 10 + 12 }}>
+        <HealthBar health={health || 100} />
         <div className="player-indicator"></div>
         <img src={assetPath} alt="player" className="sprite-image" />
       </div>
@@ -59,8 +72,10 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
     }
   }
 
+  const isDead = playerSprite.health <= 0;
+
   return (
-    <div className="game-viewport">
+    <div className={`game-viewport ${isDead ? 'is-dead' : ''}`}>
       <div 
         className="game-map-container" 
         style={{ 
@@ -71,7 +86,7 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
         }}
       >
         {visibleTiles.map(({ x, y, cell }) => {
-          // Compatibility with both plain IDs and layered objects
+          // ... (rest of tile rendering)
           const groundID = typeof cell === 'object' ? cell.g : (cell < 10 ? cell : 0);
           const propID = typeof cell === 'object' ? cell.p : (cell >= 10 ? cell : null);
 
@@ -110,6 +125,7 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
                 const pAsset = `/personajes/${p.playerId}/${action}.gif`;
                 return (
                   <div key={p.playerId} className="player-sprite" style={{ zIndex: y * 10 + 11 }}>
+                    <HealthBar health={p.health || 0} />
                     <img src={pAsset} alt="other-player" className="sprite-image" onError={(e) => { e.target.onerror = null; e.target.src=`/personajes/${p.playerId}/no-seleccion.png`; }} />
                   </div>
                 );
@@ -119,6 +135,13 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
         })}
       </div>
       <div className="vision-vignette"></div>
+      
+      {isDead && (
+        <div className="death-overlay">
+          <div className="death-message">HAS MUERTO</div>
+          <div className="death-subtext">Vuelve a cargar la sala para reintentar</div>
+        </div>
+      )}
     </div>
   );
 });

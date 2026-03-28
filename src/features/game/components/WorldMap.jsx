@@ -11,6 +11,7 @@ const WorldMap = ({ onExit, character, roomCode }) => {
   const [mapData, setMapData] = useState(null);
   const [otherPlayers, setOtherPlayers] = useState({});
   const [zombies, setZombies] = useState([]);
+  const [health, setHealth] = useState(100);
 
   useEffect(() => {
     if (!roomCode) return;
@@ -29,15 +30,21 @@ const WorldMap = ({ onExit, character, roomCode }) => {
                 roomCode: roomCode,
                 x: data.startX,
                 y: data.startY,
-                action: 'abajo'
+                action: 'abajo',
+                health: 100
             });
         })
         .catch(err => console.error("Error fetching map", err));
 
-        // Suscribirse a los movimientos
+        // Suscribirse a los movimientos y estados (incluyendo vida)
         const topic = `/topic/game.state.${roomCode}`;
         webSocketService.subscribe(topic, (message) => {
-            if (message.playerId && message.playerId !== character) {
+            if (message.playerId === character) {
+                // Actualizar vida propia desde el servidor
+                if (message.health !== undefined) {
+                    setHealth(message.health);
+                }
+            } else if (message.playerId) {
                 setOtherPlayers(prev => ({
                     ...prev,
                     [message.playerId]: message
@@ -92,7 +99,8 @@ const WorldMap = ({ onExit, character, roomCode }) => {
     mapData ? mapData.matrix : [[0]], 
     handleCollideSpecial,
     roomCode,
-    otherPlayers
+    otherPlayers,
+    health
   );
 
   // IA local del zombie eliminada (ahora se maneja vía WebSocket arriba)
@@ -117,7 +125,8 @@ const WorldMap = ({ onExit, character, roomCode }) => {
         playerSprite={{
           character,
           direction: playerState.direction,
-          isMoving: playerState.isMoving
+          isMoving: playerState.isMoving,
+          health: health
         }}
         otherPlayers={otherPlayers}
         zombies={zombies}

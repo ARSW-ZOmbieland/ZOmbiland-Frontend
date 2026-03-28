@@ -10,7 +10,7 @@ import webSocketService from '../core/WebSocketService';
  * @param {Function} onCollideSpecial - Callback for special tiles (doors, exits)
  * @param {string} roomCode - The active room code
  */
-export const usePlayerMovement = (initialPos, character, matrix, onCollideSpecial, roomCode, otherPlayers = {}) => {
+export const usePlayerMovement = (initialPos, character, matrix, onCollideSpecial, roomCode, otherPlayers = {}, health = 100) => {
   const [playerPos, setPlayerPos] = useState(initialPos);
   const [playerState, setPlayerState] = useState({
     direction: 'abajo',
@@ -18,8 +18,17 @@ export const usePlayerMovement = (initialPos, character, matrix, onCollideSpecia
   });
   
   const moveTimer = useRef(null);
+  const lastMoveRef = useRef(0);
 
   const handleManualMove = (direction) => {
+    // No moverse si está muerto
+    if (health <= 0) return;
+
+    const now = Date.now();
+    // Cooldown de 0.5 segundos (balanceado para huir del zombie)
+    if (now - lastMoveRef.current < 500) return;
+    lastMoveRef.current = now;
+    
     let newX = playerPos.x;
     let newY = playerPos.y;
     let dx = 0;

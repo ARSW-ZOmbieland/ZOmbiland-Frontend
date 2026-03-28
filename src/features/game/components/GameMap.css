@@ -180,6 +180,26 @@
   100% { transform: translateY(-8px); }
 }
 
+/* Barra de Vida */
+.health-bar-container {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 50px;
+  height: 6px;
+  background-color: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 3px;
+  overflow: hidden;
+  z-index: 16;
+}
+
+.health-bar-fill {
+  height: 100%;
+  transition: width 0.3s ease-out, background-color 0.3s ease;
+}
+
 @media (max-width: 768px) {
   .player-indicator {
     top: -12px;
@@ -188,4 +208,54 @@
     border-top-width: 8px;
     margin-left: -6px;
   }
+}
+
+/* Estado Muerto */
+.is-dead {
+  filter: grayscale(1) contrast(1.2);
+  transition: filter 1s ease-in-out;
+}
+
+.death-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 100;
+  animation: fade-in-red 2s forwards;
+}
+
+.death-message {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 4rem;
+  color: #ff0000;
+  font-weight: bold;
+  text-shadow: 0 0 20px #900, 0 0 40px #000;
+  letter-spacing: 15px;
+  margin-bottom: 20px;
+  animation: pulse-death 2s infinite;
+}
+
+.death-subtext {
+  font-size: 1.2rem;
+  color: #ccc;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+@keyframes fade-in-red {
+  0% { background-color: rgba(0, 0, 0, 0); }
+  100% { background-color: rgba(60, 0, 0, 0.4); }
+}
+
+@keyframes pulse-death {
+  0% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.1); opacity: 1; }
+  100% { transform: scale(1); opacity: 0.8; }
 }
