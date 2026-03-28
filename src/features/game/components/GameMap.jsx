@@ -25,13 +25,16 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
   const centerX = Math.floor(VIEWPORT_TILES / 2);
   const centerY = Math.floor(VIEWPORT_TILES / 2);
 
-  const startX = Math.max(0, playerPos.x - centerX - 1);
-  const endX = Math.min(cols, playerPos.x + centerX + 2);
-  const startY = Math.max(0, playerPos.y - centerY - 1);
-  const endY = Math.min(rows, playerPos.y + centerY + 2);
-
+  // Math: (CenterIndex - PlayerWorldCoordinate) * TileSize
+  // This ensures that when player is at (playerPos.x, playerPos.y), that tile lands exactly in the center of the viewport.
   const translateX = `calc((${centerX} - ${playerPos.x}) * var(--tile-size))`;
   const translateY = `calc((${centerY} - ${playerPos.y}) * var(--tile-size))`;
+
+  // Visibility Range: Render tiles around the player to save performance
+  const startX = Math.max(0, Math.floor(playerPos.x - centerX - 2));
+  const endX = Math.min(cols, Math.floor(playerPos.x + centerX + 3));
+  const startY = Math.max(0, Math.floor(playerPos.y - centerY - 2));
+  const endY = Math.min(rows, Math.floor(playerPos.y + centerY + 3));
 
   const renderPlayer = (x, y) => {
     if (!playerSprite || !playerSprite.character) return null;

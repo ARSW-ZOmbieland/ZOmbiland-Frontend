@@ -4,7 +4,6 @@ import GameRoom from './pages/Game/GameRoom';
 import BunkerRoom from './features/game/components/BunkerRoom';
 import WorldMap from './features/game/components/WorldMap';
 import './App.css';
-import HUD from './features/game/components/HUD';
 import { API_BASE_URL } from './config/constants';
 import ErrorBoundary from './components/ErrorBoundary';
 import { useAssetPreload } from './hooks/useAssetPreload';
@@ -104,16 +103,7 @@ function App() {
           </button>
         </div>
 
-        {/* HUD Layer - only visible when playing */}
-        {isPlaying && (
-          <HUD 
-            health={stats.health} 
-            stamina={stats.stamina} 
-            medkits={stats.medkits} 
-            weapons={stats.weapons}
-            roomCode={roomCode}
-          />
-        )}
+        {/* HUD Layer removed by user request ('ESTE QUITALO') */}
 
         {/* Game Flow Integration */}
         {gameState === 'LOBBY' && (

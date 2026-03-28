@@ -1,33 +1,38 @@
 :root {
-  /* Fluid Tile Calculation: Fits 9 tiles in the smallest viewport dimension */
-  --tile-size: calc(min(90vw, 75vh) / 9);
-  --sprite-size: calc(var(--tile-size) * 1.2);
-  --sprite-offset: calc(var(--tile-size) * -0.2);
+  --tile-size: 95px;
+  --sprite-size: 114px;
+  --sprite-offset: -19px;
 }
 
-@media (min-width: 1200px) {
+@media (max-width: 768px) {
   :root {
-    --tile-size: 85px; /* Cap size on large desktops */
-    --sprite-size: 102px;
-    --sprite-offset: -17px;
+    --tile-size: 60px;
+    --sprite-size: 72px;
+    --sprite-offset: -12px;
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    --tile-size: 45px;
+    --sprite-size: 54px;
+    --sprite-offset: -9px;
   }
 }
 
 .game-viewport {
   width: calc(9 * var(--tile-size));
   height: calc(9 * var(--tile-size));
-  aspect-ratio: 1 / 1;
+  max-width: 95vw;
+  max-height: 80vh;
   overflow: hidden;
   position: relative;
   background-color: #0a0a0a;
   border: 4px solid #32CD32;
   box-shadow: 0 0 50px rgba(50, 205, 50, 0.2);
-  margin-top: 85px; /* Push down for HUD */
-  margin-left: auto;
-  margin-right: auto;
-  border-radius: 12px;
+  margin: 0 auto;
+  border-radius: 8px;
   z-index: 5;
-  transition: all 0.3s ease-in-out;
 }
 
 .game-map-container {
@@ -154,25 +159,9 @@
   z-index: 20;
 }
 
-/* Identificador del jugador (Flecha verde) */
+/* Identificador del jugador (Eliminado para evitar "flotantes") */
 .player-indicator {
-  position: absolute;
-  top: -22px;
-  left: 50%;
-  margin-left: -10px;
-  width: 0;
-  height: 0;
-  border-left: 10px solid transparent;
-  border-right: 10px solid transparent;
-  border-top: 12px solid #32CD32;
-  animation: float-arrow 0.8s infinite alternate ease-in-out;
-  filter: drop-shadow(0 0 5px rgba(50, 205, 50, 0.8));
-  z-index: 15;
-}
-
-@keyframes float-arrow {
-  0% { transform: translateY(0); }
-  100% { transform: translateY(-8px); }
+  display: none;
 }
 
 /* Barra de Vida */
