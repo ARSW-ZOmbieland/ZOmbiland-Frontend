@@ -7,7 +7,7 @@ import './SpritePlayer.css';
  * Esto elimina el tiempo de carga entre pasos, especialmente en redes lentas.
  */
 const SpritePlayer = ({ characterId, direction, isMoving, isDead }) => {
-  const directions = ['abajo', 'arriba', 'derecha', 'izquierda'];
+  const directions = ['abajo', 'arriba', 'derecha', 'izquierda', 'adelante'];
   
   return (
     <div className={`sprite-player-container ${isDead ? 'other-player-dead' : ''}`}>

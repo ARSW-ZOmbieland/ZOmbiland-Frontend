@@ -8,10 +8,11 @@ import './SpritePlayer.css'; // Reutilizamos los estilos base de posicionamiento
 const SpriteZombie = ({ direction, isAttacking }) => {
   const walkDirections = ['abajo', 'arriba', 'derecha', 'izquierda'];
   const attackDirections = [
-    { key: 'abajo', asset: 'ataque adelante' },
-    { key: 'arriba', asset: 'ataque atras' },
-    { key: 'derecha', asset: 'ataque derecha' },
-    { key: 'izquierda', asset: 'ataque izquierda' }
+    { key: 'abajo', asset: 'ataque_adelante' },
+    { key: 'arriba', asset: 'ataque_atras' },
+    { key: 'derecha', asset: 'ataque_derecha' },
+    { key: 'izquierda', asset: 'ataque_izquierda' },
+    { key: 'adelante', asset: 'ataque_adelante' }
   ];
   
   const currentDir = direction || 'abajo';

@@ -112,13 +112,13 @@ function App() {
 
         {gameState === 'BUNKER_START' && (
           <ErrorBoundary>
-            <BunkerRoom onTeleport={handleTeleport} character={selectedCharacter} roomCode={roomCode} />
+            <BunkerRoom onTeleport={handleTeleport} character={selectedCharacter} roomCode={roomCode} onRestart={handleRestart} />
           </ErrorBoundary>
         )}
 
         {gameState === 'WORLD_MAP' && (
           <ErrorBoundary>
-            <WorldMap onExit={handleWorldExit} character={selectedCharacter} roomCode={roomCode} />
+            <WorldMap onExit={handleWorldExit} character={selectedCharacter} roomCode={roomCode} onRestart={handleRestart} />
           </ErrorBoundary>
         )}
 

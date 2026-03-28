@@ -12,7 +12,7 @@ const SPAWN_POINTS = {
   tomas: { x: 8, y: 8 }       // Bottom-Right
 };
 
-const BunkerRoom = ({ onTeleport, character, roomCode }) => {
+const BunkerRoom = ({ onTeleport, character, roomCode, onRestart }) => {
   const [matrix] = useState(INITIAL_BUNKER_MATRIX);
   const [otherPlayers, setOtherPlayers] = useState({});
 
@@ -85,9 +85,11 @@ const BunkerRoom = ({ onTeleport, character, roomCode }) => {
         playerSprite={{
           character,
           direction: playerState.direction,
-          isMoving: playerState.isMoving
+          isMoving: playerState.isMoving,
+          health: 100
         }}
         otherPlayers={otherPlayers}
+        onRestart={onRestart}
       />
       <TouchControls onMove={handleManualMove} />
     </div>

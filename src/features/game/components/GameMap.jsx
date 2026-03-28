@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import React, { memo, useState, useEffect } from 'react';
 import './GameMap.css';
 import SpritePlayer from './SpritePlayer';
 import SpriteZombie from './SpriteZombie';
@@ -16,7 +16,24 @@ const HealthBar = ({ health }) => {
   );
 };
 
-const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zombies = [] }) => {
+const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zombies = [], onRestart }) => {
+  const [cooldown, setCooldown] = useState(90);
+  const isDead = playerSprite.health <= 0;
+
+  useEffect(() => {
+    let timer;
+    if (isDead) {
+      if (cooldown > 0) {
+        timer = setInterval(() => {
+          setCooldown(prev => Math.max(0, prev - 1));
+        }, 1000);
+      } else {
+        // Requisito: Reinicio automático al terminar el tiempo
+        if (onRestart) onRestart();
+      }
+    }
+    return () => clearInterval(timer);
+  }, [isDead, cooldown, onRestart]);
   if (!matrix || matrix.length === 0 || !playerPos) return null;
 
   const rows = matrix.length;
@@ -31,14 +48,15 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
   const translateY = `calc((${centerY} - ${playerPos.y}) * var(--tile-size))`;
 
   // Visibility Range: Render tiles around the player to save performance
-  const startX = Math.max(0, Math.floor(playerPos.x - centerX - 2));
-  const endX = Math.min(cols, Math.floor(playerPos.x + centerX + 3));
-  const startY = Math.max(0, Math.floor(playerPos.y - centerY - 2));
-  const endY = Math.min(rows, Math.floor(playerPos.y + centerY + 3));
+  // Increased buffer (+6 on each side) to handle large buildings (4x width) and prevent popping/cropping
+  const startX = Math.max(0, Math.floor(playerPos.x - centerX - 6));
+  const endX = Math.min(cols, Math.floor(playerPos.x + centerX + 7));
+  const startY = Math.max(0, Math.floor(playerPos.y - centerY - 6));
+  const endY = Math.min(rows, Math.floor(playerPos.y + centerY + 7));
 
   const renderPlayer = (x, y) => {
     if (!playerSprite || !playerSprite.character) return null;
-    if (playerPos.x !== x || playerPos.y !== y) return null;
+    if (Math.floor(playerPos.x) !== x || Math.floor(playerPos.y) !== y) return null;
 
     const { character, direction, isMoving, health } = playerSprite;
     const isDead = health <= 0;
@@ -79,12 +97,12 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
     }
   }
 
-  const isDead = playerSprite.health <= 0;
+  // Moved isDead up to state area
 
   return (
-    <div className={`game-viewport ${isDead ? 'is-dead' : ''}`}>
+    <div className="game-viewport">
       <div 
-        className="game-map-container" 
+        className={`game-map-container ${isDead ? 'is-dead' : ''}`} 
         style={{ 
           width: `calc(${cols} * var(--tile-size))`,
           height: `calc(${rows} * var(--tile-size))`,
@@ -104,7 +122,8 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
               style={{
                 position: 'absolute',
                 left: `calc(${x} * var(--tile-size))`,
-                top: `calc(${y} * var(--tile-size))`
+                top: `calc(${y} * var(--tile-size))`,
+                zIndex: y
               }}
             >
               {/* Layer 1: Ground */}
@@ -150,7 +169,19 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
       {isDead && (
         <div className="death-overlay">
           <div className="death-message">HAS MUERTO</div>
-          <div className="death-subtext">Vuelve a cargar la sala para reintentar</div>
+          <div className="death-subtext">Debe pasar un tiempo de recuperación antes de reintentar</div>
+          
+          <button 
+            className="game-btn lobby-restart-btn is-active"
+            onClick={() => onRestart && onRestart()}
+          >
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px' }}>
+              <span>Volver al Menú</span>
+              <span className="countdown-timer-red" style={{ fontSize: '0.9rem', opacity: 0.8 }}>
+                Salida automática en: {Math.floor(cooldown / 60)}:{(cooldown % 60).toString().padStart(2, '0')}
+              </span>
+            </div>
+          </button>
         </div>
       )}
     </div>

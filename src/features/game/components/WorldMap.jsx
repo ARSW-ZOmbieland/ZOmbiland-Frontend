@@ -7,7 +7,7 @@ import { API_BASE_URL } from '../../../config/constants';
 import webSocketService from '../../../core/WebSocketService';
 // IA local elinidada para usar Sincronización de Servidor
 
-const WorldMap = ({ onExit, character, roomCode }) => {
+const WorldMap = ({ onExit, character, roomCode, onRestart }) => {
   const [mapData, setMapData] = useState(null);
   const [otherPlayers, setOtherPlayers] = useState({});
   const [zombies, setZombies] = useState([]);
@@ -31,7 +31,7 @@ const WorldMap = ({ onExit, character, roomCode }) => {
     // Zombie preloading
     const zombieStates = [
         'abajo', 'arriba', 'derecha', 'izquierda',
-        'ataque adelante', 'ataque atras', 'ataque derecha', 'ataque izquierda', 'ataque'
+        'ataque_adelante', 'ataque_atras', 'ataque_derecha', 'ataque_izquierda', 'ataque'
     ];
     zombieStates.forEach(state => {
         const img = new Image();
@@ -166,6 +166,7 @@ const WorldMap = ({ onExit, character, roomCode }) => {
         }}
         otherPlayers={otherPlayers}
         zombies={zombies}
+        onRestart={onRestart}
       />
       
       <TouchControls onMove={handleManualMove} />
