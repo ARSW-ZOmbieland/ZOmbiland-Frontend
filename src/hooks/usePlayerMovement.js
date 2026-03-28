@@ -25,8 +25,8 @@ export const usePlayerMovement = (initialPos, character, matrix, onCollideSpecia
     if (health <= 0) return;
 
     const now = Date.now();
-    // Cooldown de 0.5 segundos (balanceado para huir del zombie)
-    if (now - lastMoveRef.current < 500) return;
+    // Cooldown de 0.3 segundos (solicitado por el usuario)
+    if (now - lastMoveRef.current < 300) return;
     lastMoveRef.current = now;
     
     let newX = playerPos.x;

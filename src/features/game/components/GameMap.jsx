@@ -123,9 +123,10 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
               {Object.values(otherPlayers).filter(p => Math.floor(p.x) === x && Math.floor(p.y) === y).map(p => {
                 const action = p.action || 'abajo';
                 const pAsset = `/personajes/${p.playerId}/${action}.gif`;
+                const otherIsDead = p.health <= 0;
                 return (
-                  <div key={p.playerId} className="player-sprite" style={{ zIndex: y * 10 + 11 }}>
-                    <HealthBar health={p.health || 0} />
+                  <div key={p.playerId} className={`player-sprite ${otherIsDead ? 'other-player-dead' : ''}`} style={{ zIndex: y * 10 + 11 }}>
+                    <HealthBar health={p.health !== undefined ? p.health : 100} />
                     <img src={pAsset} alt="other-player" className="sprite-image" onError={(e) => { e.target.onerror = null; e.target.src=`/personajes/${p.playerId}/no-seleccion.png`; }} />
                   </div>
                 );
