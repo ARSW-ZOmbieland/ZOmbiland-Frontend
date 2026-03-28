@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import GameMap from './GameMap';
+import GameHUD from './GameHUD';
 import TouchControls from './TouchControls';
 import { TILE_TYPES } from '../../../core/GameEngine';
 import { usePlayerMovement } from '../../../hooks/usePlayerMovement';
@@ -146,7 +147,23 @@ const WorldMap = ({ onExit, character, roomCode }) => {
   }
 
   return (
-    <div className="game-view-cinematic" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', backgroundColor: '#000' }}>
+    <div className="game-view-cinematic" style={{ 
+      display: 'flex', 
+      flexDirection: 'column',
+      alignItems: 'center', 
+      justifyContent: 'center', 
+      height: '100%', 
+      width: '100%',
+      backgroundColor: '#000',
+      position: 'relative',
+      overflow: 'hidden'
+    }}>
+      <GameHUD 
+        character={character} 
+        health={health} 
+        roomCode={roomCode} 
+      />
+      
       <GameMap 
         matrix={mapData.matrix} 
         playerPos={playerPos} 
@@ -159,6 +176,7 @@ const WorldMap = ({ onExit, character, roomCode }) => {
         otherPlayers={otherPlayers}
         zombies={zombies}
       />
+      
       <TouchControls onMove={handleManualMove} />
     </div>
   );

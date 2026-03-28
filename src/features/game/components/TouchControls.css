@@ -1,68 +1,92 @@
 .touch-controls {
   position: absolute;
-  bottom: 20px;
-  left: 20px;
+  bottom: 30px;
+  right: 30px;
   z-index: 2000;
-  display: none; /* Hidden by default, shown on small screens */
+  display: none; 
   pointer-events: auto;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
   .touch-controls {
     display: block;
   }
 }
 
 .d-pad {
+  padding: 15px;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  border: 1px solid rgba(50, 205, 50, 0.2);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 5px;
+  gap: 8px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
 }
 
 .d-pad-horizontal {
   display: flex;
-  gap: 5px;
+  gap: 8px;
   align-items: center;
 }
 
 .d-btn {
-  width: 60px;
-  height: 60px;
-  background: rgba(50, 205, 50, 0.2);
-  border: 2px solid #32CD32;
-  border-radius: 12px;
+  width: 70px;
+  height: 70px;
+  background: linear-gradient(135deg, #1a1a1a, #0d0d0d);
+  border: 2px solid #222;
+  border-bottom: 4px solid #000;
+  border-radius: 15px;
   color: #32CD32;
-  font-size: 24px;
+  font-size: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   user-select: none;
-  backdrop-filter: blur(5px);
   transition: all 0.1s ease;
+  box-shadow: 0 4px 0 #000;
 }
 
 .d-btn:active {
-  background: rgba(50, 205, 50, 0.5);
-  transform: scale(0.95);
+  background: #32CD32;
+  color: #000;
+  border-bottom: 2px solid #000;
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 #000, 0 0 20px rgba(50, 205, 50, 0.6);
 }
 
 .d-pad-center {
-  width: 60px;
-  height: 60px;
-  background: rgba(255, 255, 255, 0.05);
+  width: 70px;
+  height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.d-pad-center::after {
+  content: '';
+  width: 10px;
+  height: 10px;
+  background: #32CD32;
   border-radius: 50%;
+  box-shadow: 0 0 10px #32CD32;
 }
 
 @media (max-width: 480px) {
+  .touch-controls {
+    bottom: 20px;
+    right: 20px;
+  }
   .d-btn {
-    width: 50px;
-    height: 50px;
-    font-size: 20px;
+    width: 60px;
+    height: 60px;
+    font-size: 24px;
   }
   .d-pad-center {
-    width: 50px;
-    height: 50px;
+    width: 60px;
+    height: 60px;
   }
 }
