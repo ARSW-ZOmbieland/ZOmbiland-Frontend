@@ -27,8 +27,18 @@ const WorldMap = ({ onExit, character, roomCode }) => {
       const idle = new Image();
       idle.src = `/personajes/${charId}/no-seleccion.png`;
     });
+
+    // Zombie preloading
+    const zombieStates = [
+        'abajo', 'arriba', 'derecha', 'izquierda',
+        'ataque adelante', 'ataque atras', 'ataque derecha', 'ataque izquierda', 'ataque'
+    ];
+    zombieStates.forEach(state => {
+        const img = new Image();
+        img.src = `/zombies/comun/${state}.gif`;
+    });
     
-    console.log(">> Preloading assets for better performance...");
+    console.log(">> Preloading assets for better performance (Players & Zombies)...");
   }, []);
 
   useEffect(() => {
