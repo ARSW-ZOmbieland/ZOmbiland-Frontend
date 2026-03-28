@@ -13,6 +13,24 @@ const WorldMap = ({ onExit, character, roomCode }) => {
   const [zombies, setZombies] = useState([]);
   const [health, setHealth] = useState(100);
 
+  // Asset Preloading: Force browser to cache all GIFs at once
+  useEffect(() => {
+    const characters = ['1', '2', '3', '4'];
+    const directions = ['abajo', 'arriba', 'derecha', 'izquierda'];
+    
+    characters.forEach(charId => {
+      directions.forEach(dir => {
+        const img = new Image();
+        img.src = `/personajes/${charId}/${dir}.gif`;
+      });
+      // Also idle
+      const idle = new Image();
+      idle.src = `/personajes/${charId}/no-seleccion.png`;
+    });
+    
+    console.log(">> Preloading assets for better performance...");
+  }, []);
+
   useEffect(() => {
     if (!roomCode) return;
     

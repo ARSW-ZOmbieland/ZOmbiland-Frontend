@@ -1,5 +1,6 @@
 import React, { memo } from 'react';
 import './GameMap.css';
+import SpritePlayer from './SpritePlayer';
 import { TILE_SIZE, VIEWPORT_TILES, GROUND_ASSETS, PROP_ASSETS } from '../../../config/constants';
 
 const HealthBar = ({ health }) => {
@@ -36,13 +37,18 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
     if (playerPos.x !== x || playerPos.y !== y) return null;
 
     const { character, direction, isMoving, health } = playerSprite;
-    const assetPath = isMoving ? `/personajes/${character}/${direction}.gif` : `/personajes/${character}/no-seleccion.png`;
+    const isDead = health <= 0;
 
     return (
       <div className="player-sprite" style={{ zIndex: y * 10 + 12 }}>
         <HealthBar health={health || 100} />
         <div className="player-indicator"></div>
-        <img src={assetPath} alt="player" className="sprite-image" />
+        <SpritePlayer 
+          characterId={character} 
+          direction={direction} 
+          isMoving={isMoving} 
+          isDead={isDead} 
+        />
       </div>
     );
   };
@@ -132,13 +138,16 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
               
               {/* Layer 4: Other Players */}
               {Object.values(otherPlayers).filter(p => Math.floor(p.x) === x && Math.floor(p.y) === y).map(p => {
-                const action = p.action || 'abajo';
-                const pAsset = `/personajes/${p.playerId}/${action}.gif`;
                 const otherIsDead = p.health <= 0;
                 return (
-                  <div key={p.playerId} className={`player-sprite ${otherIsDead ? 'other-player-dead' : ''}`} style={{ zIndex: y * 10 + 11 }}>
+                  <div key={p.playerId} className="player-sprite" style={{ zIndex: y * 10 + 11 }}>
                     <HealthBar health={p.health !== undefined ? p.health : 100} />
-                    <img src={pAsset} alt="other-player" className="sprite-image" onError={(e) => { e.target.onerror = null; e.target.src=`/personajes/${p.playerId}/no-seleccion.png`; }} />
+                    <SpritePlayer 
+                      characterId={p.playerId} 
+                      direction={p.action || 'abajo'} 
+                      isMoving={true} 
+                      isDead={otherIsDead} 
+                    />
                   </div>
                 );
               })}
