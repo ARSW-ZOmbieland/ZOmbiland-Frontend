@@ -15,7 +15,7 @@ const WorldMap = ({ onExit, character, roomCode }) => {
 
   // Asset Preloading: Force browser to cache all GIFs at once
   useEffect(() => {
-    const characters = ['1', '2', '3', '4'];
+    const characters = ['andres', 'juanpablo', 'maria', 'tomas'];
     const directions = ['abajo', 'arriba', 'derecha', 'izquierda'];
     
     characters.forEach(charId => {
