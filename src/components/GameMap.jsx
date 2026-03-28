@@ -12,7 +12,7 @@ const TILE_ASSETS = {
 const TILE_SIZE = 70;
 const VIEWPORT_TILES = 9;
 
-const GameMap = ({ matrix, playerPos, playerSprite }) => {
+const GameMap = ({ matrix, playerPos, playerSprite, zombies = [] }) => {
   if (!matrix || matrix.length === 0 || !playerPos) return null;
 
   const rows = matrix.length;
@@ -51,6 +51,20 @@ const GameMap = ({ matrix, playerPos, playerSprite }) => {
     );
   };
 
+  const renderZombies = (x, y) => {
+    if (!zombies) return null;
+    return zombies.filter(z => Math.floor(z.x) === x && Math.floor(z.y) === y).map((z, i) => (
+      <div key={`zombie-${i}`} className="player-sprite zombie-sprite">
+        <img 
+          src={`/zombies/comun/${z.direction}.gif`} 
+          alt="zombie" 
+          className="sprite-image" 
+          onError={(e) => { e.target.onerror = null; e.target.src=`/zombies/comun/abajo.gif`; }}
+        />
+      </div>
+    ));
+  };
+
   // Create the visible subset of tiles
   const visibleTiles = [];
   for (let y = startY; y < endY; y++) {
@@ -87,6 +101,7 @@ const GameMap = ({ matrix, playerPos, playerSprite }) => {
             {TILE_ASSETS[cell] && (
               <img src={TILE_ASSETS[cell]} alt={`tile-${cell}`} className="tile-image" />
             )}
+            {renderZombies(x, y)}
             {renderPlayer(x, y)}
           </div>
         ))}

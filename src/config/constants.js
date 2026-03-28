@@ -39,6 +39,18 @@ export const PROP_ASSETS = {
   55: '/assets/props/forest/log_large.png',
   56: '/assets/props/forest/tent_destroyed.png',
   57: '/assets/props/forest/wood_stump.png',
+  60: '/assets/buildings/hospital.png',
+  61: '/assets/buildings/pharmacy_01.png',
+  62: '/assets/buildings/pharmacy_02.png',
+  63: '/assets/buildings/police_station.png',
+  64: '/assets/buildings/police_station_ruined.png',
+  70: '/assets/props/urban/crate_01.png',
+  71: '/assets/props/urban/crate_02.png',
+  72: '/assets/props/urban/street_light.png',
+  73: '/assets/props/urban/supply_box.png',
+  74: '/assets/props/urban/traffic_cone.png',
+  80: '/assets/vfx/barrilfuego.gif',
+  90: '/assets/props/barricades/road_block_police.png',
 };
 
 // Map of all assets for easier pre-loading or type checking

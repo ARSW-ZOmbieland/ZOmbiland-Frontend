@@ -87,6 +87,48 @@
   pointer-events: none;
 }
 
+.city-building {
+  width: 400% !important;
+  height: auto !important;
+  object-fit: contain !important;
+  bottom: 0px !important;
+  top: auto !important;
+  left: -150% !important;
+  transform: none !important;
+  z-index: 9 !important;
+  pointer-events: none;
+}
+
+.urban-prop {
+  transform: scale(1.5);
+  transform-origin: center center;
+  z-index: 7 !important;
+  pointer-events: none;
+}
+
+.street-light-prop {
+  height: 350% !important;
+  width: auto !important;
+  object-fit: contain !important;
+  bottom: 0px !important;
+  top: auto !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  z-index: 8 !important;
+  pointer-events: none;
+}
+
+.barricade-prop {
+  transform: scale(1.5);
+  transform-origin: bottom center;
+  z-index: 6 !important;
+  pointer-events: none;
+}
+
+.bush-prop, .tree-prop, .bunker-prop, .forest-prop, .urban-prop, .barricade-prop {
+  object-fit: contain !important;
+}
+
 .player-sprite {
   position: absolute;
   width: 100%;

@@ -5,10 +5,12 @@ import { TILE_TYPES } from '../../../core/GameEngine';
 import { usePlayerMovement } from '../../../hooks/usePlayerMovement';
 import { API_BASE_URL } from '../../../config/constants';
 import webSocketService from '../../../core/WebSocketService';
+// IA local elinidada para usar Sincronización de Servidor
 
 const WorldMap = ({ onExit, character, roomCode }) => {
   const [mapData, setMapData] = useState(null);
   const [otherPlayers, setOtherPlayers] = useState({});
+  const [zombies, setZombies] = useState([]);
 
   useEffect(() => {
     if (!roomCode) return;
@@ -37,9 +39,17 @@ const WorldMap = ({ onExit, character, roomCode }) => {
         webSocketService.subscribe(topic, (message) => {
             if (message.playerId && message.playerId !== character) {
                 setOtherPlayers(prev => ({
-                ...prev,
-                [message.playerId]: message
+                    ...prev,
+                    [message.playerId]: message
                 }));
+            }
+        });
+
+        // Suscribirse a los zombies del servidor (Cada 0.5s)
+        const zombieTopic = `/topic/game.zombies.${roomCode}`;
+        webSocketService.subscribe(zombieTopic, (zombieList) => {
+            if (Array.isArray(zombieList)) {
+                setZombies(zombieList);
             }
         });
 
@@ -85,6 +95,8 @@ const WorldMap = ({ onExit, character, roomCode }) => {
     otherPlayers
   );
 
+  // IA local del zombie eliminada (ahora se maneja vía WebSocket arriba)
+
   // Update position once map is loaded
   useEffect(() => {
       if (mapData && setPlayerPos) {
@@ -108,6 +120,7 @@ const WorldMap = ({ onExit, character, roomCode }) => {
           isMoving: playerState.isMoving
         }}
         otherPlayers={otherPlayers}
+        zombies={zombies}
       />
       <TouchControls onMove={handleManualMove} />
     </div>
