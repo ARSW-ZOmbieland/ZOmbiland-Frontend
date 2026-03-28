@@ -50,19 +50,30 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
   const renderZombies = (x, y) => {
     if (!zombies || zombies.length === 0) return null;
     
-    return zombies.filter(z => Math.floor(z.x) === x && Math.floor(z.y) === y).map((z, i) => (
-      <div key={`zombie-${i}`} className="player-sprite zombie-sprite" style={{ zIndex: y * 10 + 11 }}>
-        <img 
-          src={`/zombies/comun/${z.direction}.gif`} 
-          alt="zombie" 
-          className="sprite-image" 
-          onError={(e) => { 
-            e.target.onerror = null; 
-            e.target.src=`/zombies/comun/abajo.gif`; 
-          }}
-        />
-      </div>
-    ));
+    return zombies.filter(z => Math.floor(z.x) === x && Math.floor(z.y) === y).map((z, i) => {
+      let assetName = z.direction || 'abajo';
+      if (z.attacking) {
+        if (assetName === 'abajo') assetName = 'ataque adelante';
+        else if (assetName === 'arriba') assetName = 'ataque atras';
+        else if (assetName === 'derecha') assetName = 'ataque derecha';
+        else if (assetName === 'izquierda') assetName = 'ataque izquierda';
+        else assetName = 'ataque';
+      }
+
+      return (
+        <div key={`zombie-${i}`} className="player-sprite zombie-sprite" style={{ zIndex: y * 10 + 11 }}>
+          <img 
+            src={`/zombies/comun/${assetName}.gif`} 
+            alt="zombie" 
+            className="sprite-image" 
+            onError={(e) => { 
+              e.target.onerror = null; 
+              e.target.src=`/zombies/comun/abajo.gif`; 
+            }}
+          />
+        </div>
+      );
+    });
   };
 
   const visibleTiles = [];
