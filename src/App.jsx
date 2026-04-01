@@ -15,6 +15,7 @@ function App() {
   const [gameState, setGameState] = useState('LOBBY'); // LOBBY, BUNKER_START, WORLD_MAP, BUNKER_END
   const [selectedCharacter, setSelectedCharacter] = useState(null);
   const [roomCode, setRoomCode] = useState(null);
+  const [isPaused, setIsPaused] = useState(false);
 
   // Player Stats for HUD
   const [stats, setStats] = useState({
@@ -64,7 +65,20 @@ function App() {
         setUser(null);
         setAuthLoading(false);
       });
-  }, []);
+
+    // Global Pause Handler (Esc or Enter)
+    const handleGlobalKeyDown = (e) => {
+      if (e.key === 'Escape' || e.key === 'Enter') {
+        const isCurrentlyPlaying = gameState === 'BUNKER_START' || gameState === 'WORLD_MAP';
+        if (isCurrentlyPlaying) {
+          setIsPaused(prev => !prev);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+  }, [gameState]);
 
   if (authLoading || !assetsLoaded) {
     return (
@@ -109,17 +123,42 @@ function App() {
         {gameState === 'LOBBY' && (
           <GameRoom onConfirm={handleStartGame} />
         )}
+        
+        {/* Pause System Overlay */}
+        {isPaused && (
+          <div className="pause-overlay-premium">
+            <div className="pause-content">
+              <h1 className="pause-title">PAUSA</h1>
+              <div className="pause-buttons">
+                <button className="game-btn btn-resume" onClick={() => setIsPaused(false)}>
+                  Reanudar
+                </button>
+                <button className="game-btn btn-exit" onClick={() => { setIsPaused(false); handleRestart(); }}>
+                   Volver al Menú
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
-        {gameState === 'BUNKER_START' && (
+        {(gameState === 'BUNKER_START' && !isPaused) && (
           <ErrorBoundary>
-            <BunkerRoom onTeleport={handleTeleport} character={selectedCharacter} roomCode={roomCode} onRestart={handleRestart} />
+            <BunkerRoom onTeleport={handleTeleport} character={selectedCharacter} roomCode={roomCode} onRestart={handleRestart} isPaused={isPaused} />
           </ErrorBoundary>
         )}
 
-        {gameState === 'WORLD_MAP' && (
+        {(gameState === 'WORLD_MAP' && !isPaused) && (
           <ErrorBoundary>
-            <WorldMap onExit={handleWorldExit} character={selectedCharacter} roomCode={roomCode} onRestart={handleRestart} />
+            <WorldMap onExit={handleWorldExit} character={selectedCharacter} roomCode={roomCode} onRestart={handleRestart} isPaused={isPaused} />
           </ErrorBoundary>
+        )}
+        
+        {/* Renderizado de fondo cuando está pausado para que no parpadee a negro */}
+        {isPaused && gameState === 'BUNKER_START' && (
+            <BunkerRoom onTeleport={handleTeleport} character={selectedCharacter} roomCode={roomCode} onRestart={handleRestart} isPaused={isPaused} />
+        )}
+        {isPaused && gameState === 'WORLD_MAP' && (
+            <WorldMap onExit={handleWorldExit} character={selectedCharacter} roomCode={roomCode} onRestart={handleRestart} isPaused={isPaused} />
         )}
 
         {gameState === 'BUNKER_END' && (

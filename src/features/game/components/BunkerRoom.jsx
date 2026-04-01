@@ -12,7 +12,7 @@ const SPAWN_POINTS = {
   tomas: { x: 8, y: 8 }       // Bottom-Right
 };
 
-const BunkerRoom = ({ onTeleport, character, roomCode, onRestart }) => {
+const BunkerRoom = ({ onTeleport, character, roomCode, onRestart, isPaused }) => {
   const [matrix] = useState(INITIAL_BUNKER_MATRIX);
   const [otherPlayers, setOtherPlayers] = useState({});
 
@@ -74,7 +74,9 @@ const BunkerRoom = ({ onTeleport, character, roomCode, onRestart }) => {
     matrix, 
     handleCollideSpecial,
     roomCode,
-    otherPlayers
+    otherPlayers,
+    100,
+    isPaused
   );
 
   return (
@@ -90,6 +92,7 @@ const BunkerRoom = ({ onTeleport, character, roomCode, onRestart }) => {
         }}
         otherPlayers={otherPlayers}
         onRestart={onRestart}
+        isPaused={isPaused}
       />
       <TouchControls onMove={handleManualMove} />
     </div>

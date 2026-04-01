@@ -7,11 +7,13 @@ import { API_BASE_URL } from '../../../config/constants';
 import webSocketService from '../../../core/WebSocketService';
 // IA local elinidada para usar Sincronización de Servidor
 
-const WorldMap = ({ onExit, character, roomCode, onRestart }) => {
+const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused }) => {
   const [mapData, setMapData] = useState(null);
   const [otherPlayers, setOtherPlayers] = useState({});
   const [zombies, setZombies] = useState([]);
   const [health, setHealth] = useState(100);
+  const [lastExternalShot, setLastExternalShot] = useState(null);
+  const [myAimAngle, setMyAimAngle] = useState(0);
 
   // Asset Preloading: Force browser to cache all GIFs at once
   useEffect(() => {
@@ -73,6 +75,14 @@ const WorldMap = ({ onExit, character, roomCode, onRestart }) => {
                     setHealth(message.health);
                 }
             } else if (message.playerId) {
+                // Si es un ataque externo, capturamos el evento para visualizarlo
+                if (message.action === 'ATTACK') {
+                    setLastExternalShot({
+                        id: Date.now() + Math.random(),
+                        ...message
+                    });
+                }
+                
                 setOtherPlayers(prev => ({
                     ...prev,
                     [message.playerId]: message
@@ -128,7 +138,8 @@ const WorldMap = ({ onExit, character, roomCode, onRestart }) => {
     handleCollideSpecial,
     roomCode,
     otherPlayers,
-    health
+    health,
+    isPaused
   );
 
   // IA local del zombie eliminada (ahora se maneja vía WebSocket arriba)
@@ -139,7 +150,49 @@ const WorldMap = ({ onExit, character, roomCode, onRestart }) => {
           setPlayerPos({ x: mapData.startX, y: mapData.startY });
       }
   }, [mapData, setPlayerPos]);
+ 
+  // Broadcast de Puntería (Aim Angle) - Throttled a 10Hz
+  useEffect(() => {
+    if (!roomCode || health <= 0) return;
+    
+    let lastSentAngle = -999;
+    const interval = setInterval(() => {
+        // Obtenemos el ángulo actual desde el componente a través de window (hack rápido y eficiente)
+        const currentAngle = window.currentAimAngle || 0;
+        
+        if (Math.abs(currentAngle - lastSentAngle) > 2) { // Variación mínima para enviar
+            webSocketService.sendMessage('/app/game.action', {
+                playerId: character,
+                roomCode: roomCode,
+                x: playerPos.x,
+                y: playerPos.y,
+                aimAngle: currentAngle,
+                action: playerState.direction, // Mantener dirección actual
+                health: health
+            });
+            lastSentAngle = currentAngle;
+        }
+    }, 100); // 100ms = 10Hz
+    
+    return () => clearInterval(interval);
+  }, [roomCode, character, playerPos, playerState.direction, health]);
 
+
+  // Combat Handling
+  const handleShoot = useCallback((targetX, targetY) => {
+    if (health <= 0) return;
+    
+    webSocketService.sendMessage('/app/game.action', {
+        playerId: character,
+        roomCode: roomCode,
+        x: playerPos.x,
+        y: playerPos.y,
+        targetX: targetX,
+        targetY: targetY,
+        action: 'ATTACK',
+        health: health
+    });
+  }, [character, roomCode, playerPos, health]);
 
   if (!mapData) {
     return <div style={{ color: '#32CD32', display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', backgroundColor: '#000', fontSize: '2rem' }}>Generando mapa aleatorio...</div>;
@@ -167,6 +220,10 @@ const WorldMap = ({ onExit, character, roomCode, onRestart }) => {
         otherPlayers={otherPlayers}
         zombies={zombies}
         onRestart={onRestart}
+        onShoot={handleShoot}
+        lastExternalShot={lastExternalShot}
+        onAimChange={(angle) => { window.currentAimAngle = angle; }}
+        isPaused={isPaused}
       />
       
       <TouchControls onMove={handleManualMove} />

@@ -10,7 +10,7 @@ import webSocketService from '../core/WebSocketService';
  * @param {Function} onCollideSpecial - Callback for special tiles (doors, exits)
  * @param {string} roomCode - The active room code
  */
-export const usePlayerMovement = (initialPos, character, matrix, onCollideSpecial, roomCode, otherPlayers = {}, health = 100) => {
+export const usePlayerMovement = (initialPos, character, matrix, onCollideSpecial, roomCode, otherPlayers = {}, health = 100, isPaused = false) => {
   const [playerPos, setPlayerPos] = useState(initialPos);
   const [playerState, setPlayerState] = useState({
     direction: 'abajo',
@@ -21,8 +21,8 @@ export const usePlayerMovement = (initialPos, character, matrix, onCollideSpecia
   const lastMoveRef = useRef(0);
 
   const handleManualMove = (direction) => {
-    // No moverse si está muerto
-    if (health <= 0) return;
+    // No moverse si está muerto o pausado
+    if (health <= 0 || isPaused) return;
 
     const now = Date.now();
     // Cooldown de 0.3 segundos (solicitado por el usuario)
@@ -110,7 +110,7 @@ export const usePlayerMovement = (initialPos, character, matrix, onCollideSpecia
       window.removeEventListener('keydown', handleKeyDown);
       if (moveTimer.current) clearTimeout(moveTimer.current);
     };
-  }, [playerPos, character, matrix, onCollideSpecial]);
+  }, [playerPos, character, matrix, onCollideSpecial, isPaused]);
 
   return { playerPos, playerState, setPlayerPos, handleManualMove };
 };

@@ -6,7 +6,7 @@ import './SpritePlayer.css';
  * Mantiene las 4 direcciones cargadas en el DOM y solo muestra la activa.
  * Esto elimina el tiempo de carga entre pasos, especialmente en redes lentas.
  */
-const SpritePlayer = ({ characterId, direction, isMoving, isDead }) => {
+const SpritePlayer = ({ characterId, direction, isMoving, isDead, aimAngle }) => {
   const directions = ['abajo', 'arriba', 'derecha', 'izquierda', 'adelante'];
   
   return (
@@ -34,8 +34,10 @@ const SpritePlayer = ({ characterId, direction, isMoving, isDead }) => {
           className="sprite-layer active"
         />
       )}
+
     </div>
   );
 };
+
 
 export default SpritePlayer;
