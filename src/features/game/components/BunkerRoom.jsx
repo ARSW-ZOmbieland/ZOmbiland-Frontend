@@ -12,7 +12,7 @@ const SPAWN_POINTS = {
   tomas: { x: 8, y: 8 }       // Bottom-Right
 };
 
-const BunkerRoom = ({ onTeleport, character, roomCode, onRestart, isPaused }) => {
+const BunkerRoom = ({ onTeleport, character, roomCode, onRestart, isPaused, onPauseSync }) => {
   const [matrix] = useState(INITIAL_BUNKER_MATRIX);
   const [otherPlayers, setOtherPlayers] = useState({});
 
@@ -32,9 +32,18 @@ const BunkerRoom = ({ onTeleport, character, roomCode, onRestart, isPaused }) =>
       const topic = `/topic/game.state.${roomCode}`;
       webSocketService.subscribe(topic, (message) => {
         if (message.playerId && message.playerId !== character) {
+          if (message.action === 'PAUSE') {
+            if (onPauseSync) onPauseSync(true);
+            return;
+          }
+          if (message.action === 'RESUME') {
+            if (onPauseSync) onPauseSync(false);
+            return;
+          }
+
           setOtherPlayers(prev => ({
             ...prev,
-            [message.playerId]: message
+            [message.playerId]: { ...prev[message.playerId], ...message }
           }));
         }
       });

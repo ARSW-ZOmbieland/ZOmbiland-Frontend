@@ -76,7 +76,8 @@ export const usePlayerMovement = (initialPos, character, matrix, onCollideSpecia
                   roomCode: roomCode,
                   x: newX,
                   y: newY,
-                  action: mappedDir
+                  action: mappedDir,
+                  health: health
               });
           }
         }

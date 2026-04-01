@@ -14,24 +14,24 @@
 
 @media (max-width: 480px) {
   :root {
-    --tile-size: 45px;
-    --sprite-size: 54px;
-    --sprite-offset: -9px;
+    --tile-size: 40px;
+    --sprite-size: 48px;
+    --sprite-offset: -8px;
   }
 }
 
 .game-viewport {
-  width: calc(9 * var(--tile-size));
-  height: calc(9 * var(--tile-size));
-  max-width: 95vw;
-  max-height: 80vh;
+  width: 100%;
+  height: 100%;
+  max-width: 100vw;
+  max-height: 100vh;
   overflow: hidden;
   position: relative;
-  background-color: #0a0a0a;
-  border: 4px solid #32CD32;
-  box-shadow: 0 0 50px rgba(50, 205, 50, 0.2);
-  margin: 0 auto;
-  border-radius: 8px;
+  background-color: #050505;
+  margin: 0;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
   z-index: 5;
 }
 

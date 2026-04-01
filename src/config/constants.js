@@ -1,5 +1,5 @@
 export const TILE_SIZE = 95;
-export const VIEWPORT_TILES = 9;
+export const VIEWPORT_TILES = 21;
 
 export const GROUND_ASSETS = {
   0: '/assets/tiles/ground/ground_clean.png',

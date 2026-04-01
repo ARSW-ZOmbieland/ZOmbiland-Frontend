@@ -133,3 +133,29 @@
   transform: scale(1.05);
   filter: brightness(1.2);
 }
+
+/* Room Code Badge */
+.room-code-badge {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  background: rgba(10, 10, 15, 0.85);
+  backdrop-filter: blur(8px);
+  padding: 8px 25px;
+  border-radius: 0 0 15px 15px;
+  border-bottom: 2px solid #32CD32;
+  border-left: 2px solid #32CD32;
+  border-right: 2px solid #32CD32;
+  color: #32CD32;
+  font-family: 'Courier New', Courier, monospace;
+  font-weight: bold;
+  letter-spacing: 2px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+}
+
+.room-code-badge span {
+  color: white;
+  margin-left: 8px;
+}

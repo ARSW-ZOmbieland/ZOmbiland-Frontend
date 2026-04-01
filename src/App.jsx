@@ -7,6 +7,7 @@ import './App.css';
 import { API_BASE_URL } from './config/constants';
 import ErrorBoundary from './components/ErrorBoundary';
 import { useAssetPreload } from './hooks/useAssetPreload';
+import webSocketService from './core/WebSocketService';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -71,7 +72,17 @@ function App() {
       if (e.key === 'Escape' || e.key === 'Enter') {
         const isCurrentlyPlaying = gameState === 'BUNKER_START' || gameState === 'WORLD_MAP';
         if (isCurrentlyPlaying) {
-          setIsPaused(prev => !prev);
+          const nextPausedState = !isPaused;
+          setIsPaused(nextPausedState);
+          
+          // Enviar sincronización MANUAL (Solo en eventos locales)
+          if (roomCode) {
+            webSocketService.sendMessage('/app/game.action', {
+                playerId: selectedCharacter,
+                roomCode: roomCode,
+                action: nextPausedState ? 'PAUSE' : 'RESUME'
+            });
+          }
         }
       }
     };
@@ -106,6 +117,12 @@ function App() {
     return (
       <div style={{ position: 'relative', height: '100vh', width: '100%', backgroundColor: '#000', overflow: 'hidden' }}>
         {/* User overlay widget */}
+        {selectedCharacter && isPlaying && (
+          <div className="room-code-badge pop-in">
+            REFUGIO: <span>{roomCode}</span>
+          </div>
+        )}
+
         <div className="user-overlay">
           <img src={userPhoto} alt={userName} className="user-photo" />
           <div className="user-info">
@@ -130,10 +147,29 @@ function App() {
             <div className="pause-content">
               <h1 className="pause-title">PAUSA</h1>
               <div className="pause-buttons">
-                <button className="game-btn btn-resume" onClick={() => setIsPaused(false)}>
+                <button className="game-btn btn-resume" onClick={() => {
+                  setIsPaused(false);
+                  if (roomCode) {
+                    webSocketService.sendMessage('/app/game.action', {
+                        playerId: selectedCharacter,
+                        roomCode: roomCode,
+                        action: 'RESUME'
+                    });
+                  }
+                }}>
                   Reanudar
                 </button>
-                <button className="game-btn btn-exit" onClick={() => { setIsPaused(false); handleRestart(); }}>
+                <button className="game-btn btn-exit" onClick={() => { 
+                  setIsPaused(false); 
+                  if (roomCode) {
+                    webSocketService.sendMessage('/app/game.action', {
+                        playerId: selectedCharacter,
+                        roomCode: roomCode,
+                        action: 'RESUME'
+                    });
+                  }
+                  handleRestart(); 
+                }}>
                    Volver al Menú
                 </button>
               </div>
@@ -141,24 +177,30 @@ function App() {
           </div>
         )}
 
-        {(gameState === 'BUNKER_START' && !isPaused) && (
+        {(gameState === 'BUNKER_START') && (
           <ErrorBoundary>
-            <BunkerRoom onTeleport={handleTeleport} character={selectedCharacter} roomCode={roomCode} onRestart={handleRestart} isPaused={isPaused} />
+            <BunkerRoom 
+              onTeleport={handleTeleport} 
+              character={selectedCharacter} 
+              roomCode={roomCode} 
+              onRestart={handleRestart} 
+              isPaused={isPaused} 
+              onPauseSync={setIsPaused} 
+            />
           </ErrorBoundary>
         )}
 
-        {(gameState === 'WORLD_MAP' && !isPaused) && (
+        {(gameState === 'WORLD_MAP') && (
           <ErrorBoundary>
-            <WorldMap onExit={handleWorldExit} character={selectedCharacter} roomCode={roomCode} onRestart={handleRestart} isPaused={isPaused} />
+            <WorldMap 
+              onExit={handleWorldExit} 
+              character={selectedCharacter} 
+              roomCode={roomCode} 
+              onRestart={handleRestart} 
+              isPaused={isPaused} 
+              onPauseSync={setIsPaused} 
+            />
           </ErrorBoundary>
-        )}
-        
-        {/* Renderizado de fondo cuando está pausado para que no parpadee a negro */}
-        {isPaused && gameState === 'BUNKER_START' && (
-            <BunkerRoom onTeleport={handleTeleport} character={selectedCharacter} roomCode={roomCode} onRestart={handleRestart} isPaused={isPaused} />
-        )}
-        {isPaused && gameState === 'WORLD_MAP' && (
-            <WorldMap onExit={handleWorldExit} character={selectedCharacter} roomCode={roomCode} onRestart={handleRestart} isPaused={isPaused} />
         )}
 
         {gameState === 'BUNKER_END' && (

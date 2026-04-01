@@ -1,4 +1,4 @@
-import React, { memo, useState, useEffect } from 'react';
+import React, { memo, useState, useEffect, useRef } from 'react';
 import './GameMap.css';
 import SpritePlayer from './SpritePlayer';
 import SpriteZombie from './SpriteZombie';
@@ -22,6 +22,8 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
   const [hoveredTile, setHoveredTile] = useState(null);
   const [bullets, setBullets] = useState([]);
   const [flashes, setFlashes] = useState([]);
+  const virtualMouse = useRef({ x: 0, y: 0 }); // Posición virtual para el modo capturado
+  const isLocked = useRef(false);
   const [hitZombies, setHitZombies] = useState(new Set());
   const prevHealthRef = React.useRef(new Map());
   const isDead = playerSprite.health <= 0;
@@ -54,20 +56,43 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
       }, 300);
     }
   }, [zombies]);
-  // Seguimiento del Mouse para apuntar (Memoizado)
+  // Seguimiento del Mouse para apuntar (Relativo + Absoluto)
   const handleMouseMove = React.useCallback((e) => {
     if (isDead || isPaused) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const centerX = rect.width / 2;
-    const centerY = rect.height / 2;
-    const x = e.clientX - rect.left - centerX;
-    const y = e.clientY - rect.top - centerY;
-    const angle = Math.atan2(y, x) * (180 / Math.PI);
+    
+    // Si el puntero está capturado (Pointer Lock)
+    if (document.pointerLockElement) {
+        // Actualizamos la posición virtual sumando el movimiento
+        virtualMouse.current.x += e.movementX;
+        virtualMouse.current.y += e.movementY;
+        
+        // Mantener el puntero virtual dentro de un rango razonable (ej. 400px de radio)
+        const dist = Math.sqrt(virtualMouse.current.x**2 + virtualMouse.current.y**2);
+        if (dist > 400) {
+            const ratio = 400 / dist;
+            virtualMouse.current.x *= ratio;
+            virtualMouse.current.y *= ratio;
+        }
+    } else {
+        // Modo normal si no está bloqueado (aunque el usuario quiere bloqueo siempre)
+        const rect = e.currentTarget.getBoundingClientRect();
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+        virtualMouse.current.x = e.clientX - rect.left - centerX;
+        virtualMouse.current.y = e.clientY - rect.top - centerY;
+    }
+
+    const angle = Math.atan2(virtualMouse.current.y, virtualMouse.current.x) * 180 / Math.PI;
     setAimAngle(angle);
     if (onAimChange) onAimChange(angle);
+  }, [isDead, isPaused, onAimChange]);
 
-    // NUEVO: Calcular la baldosa vecina EXACTAMENTE con la misma lógica de 45 grados
-    const a = (angle + 360) % 360;
+  // NUEVO: Efecto reactivo para actualizar la baldosa vecina (hoveredTile) cuando el personaje se mueva o cambie el ángulo
+  useEffect(() => {
+    if (isDead || isPaused) return;
+
+    // Calcular la baldosa vecina EXACTAMENTE con la misma lógica de 45 grados
+    const a = (aimAngle + 360) % 360;
     let ox = 0, oy = 0;
     
     if (a >= 337.5 || a < 22.5) { ox = 1; oy = 0; }
@@ -83,7 +108,7 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
       x: Math.floor(playerPos.x) + ox,
       y: Math.floor(playerPos.y) + oy
     });
-  }, [isDead, onAimChange, playerPos.x, playerPos.y]);
+  }, [aimAngle, playerPos.x, playerPos.y, isDead, isPaused]);
 
   // Disparo al hacer clic (Memoizado para rendimiento)
   const executeShot = React.useCallback((input) => {
@@ -145,11 +170,18 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
     if (onShoot) {
         onShoot(targetX, targetY);
     }
-  }, [isDead, playerPos, onShoot]);
+  }, [isDead, isPaused, playerPos, onShoot]);
 
-  const handleMapClick = (e) => {
+  const handleMouseDown = (e) => {
     if (isDead || !onRestart) return;
-    executeShot(aimAngle); // Usamos el ángulo actual (el que tiene la pistola) directamente
+    
+    // Solicitar Pointer Lock al presionar el ratón (Más fiable que click)
+    const viewport = e.currentTarget;
+    if (!isPaused && viewport.requestPointerLock) {
+        viewport.requestPointerLock();
+    }
+    
+    executeShot(aimAngle);
   };
 
   // --- NUEVA LÓGICA DE DISPARO POR TECLADO NUMÉRICO ---
@@ -179,7 +211,25 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [executeShot, playerPos, isDead]);
+  }, [executeShot, playerPos, isDead, isPaused, aimAngle]);
+
+  // Manejar cambios en el estado de Pointer Lock y Liberación por Pausa
+  useEffect(() => {
+    const handleLockChange = () => {
+        isLocked.current = !!document.pointerLockElement;
+    };
+
+    document.addEventListener('pointerlockchange', handleLockChange);
+    
+    // Si se pausa o muere, liberar el puntero automáticamente
+    if ((isPaused || isDead) && document.pointerLockElement) {
+        document.exitPointerLock();
+    }
+
+    return () => {
+        document.removeEventListener('pointerlockchange', handleLockChange);
+    };
+  }, [isPaused, isDead]);
 
   useEffect(() => {
     if (lastExternalShot && lastExternalShot.playerId !== playerSprite.character) {
@@ -239,13 +289,15 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
   const centerXValue = Math.floor(VIEWPORT_TILES / 2);
   const centerYValue = Math.floor(VIEWPORT_TILES / 2);
 
-  const translateX = `calc((${centerXValue} - ${playerPos.x}) * var(--tile-size))`;
-  const translateY = `calc((${centerYValue} - ${playerPos.y}) * var(--tile-size))`;
+  // Lógica de Centrado Absoluto en Pantalla
+  const translateX = `calc(50vw - (${playerPos.x} * var(--tile-size)) - (var(--tile-size) / 2))`;
+  const translateY = `calc(50vh - (${playerPos.y} * var(--tile-size)) - (var(--tile-size) / 2))`;
 
-  const startX = Math.max(0, Math.floor(playerPos.x - centerXValue - 6));
-  const endX = Math.min(cols, Math.floor(playerPos.x + centerXValue + 7));
-  const startY = Math.max(0, Math.floor(playerPos.y - centerYValue - 6));
-  const endY = Math.min(rows, Math.floor(playerPos.y + centerYValue + 7));
+  // Buffer de renderizado más amplio para evitar bordes cortados en pantallas panorámicas
+  const startX = Math.max(0, Math.floor(playerPos.x - 15));
+  const endX = Math.min(cols, Math.floor(playerPos.x + 16));
+  const startY = Math.max(0, Math.floor(playerPos.y - 12));
+  const endY = Math.min(rows, Math.floor(playerPos.y + 13));
 
   const renderPlayer = (x, y) => {
     if (!playerSprite || !playerSprite.character) return null;
@@ -286,7 +338,7 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
     <div 
       className="game-viewport" 
       onMouseMove={handleMouseMove}
-      onClick={handleMapClick}
+      onMouseDown={handleMouseDown}
       style={{ cursor: 'crosshair' }}
     >
       <div 
@@ -307,7 +359,6 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
             </div>
           );
         })}
-
         {/* Pass 2: Props and Entities */}
         {visibleTiles.map(({ x, y, cell }) => {
           const propID = typeof cell === 'object' ? cell.p : (cell >= 10 && cell !== 99 ? cell : null);
@@ -324,7 +375,13 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
                   <SpritePlayer characterId={p.playerId} direction={p.action || 'abajo'} isMoving={true} isDead={p.health <= 0} aimAngle={p.aimAngle || 0} />
                 </div>
               ))}
-              {/* Indicador de Puntería (Pistola en el mouse) */}
+            </div>
+          );
+        })}
+
+        {/* Pass 3: Hover/Aim Indicator (Still inside grid for coordinate matching) */}
+        {visibleTiles.map(({ x, y }) => (
+          <div key={`aim-layer-${x}-${y}`} style={{ position: 'absolute', left: `calc(${x} * var(--tile-size))`, top: `calc(${y} * var(--tile-size))` }}>
               {!isDead && !isPaused && hoveredTile && hoveredTile.x === x && hoveredTile.y === y && (
                 <div className="weapon-aim-indicator" style={{ zIndex: y * 10 + 20 }}>
                   <img 
@@ -335,8 +392,7 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
                 </div>
               )}
             </div>
-          );
-        })}
+        ))}
 
         {/* --- PERFORMANCE FIX: INDEPENDENT BULLET LAYER --- */}
         <div className="bullet-overlay-layer" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 999 }}>

@@ -7,7 +7,7 @@ import { API_BASE_URL } from '../../../config/constants';
 import webSocketService from '../../../core/WebSocketService';
 // IA local elinidada para usar Sincronización de Servidor
 
-const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused }) => {
+const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSync }) => {
   const [mapData, setMapData] = useState(null);
   const [otherPlayers, setOtherPlayers] = useState({});
   const [zombies, setZombies] = useState([]);
@@ -69,6 +69,15 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused }) => {
         // Suscribirse a los movimientos y estados (incluyendo vida)
         const topic = `/topic/game.state.${roomCode}`;
         webSocketService.subscribe(topic, (message) => {
+            if (message.action === 'PAUSE') {
+                if (onPauseSync) onPauseSync(true);
+                return;
+            }
+            if (message.action === 'RESUME') {
+                if (onPauseSync) onPauseSync(false);
+                return;
+            }
+
             if (message.playerId === character) {
                 // Actualizar vida propia desde el servidor
                 if (message.health !== undefined) {
@@ -85,7 +94,7 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused }) => {
                 
                 setOtherPlayers(prev => ({
                     ...prev,
-                    [message.playerId]: message
+                    [message.playerId]: { ...prev[message.playerId], ...message }
                 }));
             }
         });

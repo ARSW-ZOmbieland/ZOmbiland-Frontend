@@ -11,7 +11,8 @@ const SpritePlayer = ({ characterId, direction, isMoving, isDead, aimAngle }) =>
   
   return (
     <div className={`sprite-player-container ${isDead ? 'other-player-dead' : ''}`}>
-      {directions.map(dir => {
+      {/* Estado Vivo - Caminando (GIFs) */}
+      {!isDead && directions.map(dir => {
         const isActive = direction === dir && isMoving;
         const assetPath = `/personajes/${characterId}/${dir}.gif`;
         
@@ -25,7 +26,16 @@ const SpritePlayer = ({ characterId, direction, isMoving, isDead, aimAngle }) =>
           />
         );
       })}
-      
+
+      {/* Estado Muerto - Imagen estática específica */}
+      {isDead && (
+        <img 
+          src={`/personajes/${characterId}/${characterId === 'andres' ? 'juanandres' : characterId}_muerto.png`} 
+          alt={`${characterId}-dead`} 
+          className="sprite-layer active"
+        />
+      )}
+
       {/* Idle state (No-seleccion - PNG estático) */}
       {!isMoving && !isDead && (
         <img 
