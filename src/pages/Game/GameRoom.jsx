@@ -14,7 +14,7 @@ function GameRoom({ onConfirm }) {
     useEffect(() => {
         if (view === 'character-selection') {
             const activeCode = roomCode || joinCode;
-            fetch(`${API_BASE_URL}/api/game/rooms/${activeCode}`)
+            fetch(`${API_BASE_URL}/api/game/rooms/${activeCode}`, { credentials: 'include' })
                 .then(res => res.json())
                 .then(data => {
                     if (Array.isArray(data)) setTakenCharacters(data);
@@ -23,7 +23,7 @@ function GameRoom({ onConfirm }) {
             
             // Poll every 3 seconds while in character selection to update taken characters
             const interval = setInterval(() => {
-                fetch(`${API_BASE_URL}/api/game/rooms/${activeCode}`)
+                fetch(`${API_BASE_URL}/api/game/rooms/${activeCode}`, { credentials: 'include' })
                     .then(res => res.json())
                     .then(data => {
                         if (Array.isArray(data)) setTakenCharacters(data);
@@ -46,6 +46,7 @@ function GameRoom({ onConfirm }) {
             fetch(`${API_BASE_URL}/api/game/rooms/create`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
                 body: JSON.stringify({ roomCode: newCode })
             }).then(() => {
                 setRoomCode(newCode);
@@ -62,7 +63,7 @@ function GameRoom({ onConfirm }) {
         setJoinError('');
         if (joinCode.trim().length > 0) {
             try {
-                const res = await fetch(`${API_BASE_URL}/api/game/rooms/${joinCode}/exists`);
+                const res = await fetch(`${API_BASE_URL}/api/game/rooms/${joinCode}/exists`, { credentials: 'include' });
                 if (!res.ok) {
                     throw new Error("Bad response from server");
                 }

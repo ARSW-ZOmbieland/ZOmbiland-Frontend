@@ -1,0 +1,25 @@
+name: Deploy Frontend
+on:
+  push:
+    branches: [ "release" ]
+
+jobs:
+  deploy:
+    name: Deploy to Self-Hosted Server
+    runs-on: self-hosted
+
+    steps:
+      - name: Update code and restart container
+        run: |
+          # NAVEGAR A LA CARPETA DEL PROYECTO
+          cd ~/Proyecto-ARSW/ZOmbiland-Frontend
+          
+          # ACTUALIZAR EL CODIGO
+          git pull
+          
+          # RECONSTRUIR Y REINICIAR SOLO EL FRONTEND
+          cd ..
+          docker compose up -d --build frontend
+          
+          # LIMPIEZA DE IMAGENES ANTIGUAS (SIN BORRAR VOLUMENES)
+          docker image prune -f

@@ -49,7 +49,7 @@ const BunkerRoom = ({ onTeleport, character, roomCode, onRestart, isPaused, onPa
       });
 
       // Sincronizar estado inicial de la sala para ver a quienes ya estaban quietos
-      fetch(`/api/game/rooms/${roomCode}/state`)
+      fetch(`${API_BASE_URL}/api/game/rooms/${roomCode}/state`, { credentials: 'include' })
         .then(res => res.json())
         .then(playersInfo => {
            if (Array.isArray(playersInfo)) {

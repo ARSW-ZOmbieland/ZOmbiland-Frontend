@@ -49,7 +49,7 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
     // Configurar WebSockets para la sala
     webSocketService.connect(() => {
         // Obtenemos el mapa
-        fetch(`${API_BASE_URL}/api/game/rooms/${roomCode}/map`)
+        fetch(`${API_BASE_URL}/api/game/rooms/${roomCode}/map`, { credentials: 'include' })
         .then(res => res.json())
         .then(data => {
             setMapData(data);
@@ -107,8 +107,8 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
             }
         });
 
-        // Sincronizar estado inicial
-        fetch(`${API_BASE_URL}/api/game/rooms/${roomCode}/state`)
+        // Sincronizar estado inicial de la sala para ver a quienes ya estaban quietos
+        fetch(`${API_BASE_URL}/api/game/rooms/${roomCode}/state`, { credentials: 'include' })
         .then(res => res.json())
         .then(playersInfo => {
             if (Array.isArray(playersInfo)) {
