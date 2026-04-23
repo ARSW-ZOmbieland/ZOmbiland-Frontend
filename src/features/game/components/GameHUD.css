@@ -1,0 +1,151 @@
+.game-hud {
+  position: fixed;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 95%;
+  max-width: 800px;
+  height: 70px;
+  background: rgba(10, 10, 10, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(50, 205, 50, 0.3);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  z-index: 1000;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5), 
+              inset 0 0 10px rgba(50, 205, 50, 0.1);
+  box-sizing: border-box;
+}
+
+.hud-left {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex: 1;
+}
+
+.player-avatar-container {
+  width: 50px;
+  height: 50px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 2px solid #32CD32;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 10px rgba(50, 205, 50, 0.4);
+}
+
+.player-avatar {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.player-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex: 1;
+}
+
+.player-name {
+  color: #fff;
+  font-family: 'Courier New', Courier, monospace;
+  font-weight: bold;
+  letter-spacing: 1px;
+  font-size: 0.9rem;
+}
+
+.main-health-container {
+  width: 100%;
+  max-width: 250px;
+}
+
+.health-label {
+  color: #32CD32;
+  font-size: 0.7rem;
+  font-weight: bold;
+  margin-bottom: 2px;
+  display: block;
+}
+
+.health-track {
+  width: 100%;
+  height: 12px;
+  background: #111;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  position: relative;
+}
+
+.health-fill {
+  height: 100%;
+  transition: width 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  position: relative;
+}
+
+.health-inner-highlight {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 50%;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.hud-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.room-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.room-label {
+  color: #666;
+  font-size: 0.6rem;
+  font-weight: bold;
+}
+
+.room-id {
+  color: #32CD32;
+  font-family: monospace;
+  font-size: 1.1rem;
+  text-shadow: 0 0 10px rgba(50, 205, 50, 0.5);
+}
+
+/* Animaciones */
+@keyframes pulse-danger {
+  0% { opacity: 1; box-shadow: 0 0 5px #ff0000; }
+  100% { opacity: 0.6; box-shadow: 0 0 20px #ff0000; }
+}
+
+.pulse-danger {
+  animation: pulse-danger 0.5s infinite alternate;
+}
+
+@media (max-width: 480px) {
+  .game-hud {
+    height: 60px;
+    padding: 0 10px;
+  }
+  .player-name {
+    font-size: 0.8rem;
+  }
+  .main-health-container {
+    max-width: 140px;
+  }
+  .room-id {
+    font-size: 0.9rem;
+  }
+}

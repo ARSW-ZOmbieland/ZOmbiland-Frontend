@@ -6,6 +6,10 @@ export default defineConfig({
   plugins: [react()],
   server: {
     host: true,
+    allowedHosts: [
+      'gran-sabio.tail2474b3.ts.net',
+      'server-sabio.tail2474b3.ts.net'
+    ],
     watch: {
       usePolling: true,
     }

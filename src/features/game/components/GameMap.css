@@ -1,0 +1,378 @@
+:root {
+  --tile-size: 95px;
+  --sprite-size: 114px;
+  --sprite-offset: -19px;
+}
+
+@media (max-width: 768px) {
+  :root {
+    --tile-size: 60px;
+    --sprite-size: 72px;
+    --sprite-offset: -12px;
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    --tile-size: 40px;
+    --sprite-size: 48px;
+    --sprite-offset: -8px;
+  }
+}
+
+.game-viewport {
+  width: 100%;
+  height: 100%;
+  max-width: 100vw;
+  max-height: 100vh;
+  overflow: hidden;
+  position: relative;
+  background-color: #050505;
+  margin: 0;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+  z-index: 5;
+}
+
+.game-map-container {
+  position: relative;
+  transition: transform 0.1s ease-out;
+  will-change: transform;
+}
+
+.tile, .ground-tile, .entity-tile {
+  width: var(--tile-size);
+  height: var(--tile-size);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ground-tile {
+  background-color: #2a1f1a;
+  border: 1px solid rgba(255,255,255,0.05);
+}
+
+.entity-tile {
+  overflow: visible !important;
+}
+
+
+.tile-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.bush-prop {
+  transform: scale(1.8);
+  transform-origin: center center;
+  z-index: 6;
+  pointer-events: none;
+}
+
+.tree-prop {
+  transform: scale(2.2);
+  transform-origin: bottom center;
+  z-index: 8;
+  pointer-events: none;
+}
+
+.bunker-prop {
+  transform: scale(1.3);
+  transform-origin: center center;
+  z-index: 7;
+  pointer-events: none;
+}
+
+.forest-prop {
+  transform: scale(1.5);
+  transform-origin: bottom center;
+  z-index: 7;
+  pointer-events: none;
+}
+
+.city-building {
+  width: 400% !important;
+  height: auto !important;
+  object-fit: contain !important;
+  bottom: 0px !important;
+  top: auto !important;
+  left: -150% !important;
+  transform: none !important;
+  z-index: 9;
+  pointer-events: none;
+}
+
+.urban-prop {
+  transform: scale(1.5);
+  transform-origin: center center;
+  z-index: 7;
+  pointer-events: none;
+}
+
+.street-light-prop {
+  height: 350% !important;
+  width: auto !important;
+  object-fit: contain !important;
+  bottom: 0px !important;
+  top: auto !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  z-index: 8;
+  pointer-events: none;
+}
+
+.barricade-prop {
+  transform: scale(1.5);
+  transform-origin: bottom center;
+  z-index: 6;
+  pointer-events: none;
+}
+
+.bush-prop, .tree-prop, .bunker-prop, .forest-prop, .urban-prop, .barricade-prop {
+  object-fit: contain !important;
+}
+
+.player-sprite {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.sprite-image {
+  width: var(--sprite-size);
+  height: var(--sprite-size);
+  object-fit: contain;
+  margin-top: var(--sprite-offset);
+}
+
+/* Vignette effect to focus on the area */
+.vision-vignette {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  box-shadow: inset 0 0 40px rgba(0,0,0,0.7);
+  z-index: 20;
+}
+
+/* Identificador del jugador (Eliminado para evitar "flotantes") */
+.player-indicator {
+  display: none;
+}
+
+/* Barra de Vida */
+.health-bar-container {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 50px;
+  height: 6px;
+  background-color: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 3px;
+  overflow: hidden;
+  z-index: 16;
+}
+
+.health-bar-fill {
+  height: 100%;
+  transition: width 0.3s ease-out, background-color 0.3s ease;
+}
+
+@media (max-width: 768px) {
+  .player-indicator {
+    top: -12px;
+    border-left-width: 6px;
+    border-right-width: 6px;
+    border-top-width: 8px;
+    margin-left: -6px;
+  }
+}
+
+/* Estado Muerto */
+.game-map-container.is-dead {
+  filter: grayscale(1) contrast(1.2) brightness(0.6);
+  transition: filter 1s ease-in-out;
+}
+
+.death-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 100;
+  animation: fade-in-red 2s forwards;
+}
+
+/* Compañeros muertos */
+.other-player-dead {
+  filter: grayscale(1) opacity(0.8);
+  transform: rotate(-90deg) scale(0.8);
+  transform-origin: center bottom;
+  transition: all 0.5s ease-in-out;
+}
+
+.other-player-dead .health-bar-container {
+  display: none; /* No mostrar barra de vida a los muertos */
+}
+
+.death-message {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 4rem;
+  color: #ff0000;
+  font-weight: bold;
+  text-shadow: 0 0 20px #900, 0 0 40px #000;
+  letter-spacing: 15px;
+  margin-bottom: 20px;
+  animation: pulse-death 2s infinite;
+}
+
+.death-subtext {
+  font-size: 1.2rem;
+  color: #ccc;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 30px;
+}
+
+.lobby-restart-btn {
+  padding: 15px 40px;
+  min-width: 280px;
+  background: linear-gradient(135deg, #32CD32 0%, #1a8b1a 100%);
+  color: white;
+  border: 3px solid #50ff50;
+  border-radius: 12px;
+  text-transform: uppercase;
+  font-weight: bold;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  animation: pulse-border 2s infinite;
+}
+
+.lobby-restart-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 40px rgba(50, 205, 50, 0.4);
+}
+
+.lobby-restart-btn:active {
+  transform: scale(0.95);
+}
+
+.countdown-timer-red {
+  color: #ff0000;
+  font-family: 'Courier New', Courier, monospace;
+  font-weight: 900;
+  text-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+}
+
+.lobby-restart-btn.is-active:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 30px rgba(50, 205, 50, 0.5);
+}
+
+@keyframes pulse-border {
+  0% { box-shadow: 0 0 0px rgba(50, 205, 50, 0.4); }
+  50% { box-shadow: 0 0 20px rgba(50, 205, 50, 0.7); }
+  100% { box-shadow: 0 0 0px rgba(50, 205, 50, 0.4); }
+}
+
+
+@keyframes fade-in-red {
+  0% { background-color: rgba(0, 0, 0, 0); }
+  100% { background-color: rgba(60, 0, 0, 0.4); }
+}
+
+@keyframes pulse-death {
+  0% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.1); opacity: 1; }
+  100% { transform: scale(1); opacity: 0.8; }
+}
+
+/* Efecto de daño (Hit Flash Transient) */
+.zombie-hit-flash {
+  animation: hit-flash-red 0.3s ease-out;
+}
+
+@keyframes hit-flash-red {
+  0% { filter: brightness(1); }
+  20% { filter: brightness(2) sepia(1) saturate(10000%) hue-rotate(0deg); }
+  100% { filter: brightness(1); }
+}
+
+/* Capa de Proyectiles Independiente para Optimización */
+.bullet-overlay-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 500; /* Por encima de los personajes */
+}
+
+.muzzle-flash {
+  position: absolute;
+  width: 25px;
+  height: 25px;
+  background: radial-gradient(circle, #fff, #ffcc00, transparent);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 2000;
+  animation: flash-grow 0.1s ease-out forwards;
+}
+
+@keyframes flash-grow {
+  0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(2); opacity: 0; }
+}
+
+/* Indicador de Puntería (Pistola) */
+.weapon-aim-indicator {
+  position: absolute;
+  width: var(--tile-size);
+  height: var(--tile-size);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 50;
+  filter: drop-shadow(0 0 8px rgba(50, 205, 50, 0.4));
+}
+
+.weapon-aim-image {
+  width: 80%;
+  height: 80%;
+  object-fit: contain;
+  opacity: 0.9;
+}
+
+/* Ocultar el cursor default sobre el mapa para mayor inmersión */
+.game-viewport {
+  cursor: none !important;
+}

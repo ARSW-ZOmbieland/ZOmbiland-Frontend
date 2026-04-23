@@ -22,7 +22,7 @@ const PROP_ASSETS = {
 const TILE_SIZE = 70;
 const VIEWPORT_TILES = 9;
 
-const GameMap = ({ matrix, playerPos, playerSprite }) => {
+const GameMap = ({ matrix, playerPos, playerSprite, zombies = [] }) => {
   if (!matrix || matrix.length === 0 || !playerPos) return null;
 
   const rows = matrix.length;
@@ -65,6 +65,21 @@ const GameMap = ({ matrix, playerPos, playerSprite }) => {
     );
   };
 
+  const renderZombies = (x, y) => {
+    if (!zombies) return null;
+    return zombies.filter(z => Math.floor(z.x) === x && Math.floor(z.y) === y).map((z, i) => (
+      <div key={`zombie-${i}`} className="player-sprite zombie-sprite">
+        <img 
+          src={`/zombies/comun/${z.direction}.gif`} 
+          alt="zombie" 
+          className="sprite-image" 
+          onError={(e) => { e.target.onerror = null; e.target.src=`/zombies/comun/abajo.gif`; }}
+        />
+      </div>
+    ));
+  };
+
+  // Create the visible subset of tiles
   const visibleTiles = [];
   for (let y = startY; y < endY; y++) {
     for (let x = startX; x < endX; x++) {
@@ -83,47 +98,23 @@ const GameMap = ({ matrix, playerPos, playerSprite }) => {
           position: 'relative'
         }}
       >
-        {visibleTiles.map(({ x, y, cell }) => {
-          // Handle both simple ID (bunker) and layered object (world)
-          const groundID = typeof cell === 'object' ? cell.g : (cell < 10 ? cell : 0);
-          const propID = typeof cell === 'object' ? cell.p : (cell >= 10 ? cell : null);
-
-          return (
-            <div 
-              key={`${x}-${y}`} 
-              className="tile"
-              style={{
-                position: 'absolute',
-                left: `${x * TILE_SIZE}px`,
-                top: `${y * TILE_SIZE}px`,
-                backgroundColor: 'transparent',
-                border: 'none',
-                overflow: 'visible'
-              }}
-            >
-              {/* Layer 1: Ground */}
-              <img 
-                src={GROUND_ASSETS[groundID] || GROUND_ASSETS[0]} 
-                alt="ground" 
-                className="tile-image" 
-                style={{ position: 'absolute', zIndex: 1 }} 
-              />
-              
-              {/* Layer 2: Prop */}
-              {propID && (
-                <img 
-                  src={PROP_ASSETS[propID]} 
-                  alt="prop" 
-                  className="tile-image" 
-                  style={{ position: 'absolute', zIndex: 5 }} 
-                />
-              )}
-            </div>
-          );
-        })}
-
-        {/* Layer 3: Player */}
-        {renderPlayerSprite()}
+        {visibleTiles.map(({ x, y, cell }) => (
+          <div 
+            key={`${x}-${y}`} 
+            className="tile"
+            style={{
+              position: 'absolute',
+              left: `${x * TILE_SIZE}px`,
+              top: `${y * TILE_SIZE}px`
+            }}
+          >
+            {TILE_ASSETS[cell] && (
+              <img src={TILE_ASSETS[cell]} alt={`tile-${cell}`} className="tile-image" />
+            )}
+            {renderZombies(x, y)}
+            {renderPlayer(x, y)}
+          </div>
+        ))}
       </div>
       <div className="vision-vignette"></div>
     </div>

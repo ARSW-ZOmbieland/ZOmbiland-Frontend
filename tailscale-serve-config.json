@@ -1,0 +1,12 @@
+{
+  "version": "alpha0",
+  "web": {
+    "server-sabio.tail2474b3.ts.net:443": {
+      "handlers": {
+        "/": {
+          "proxy": "http://127.0.0.1:80"
+        }
+      }
+    }
+  }
+}

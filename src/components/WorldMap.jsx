@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import GameMap from './GameMap';
 import { WORLD_MAP_MATRIX, isWalkable, TILE_TYPES } from '../logic/GameEngine';
+import { useZombieAI } from '../hooks/useZombieAI';
 
 const WorldMap = ({ onExit, character }) => {
   // Start near the entrance (1,1)
@@ -11,6 +12,14 @@ const WorldMap = ({ onExit, character }) => {
   });
   const [matrix] = useState(WORLD_MAP_MATRIX);
   const moveTimer = useRef(null);
+
+  // IA del zombie
+  const { zombiePos, direction: zombieDir } = useZombieAI(
+    playerPos, 
+    matrix, 
+    { x: 3, y: 1 }, // Spawning at 3,1 for testing (player starts at 2,1)
+    {} // En esta versión simplificada no hay otherPlayers por ahora
+  );
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -62,6 +71,7 @@ const WorldMap = ({ onExit, character }) => {
           direction: playerState.direction,
           isMoving: playerState.isMoving
         }}
+        zombies={[{ x: zombiePos.x, y: zombiePos.y, direction: zombieDir }]}
       />
     </div>
   );

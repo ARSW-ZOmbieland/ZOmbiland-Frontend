@@ -76,9 +76,9 @@ export const INITIAL_BUNKER_MATRIX = [
 
 export const isWalkable = (matrix, x, y) => {
     if (y < 0 || y >= matrix.length || x < 0 || x >= matrix[0].length) return false;
-    const cell = matrix[y][x];
-    if (typeof cell === 'object') {
-        return cell.p === null || cell.p < 10;
-    }
-    return cell < 10;
+    const tile = matrix[y][x];
+    if (typeof tile === 'object') return false; // Future object handling
+    if (tile === 72) return true;               // Street lights are walkable
+    if (tile >= 20 && tile <= 22) return true;  // Bushes are walkable
+    return tile < 10; // Simple collision logic: types >= 10 are solid or interactive
 };
