@@ -52,7 +52,8 @@ function App() {
   useEffect(() => {
     // Check if user is authenticated upon load
     fetch(`${API_BASE_URL}/api/auth/user`, {
-      credentials: 'include'
+      credentials: 'include',
+      redirect: 'error' // Do not follow redirects to Google to avoid CORS error
     })
       .then(response => {
         if (response.ok) return response.json();
@@ -62,7 +63,8 @@ function App() {
         setUser(data);
         setAuthLoading(false);
       })
-      .catch(() => {
+      .catch((err) => {
+        // Silently handle auth failure - user will see login screen
         setUser(null);
         setAuthLoading(false);
       });
