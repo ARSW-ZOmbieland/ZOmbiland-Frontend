@@ -49,11 +49,12 @@ function App() {
     window.location.href = `${API_BASE_URL}/logout`;
   };
 
+  // 1. Check authentication ONLY ONCE on mount
   useEffect(() => {
-    // Check if user is authenticated upon load
+    setAuthLoading(true);
     fetch(`${API_BASE_URL}/api/auth/user`, {
       credentials: 'include',
-      redirect: 'error' // Do not follow redirects to Google to avoid CORS error
+      redirect: 'manual' // More graceful than 'error'
     })
       .then(response => {
         if (response.ok) return response.json();
@@ -63,11 +64,14 @@ function App() {
         setUser(data);
         setAuthLoading(false);
       })
-      .catch((err) => {
-        // Silently handle auth failure - user will see login screen
+      .catch(() => {
         setUser(null);
         setAuthLoading(false);
       });
+  }, []); // Empty dependency array = only runs once
+
+  // 2. Global Pause Handler (Esc or Enter) - Runs when gameState or isPaused changes
+  useEffect(() => {
 
     // Global Pause Handler (Esc or Enter)
     const handleGlobalKeyDown = (e) => {
@@ -91,7 +95,7 @@ function App() {
 
     window.addEventListener('keydown', handleGlobalKeyDown);
     return () => window.removeEventListener('keydown', handleGlobalKeyDown);
-  }, [gameState]);
+  }, [gameState, isPaused, roomCode, selectedCharacter]); // Correct dependencies for the key listener
 
   if (authLoading || !assetsLoaded) {
     return (
