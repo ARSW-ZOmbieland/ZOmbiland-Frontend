@@ -3,6 +3,7 @@ import GameMap from './GameMap';
 import TouchControls from './TouchControls';
 import { INITIAL_BUNKER_MATRIX, TILE_TYPES } from '../../../core/GameEngine';
 import { usePlayerMovement } from '../../../hooks/usePlayerMovement';
+import { API_BASE_URL } from '../../../config/constants';
 import webSocketService from '../../../core/WebSocketService';
 
 const SPAWN_POINTS = {

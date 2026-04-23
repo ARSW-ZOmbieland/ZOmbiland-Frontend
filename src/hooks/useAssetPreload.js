@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ALL_ASSETS } from '../config/constants';
 
-const CHARACTERS = ['alex', 'andres', 'juanpablo', 'maria', 'tomas'];
+const CHARACTERS = ['andres', 'juanpablo', 'maria', 'tomas'];
 const DIRECTIONS = ['abajo', 'arriba', 'derecha', 'izquierda', 'adelante'];
 
 /**
