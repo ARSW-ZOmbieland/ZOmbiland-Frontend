@@ -299,32 +299,77 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
   const startY = Math.max(0, Math.floor(playerPos.y - 12));
   const endY = Math.min(rows, Math.floor(playerPos.y + 13));
 
-  const renderPlayer = (x, y) => {
-    if (!playerSprite || !playerSprite.character) return null;
-    if (Math.floor(playerPos.x) !== x || Math.floor(playerPos.y) !== y) return null;
+  // --- PERFORMANCE FIX: PRE-INDEX ENTITIES BY POSITION ---
+  const entityMap = React.useMemo(() => {
+    const map = new Map();
+    
+    // Index Zombies
+    if (zombies) {
+      zombies.forEach(z => {
+        const key = `${Math.floor(z.x)}-${Math.floor(z.y)}`;
+        if (!map.has(key)) map.set(key, { zombies: [], players: [] });
+        map.get(key).zombies.push(z);
+      });
+    }
 
-    const { character, direction, isMoving, health } = playerSprite;
-    return (
-      <div className="player-sprite" style={{ zIndex: y * 10 + 12 }}>
-        <HealthBar health={health || 100} />
-        <SpritePlayer 
-          characterId={character} 
-          direction={direction} 
-          isMoving={isMoving} 
-          isDead={isDead} 
-          aimAngle={aimAngle}
-        />
-      </div>
-    );
-  };
+    // Index Other Players
+    if (otherPlayers) {
+      Object.values(otherPlayers).forEach(p => {
+        const key = `${Math.floor(p.x)}-${Math.floor(p.y)}`;
+        if (!map.has(key)) map.set(key, { zombies: [], players: [] });
+        map.get(key).players.push(p);
+      });
+    }
+    
+    return map;
+  }, [zombies, otherPlayers]);
 
-  const renderZombies = (x, y) => {
-    if (!zombies || zombies.length === 0) return null;
-    return zombies.filter(z => Math.floor(z.x) === x && Math.floor(z.y) === y).map((z) => (
-      <div key={z.id} className={`player-sprite zombie-sprite ${hitZombies.has(z.id) ? 'zombie-hit-flash' : ''}`} style={{ zIndex: y * 10 + 11 }}>
-        <SpriteZombie direction={z.direction} isAttacking={z.attacking} />
-      </div>
-    ));
+  const renderCellEntities = (x, y) => {
+    const key = `${x}-${y}`;
+    const cellEntities = entityMap.get(key);
+    const elements = [];
+
+    // 1. Zombies
+    if (cellEntities && cellEntities.zombies.length > 0) {
+      cellEntities.zombies.forEach(z => {
+        elements.push(
+          <div key={`zombie-${z.id}`} className={`player-sprite zombie-sprite ${hitZombies.has(z.id) ? 'zombie-hit-flash' : ''}`} style={{ zIndex: y * 10 + 11 }}>
+            <SpriteZombie direction={z.direction} isAttacking={z.attacking} />
+          </div>
+        );
+      });
+    }
+
+    // 2. Main Player
+    if (Math.floor(playerPos.x) === x && Math.floor(playerPos.y) === y) {
+      const { character, direction, isMoving, health } = playerSprite;
+      elements.push(
+        <div key="main-player" className="player-sprite" style={{ zIndex: y * 10 + 12 }}>
+          <HealthBar health={health || 100} />
+          <SpritePlayer 
+            characterId={character} 
+            direction={direction} 
+            isMoving={isMoving} 
+            isDead={isDead} 
+            aimAngle={aimAngle}
+          />
+        </div>
+      );
+    }
+
+    // 3. Other Players
+    if (cellEntities && cellEntities.players.length > 0) {
+      cellEntities.players.forEach(p => {
+        elements.push(
+          <div key={`other-${p.playerId}`} className="player-sprite" style={{ zIndex: y * 10 + 12 }}>
+            <HealthBar health={p.health !== undefined ? p.health : 100} />
+            <SpritePlayer characterId={p.playerId} direction={p.action || 'abajo'} isMoving={true} isDead={p.health <= 0} aimAngle={p.aimAngle || 0} />
+          </div>
+        );
+      });
+    }
+
+    return elements;
   };
 
   const visibleTiles = [];
@@ -350,49 +395,42 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
           position: 'relative'
         }}
       >
-        {/* Pass 1: Ground Tiles */}
+        {/* Pass 1: Unified Map Render (Ground + Props + Entities + Aim) */}
         {visibleTiles.map(({ x, y, cell }) => {
           const groundID = typeof cell === 'object' ? cell.g : (cell < 10 ? cell : 0);
-          return (
-            <div key={`ground-${x}-${y}`} className="tile ground-tile" style={{ position: 'absolute', left: `calc(${x} * var(--tile-size))`, top: `calc(${y} * var(--tile-size))`, zIndex: 1 }}>
-              <img src={GROUND_ASSETS[groundID] || GROUND_ASSETS[0]} alt="ground" className="tile-image" />
-            </div>
-          );
-        })}
-        {/* Pass 2: Props and Entities */}
-        {visibleTiles.map(({ x, y, cell }) => {
           const propID = typeof cell === 'object' ? cell.p : (cell >= 10 && cell !== 99 ? cell : null);
+          const isHovered = !isDead && !isPaused && hoveredTile && hoveredTile.x === x && hoveredTile.y === y;
+          
           return (
-            <div key={`entity-layer-${x}-${y}`} className="entity-tile" style={{ position: 'absolute', left: `calc(${x} * var(--tile-size))`, top: `calc(${y} * var(--tile-size))`, zIndex: y * 10 + 5, pointerEvents: 'none' }}>
-              {propID && propID !== 99 && (
-                <img src={PROP_ASSETS[propID]} alt="prop" className={`tile-image ${propID >= 20 && propID <= 22 ? 'bush-prop' : ''} ${propID >= 30 && propID <= 34 ? 'tree-prop' : ''} ${propID >= 40 && propID <= 49 ? 'bunker-prop' : ''} ${propID >= 50 && propID <= 59 ? 'forest-prop' : ''} ${propID >= 60 && propID <= 69 ? 'city-building' : ''} ${propID >= 70 && propID <= 89 && propID !== 72 ? 'urban-prop' : ''} ${propID === 72 ? 'street-light-prop' : ''} ${propID === 90 ? 'barricade-prop' : ''}`} style={{ position: 'absolute', zIndex: 1, top: 0, left: 0 }} />
-              )}
-              {renderZombies(x, y)}
-              {renderPlayer(x, y)}
-              {Object.values(otherPlayers).filter(p => Math.floor(p.x) === x && Math.floor(p.y) === y).map(p => (
-                <div key={p.playerId} className="player-sprite" style={{ zIndex: 2 }}>
-                  <HealthBar health={p.health !== undefined ? p.health : 100} />
-                  <SpritePlayer characterId={p.playerId} direction={p.action || 'abajo'} isMoving={true} isDead={p.health <= 0} aimAngle={p.aimAngle || 0} />
+            <React.Fragment key={`tile-group-${x}-${y}`}>
+              {/* Ground */}
+              <div className="tile ground-tile" style={{ position: 'absolute', left: `calc(${x} * var(--tile-size))`, top: `calc(${y} * var(--tile-size))`, zIndex: 1 }}>
+                <img src={GROUND_ASSETS[groundID] || GROUND_ASSETS[0]} alt="ground" className="tile-image" />
+              </div>
+              
+              {/* Entities and Props */}
+              <div className="entity-tile" style={{ position: 'absolute', left: `calc(${x} * var(--tile-size))`, top: `calc(${y} * var(--tile-size))`, zIndex: y * 10 + 5, pointerEvents: 'none' }}>
+                {propID && propID !== 99 && (
+                  <img src={PROP_ASSETS[propID]} alt="prop" className={`tile-image ${propID >= 20 && propID <= 22 ? 'bush-prop' : ''} ${propID >= 30 && propID <= 34 ? 'tree-prop' : ''} ${propID >= 40 && propID <= 49 ? 'bunker-prop' : ''} ${propID >= 50 && propID <= 59 ? 'forest-prop' : ''} ${propID >= 60 && propID <= 69 ? 'city-building' : ''} ${propID >= 70 && propID <= 89 && propID !== 72 ? 'urban-prop' : ''} ${propID === 72 ? 'street-light-prop' : ''} ${propID === 90 ? 'barricade-prop' : ''}`} style={{ position: 'absolute', zIndex: 1, top: 0, left: 0 }} />
+                )}
+                {renderCellEntities(x, y)}
+              </div>
+
+              {/* Aim Layer */}
+              {isHovered && (
+                <div style={{ position: 'absolute', left: `calc(${x} * var(--tile-size))`, top: `calc(${y} * var(--tile-size))`, zIndex: y * 10 + 20 }}>
+                  <div className="weapon-aim-indicator">
+                    <img 
+                      src={`/assets/weapons/weapon direction/${getWeaponDirection(aimAngle)}.png`} 
+                      alt="aim"
+                      className="weapon-aim-image"
+                    />
+                  </div>
                 </div>
-              ))}
-            </div>
+              )}
+            </React.Fragment>
           );
         })}
-
-        {/* Pass 3: Hover/Aim Indicator (Still inside grid for coordinate matching) */}
-        {visibleTiles.map(({ x, y }) => (
-          <div key={`aim-layer-${x}-${y}`} style={{ position: 'absolute', left: `calc(${x} * var(--tile-size))`, top: `calc(${y} * var(--tile-size))` }}>
-              {!isDead && !isPaused && hoveredTile && hoveredTile.x === x && hoveredTile.y === y && (
-                <div className="weapon-aim-indicator" style={{ zIndex: y * 10 + 20 }}>
-                  <img 
-                    src={`/assets/weapons/weapon direction/${getWeaponDirection(aimAngle)}.png`} 
-                    alt="aim"
-                    className="weapon-aim-image"
-                  />
-                </div>
-              )}
-            </div>
-        ))}
 
         {/* --- PERFORMANCE FIX: INDEPENDENT BULLET LAYER --- */}
         <div className="bullet-overlay-layer" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 999 }}>
