@@ -1,4 +1,4 @@
-name: Deploy Backend
+name: Deploy Frontend
 on:
   push:
     branches: [ "release" ]
@@ -11,8 +11,8 @@ jobs:
     steps:
       - name: Update code and infrastructure
         run: |
-          # 1. NAVEGAR AL REPO DE BACKEND
-          cd ~/Proyecto-ARSW/ZOmbiland-Backend
+          # 1. NAVEGAR AL REPO DE FRONTEND
+          cd ~/Proyecto-ARSW/ZOmbiland-Frontend
           
           # 2. ACTUALIZAR EL CODIGO (FORZADO)
           git fetch origin release
@@ -24,8 +24,7 @@ jobs:
           cp tailscale-serve-config.json ..
           
           # 4. ACTUALIZAR TAILSCALE SERVE
-          # Usamos --all para asegurar que se aplique a todo el nodo
-          tailscale serve set-config --all < tailscale-serve-config.json
+          tailscale serve set-config --all tailscale-serve-config.json
           
           # 5. RECONSTRUIR Y REINICIAR TODO EL PROYECTO
           cd ..
