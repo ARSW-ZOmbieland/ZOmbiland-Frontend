@@ -21,4 +21,4 @@ jobs:
         run: |
           cd /home/juan/ZOmbiland-Prod
           # Restart the frontend container specifically if it's already up
-          docker compose -p zombieland-prod -f docker-compose.prod.yml up -d --build frontend-prod
+          /usr/bin/docker compose -p zombieland-prod -f docker-compose.prod.yml up -d --build frontend-prod

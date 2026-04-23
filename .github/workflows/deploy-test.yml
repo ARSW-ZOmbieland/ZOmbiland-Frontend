@@ -21,4 +21,4 @@ jobs:
         run: |
           cd /home/juan/ZOmbiland-Test
           # Restart the frontend container specifically if it's already up
-          docker compose -f docker-compose.test.yml up -d --build frontend
+          /usr/bin/docker compose -f docker-compose.test.yml up -d --build frontend
