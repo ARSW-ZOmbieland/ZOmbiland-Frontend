@@ -14,8 +14,8 @@ jobs:
 
       - name: Sync Code to Test Directory
         run: |
-          mkdir -p /home/juan/ZOmbiland-Test/ZOmbiland-Frontend
-          rsync -avz --exclude '.git' ./ /home/juan/ZOmbiland-Test/ZOmbiland-Frontend/
+          /usr/bin/mkdir -p /home/juan/ZOmbiland-Test/ZOmbiland-Frontend
+          /usr/bin/rsync -avz --exclude '.git' ./ /home/juan/ZOmbiland-Test/ZOmbiland-Frontend/
 
       - name: Deploy with Docker Compose (Test)
         run: |
