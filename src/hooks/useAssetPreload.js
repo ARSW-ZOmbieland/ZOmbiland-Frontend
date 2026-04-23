@@ -18,7 +18,8 @@ export const useAssetPreload = () => {
         // Add all character animation frames
         CHARACTERS.forEach(char => {
             imageUrls.push(`/personajes/${char}/no-seleccion.png`);
-            DIRECTIONS.forEach(dir => {
+            const directions = char === 'maria' ? ['adelante', 'arriba', 'izquierda', 'derecha'] : ['abajo', 'arriba', 'izquierda', 'derecha'];
+            directions.forEach(dir => {
                 imageUrls.push(`/personajes/${char}/${dir}.gif`);
             });
         });
