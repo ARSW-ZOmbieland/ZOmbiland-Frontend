@@ -12,7 +12,7 @@ jobs:
       - name: Update code and infrastructure
         run: |
           # 1. NAVEGAR AL REPO DE FRONTEND
-          cd ~/Proyecto-ARSW/ZOmbiland-Frontend
+          cd /home/juan/Proyecto-ARSW/ZOmbiland-Frontend
           
           # 2. ACTUALIZAR EL CODIGO (FORZADO)
           git fetch origin release
