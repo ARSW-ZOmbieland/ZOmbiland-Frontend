@@ -1,0 +1,24 @@
+name: Deploy Test (Release)
+
+on:
+  push:
+    branches:
+      - release
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Sync Code to Test Directory
+        run: |
+          mkdir -p /home/juan/ZOmbiland-Test/ZOmbiland-Frontend
+          rsync -avz --exclude '.git' ./ /home/juan/ZOmbiland-Test/ZOmbiland-Frontend/
+
+      - name: Deploy with Docker Compose (Test)
+        run: |
+          cd /home/juan/ZOmbiland-Test
+          # Restart the frontend container specifically if it's already up
+          docker compose -f docker-compose.test.yml up -d --build frontend
