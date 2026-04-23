@@ -9,17 +9,25 @@ jobs:
     runs-on: self-hosted
 
     steps:
-      - name: Update code and restart container
+      - name: Update code and infrastructure
         run: |
-          # NAVEGAR A LA CARPETA DEL PROYECTO
+          # 1. NAVEGAR AL REPO DE FRONTEND
           cd ~/Proyecto-ARSW/ZOmbiland-Frontend
           
-          # ACTUALIZAR EL CODIGO
+          # 2. ACTUALIZAR EL CODIGO
           git pull
           
-          # RECONSTRUIR Y REINICIAR SOLO EL FRONTEND
-          cd ..
-          docker compose up -d --build frontend
+          # 3. COPIAR ARCHIVOS DE INFRAESTRUCTURA A LA RAÍZ
+          cp docker-compose.yml ..
+          cp nginx.conf ..
+          cp tailscale-serve-config.json ..
           
-          # LIMPIEZA DE IMAGENES ANTIGUAS (SIN BORRAR VOLUMENES)
+          # 4. ACTUALIZAR TAILSCALE SERVE
+          tailscale serve set-config --all < tailscale-serve-config.json
+          
+          # 5. RECONSTRUIR Y REINICIAR TODO EL PROYECTO
+          cd ..
+          docker compose up -d --build --force-recreate --remove-orphans
+          
+          # 6. LIMPIEZA DE IMAGENES ANTIGUAS
           docker image prune -f
