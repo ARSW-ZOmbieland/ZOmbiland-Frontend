@@ -16,7 +16,7 @@ const HealthBar = ({ health }) => {
   );
 };
 
-const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zombies = [], onRestart, onShoot, lastExternalShot, onAimChange, isPaused }) => {
+const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zombies = [], onRestart, onShoot, lastExternalShot, onAimChange, isPaused, mobileShotTrigger }) => {
   const [cooldown, setCooldown] = useState(90);
   const [aimAngle, setAimAngle] = useState(0);
   const [hoveredTile, setHoveredTile] = useState(null);
@@ -27,6 +27,14 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
   const [hitZombies, setHitZombies] = useState(new Set());
   const prevHealthRef = React.useRef(new Map());
   const isDead = playerSprite.health <= 0;
+
+  // NUEVO: Escuchar disparos desde controles móviles
+  useEffect(() => {
+    if (mobileShotTrigger && !isPaused && !isDead) {
+      setAimAngle(mobileShotTrigger.angle);
+      executeShot(mobileShotTrigger.angle);
+    }
+  }, [mobileShotTrigger]);
 
   // Efecto visual de "Flash" al recibir daño (Transient)
   useEffect(() => {

@@ -1,17 +1,15 @@
 import React from 'react';
 import './TouchControls.css';
 
-const TouchControls = ({ onMove, onShoot }) => {
+const TouchControls = ({ onMove, onShoot, onAimChange }) => {
   // Disparo en 8 direcciones (mapeo tipo Numpad)
   const handleShootDirection = (dx, dy) => {
-    if (onShoot) {
-      // Actualizamos la puntería visual primero
-      const angle = Math.atan2(dy, dx) * (180 / Math.PI);
-      if (onAimChange) onAimChange(angle);
-
-      // Enviamos el disparo con un vector de distancia
-      onShoot(dx * 100, dy * 100);
-    }
+    // Calculamos el ángulo
+    const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+    
+    // Al llamar a onAimChange con este ángulo especial, 
+    // el sistema detectará que es un disparo desde móvil
+    if (onAimChange) onAimChange(angle);
   };
 
   return (

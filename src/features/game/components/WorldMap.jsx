@@ -203,6 +203,8 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
     });
   }, [character, roomCode, playerPos, health]);
 
+  const [mobileShotTrigger, setMobileShotTrigger] = useState(null);
+
   if (!mapData) {
     return <div style={{ color: '#32CD32', display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', backgroundColor: '#000', fontSize: '2rem' }}>Generando mapa aleatorio...</div>;
   }
@@ -233,12 +235,16 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
         lastExternalShot={lastExternalShot}
         onAimChange={(angle) => { window.currentAimAngle = angle; }}
         isPaused={isPaused}
+        mobileShotTrigger={mobileShotTrigger}
       />
       
       <TouchControls 
         onMove={handleManualMove} 
         onShoot={handleShoot}
-        onAimChange={(angle) => { window.currentAimAngle = angle; }}
+        onAimChange={(angle) => { 
+          window.currentAimAngle = angle;
+          setMobileShotTrigger({ angle, timestamp: Date.now() });
+        }}
       />
     </div>
   );
