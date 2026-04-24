@@ -56,10 +56,10 @@
   }
   
   .room-code-badge {
-    top: 8px;
-    left: 8px;
-    right: auto;
-    transform: none;
+    top: 8px !important;
+    left: 8px !important;
+    right: auto !important;
+    transform: none !important;
     padding: 6px 15px;
     font-size: 0.75rem;
     border-radius: 8px;
