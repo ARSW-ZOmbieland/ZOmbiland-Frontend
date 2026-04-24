@@ -100,6 +100,24 @@
   align-items: center;
 }
 
+@media (max-width: 768px) {
+  .pause-content {
+    padding: 30px 40px;
+    width: 90%;
+  }
+  .pause-title {
+    font-size: 2.5rem;
+    letter-spacing: 10px;
+    margin-bottom: 30px;
+  }
+  .room-code-badge {
+    top: 5px;
+    padding: 5px 15px;
+    font-size: 0.8rem;
+    border-radius: 0 0 10px 10px;
+  }
+}
+
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }

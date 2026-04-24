@@ -293,11 +293,11 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
   const translateX = `calc(50vw - (${playerPos.x} * var(--tile-size)) - (var(--tile-size) / 2))`;
   const translateY = `calc(50vh - (${playerPos.y} * var(--tile-size)) - (var(--tile-size) / 2))`;
 
-  // Buffer de renderizado más amplio para evitar bordes cortados en pantallas panorámicas
-  const startX = Math.max(0, Math.floor(playerPos.x - 15));
-  const endX = Math.min(cols, Math.floor(playerPos.x + 16));
-  const startY = Math.max(0, Math.floor(playerPos.y - 12));
-  const endY = Math.min(rows, Math.floor(playerPos.y + 13));
+  // Buffer de renderizado más amplio para evitar bordes cortados en pantallas panorámicas (20 tiles de radio)
+  const startX = Math.max(0, Math.floor(playerPos.x - 20));
+  const endX = Math.min(cols, Math.floor(playerPos.x + 21));
+  const startY = Math.max(0, Math.floor(playerPos.y - 15));
+  const endY = Math.min(rows, Math.floor(playerPos.y + 16));
 
   // --- PERFORMANCE FIX: PRE-INDEX ENTITIES BY POSITION ---
   const entityMap = React.useMemo(() => {

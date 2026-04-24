@@ -254,6 +254,16 @@
   margin-bottom: 30px;
 }
 
+@media (max-width: 768px) {
+  .death-message {
+    font-size: 2.5rem;
+    letter-spacing: 8px;
+  }
+  .death-subtext {
+    font-size: 0.9rem;
+  }
+}
+
 .lobby-restart-btn {
   padding: 15px 40px;
   min-width: 280px;
