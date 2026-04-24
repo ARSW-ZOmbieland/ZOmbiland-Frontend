@@ -4,17 +4,14 @@ import './TouchControls.css';
 const TouchControls = ({ onMove, onShoot, onAimChange }) => {
   // Disparo en 8 direcciones (mapeo tipo Numpad)
   const handleShootDirection = (dx, dy) => {
-    // Calculamos el ángulo
     const angle = Math.atan2(dy, dx) * (180 / Math.PI);
-    
-    // Al llamar a onAimChange con este ángulo especial, 
-    // el sistema detectará que es un disparo desde móvil
-    if (onAimChange) onAimChange(angle);
+    // Notificar disparo a través de la vía oficial para móviles
+    if (onShoot) onShoot(angle);
   };
 
   const handleCenterShoot = () => {
-    // Disparo frontal (usa el ángulo actual de window)
-    if (onAimChange) onAimChange(window.currentAimAngle || 0);
+    // Disparo frontal
+    if (onShoot) onShoot(window.currentAimAngle || 0);
   };
 
   return (

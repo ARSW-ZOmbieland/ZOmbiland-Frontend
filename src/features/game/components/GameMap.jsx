@@ -176,9 +176,10 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
   useEffect(() => {
     if (mobileShotTrigger && !isPaused && !isDead) {
       setAimAngle(mobileShotTrigger.angle);
+      if (onAimChange) onAimChange(mobileShotTrigger.angle);
       executeShot(mobileShotTrigger.angle);
     }
-  }, [mobileShotTrigger, isPaused, isDead, executeShot]);
+  }, [mobileShotTrigger, isPaused, isDead, executeShot, onAimChange]);
 
   const handleMouseDown = (e) => {
     if (isDead || !onRestart) return;
