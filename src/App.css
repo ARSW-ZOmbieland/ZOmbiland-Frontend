@@ -100,24 +100,27 @@
     margin-left: 5px !important;
   }
 
-  /* Space Optimization: hide sub-info and truncate name on mobile */
-  .user-info p, 
-  .user-info .sub-text, 
-  .user-info br { 
+  /* Space Optimization: hide name entirely on mobile, show only photo */
+  .user-info { 
     display: none !important; 
-  }
-  
-  .user-info h4, .user-info div:first-child {
-    font-size: 0.75rem !important;
-    max-width: 90px !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    white-space: nowrap !important;
   }
 
   .user-overlay {
-    gap: 8px !important;
-    padding-right: 10px !important;
+    gap: 10px !important;
+    padding: 0 10px !important;
+    background: transparent !important; /* Makes it blend better with the black bar */
+    border-bottom: none !important;
+  }
+
+  .user-photo {
+    width: 32px !important;
+    height: 32px !important;
+    border: 1px solid #32CD32 !important;
+  }
+
+  .logout-btn {
+    padding: 4px 8px !important;
+    font-size: 0.7rem !important;
   }
 
   .pause-content {
