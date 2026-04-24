@@ -28,14 +28,6 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
   const prevHealthRef = React.useRef(new Map());
   const isDead = playerSprite.health <= 0;
 
-  // NUEVO: Escuchar disparos desde controles móviles
-  useEffect(() => {
-    if (mobileShotTrigger && !isPaused && !isDead) {
-      setAimAngle(mobileShotTrigger.angle);
-      executeShot(mobileShotTrigger.angle);
-    }
-  }, [mobileShotTrigger]);
-
   // Efecto visual de "Flash" al recibir daño (Transient)
   useEffect(() => {
     const newHits = new Set();
@@ -179,6 +171,14 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
         onShoot(targetX, targetY);
     }
   }, [isDead, isPaused, playerPos, onShoot]);
+
+  // NUEVO: Escuchar disparos desde controles móviles (Después de definir executeShot)
+  useEffect(() => {
+    if (mobileShotTrigger && !isPaused && !isDead) {
+      setAimAngle(mobileShotTrigger.angle);
+      executeShot(mobileShotTrigger.angle);
+    }
+  }, [mobileShotTrigger, isPaused, isDead, executeShot]);
 
   const handleMouseDown = (e) => {
     if (isDead || !onRestart) return;
