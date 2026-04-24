@@ -100,6 +100,26 @@
     margin-left: 5px !important;
   }
 
+  /* Space Optimization: hide sub-info and truncate name on mobile */
+  .user-info p, 
+  .user-info .sub-text, 
+  .user-info br { 
+    display: none !important; 
+  }
+  
+  .user-info h4, .user-info div:first-child {
+    font-size: 0.75rem !important;
+    max-width: 90px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .user-overlay {
+    gap: 8px !important;
+    padding-right: 10px !important;
+  }
+
   .pause-content {
     padding: 30px 40px;
     width: 90%;
