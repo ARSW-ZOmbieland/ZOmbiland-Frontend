@@ -5,9 +5,12 @@ const TouchControls = ({ onMove, onShoot }) => {
   // Disparo en 8 direcciones (mapeo tipo Numpad)
   const handleShootDirection = (dx, dy) => {
     if (onShoot) {
-      // Calculamos el ángulo para el disparo basándonos en dx/dy
+      // Actualizamos la puntería visual primero
       const angle = Math.atan2(dy, dx) * (180 / Math.PI);
-      onShoot(angle);
+      if (onAimChange) onAimChange(angle);
+
+      // Enviamos el disparo con un vector de distancia
+      onShoot(dx * 100, dy * 100);
     }
   };
 
