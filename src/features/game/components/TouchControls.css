@@ -3,11 +3,11 @@
   bottom: 0;
   left: 0;
   width: 100vw;
-  height: 200px;
+  height: 280px;
   pointer-events: none;
   display: none;
   z-index: 2000;
-  padding: 0 40px 40px 40px;
+  padding: 0 20px 20px 20px;
 }
 
 @media (max-width: 900px) {
@@ -18,18 +18,114 @@
   }
 }
 
-.joystick-left, .joystick-right {
+.control-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
   pointer-events: auto;
-  opacity: 0.8;
-  transition: opacity 0.3s;
 }
 
-.joystick-left:active, .joystick-right:active {
-  opacity: 1;
+.control-label {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.7rem;
+  color: #32CD32;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  opacity: 0.7;
+}
+
+/* D-PAD CLÁSICO */
+.d-pad {
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  border: 1px solid rgba(50, 205, 50, 0.2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.d-pad-horizontal {
+  display: flex;
+  gap: 5px;
+}
+
+.d-btn {
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, #1a1a1a, #0d0d0d);
+  border: 2px solid #222;
+  border-radius: 12px;
+  color: #32CD32;
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 0 #000;
+}
+
+.d-btn:active {
+  background: #32CD32;
+  color: #000;
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 #000;
+}
+
+.d-pad-center {
+  width: 60px;
+  height: 60px;
+}
+
+/* GRID DE DISPARO */
+.shoot-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 60px);
+  grid-template-rows: repeat(3, 60px);
+  gap: 5px;
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 0, 0, 0.2);
+}
+
+.s-btn {
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, #1a0505, #0d0000);
+  border: 2px solid #222;
+  border-radius: 12px;
+  color: #ff4444;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 0 #000;
+}
+
+.s-btn:active {
+  background: #ff4444;
+  color: #fff;
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 #000;
+}
+
+.s-btn-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: #ff4444;
 }
 
 @media (max-width: 480px) {
   .touch-controls-container {
-    padding: 0 20px 20px 20px;
+    height: 240px;
+  }
+  .d-btn, .s-btn, .d-pad-center, .shoot-grid {
+    scale: 0.9;
   }
 }
