@@ -116,6 +116,12 @@
   box-shadow: 0 1px 0 #000;
 }
 
+.center-fire {
+  background: radial-gradient(circle, #ff0000, #330000) !important;
+  font-size: 1.5rem !important;
+  box-shadow: 0 0 15px rgba(255, 0, 0, 0.5) !important;
+}
+
 .s-btn-center {
   display: flex;
   align-items: center;
