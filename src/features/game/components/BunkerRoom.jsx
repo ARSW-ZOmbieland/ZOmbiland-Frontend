@@ -104,7 +104,11 @@ const BunkerRoom = ({ onTeleport, character, roomCode, onRestart, isPaused, onPa
         onRestart={onRestart}
         isPaused={isPaused}
       />
-      <TouchControls onMove={handleManualMove} />
+      <TouchControls 
+        onMove={handleManualMove} 
+        onShoot={() => {}} // Bunker is safe, no shooting for now
+        onAimChange={() => {}}
+      />
     </div>
   );
 };

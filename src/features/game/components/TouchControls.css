@@ -1,92 +1,35 @@
-.touch-controls {
-  position: absolute;
-  bottom: 20px;
-  left: 20px;
+.touch-controls-container {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100vw;
+  height: 200px;
+  pointer-events: none;
+  display: none;
   z-index: 2000;
-  display: none; /* Hidden by default, shown on small screens */
-  pointer-events: auto;
+  padding: 0 40px 40px 40px;
 }
 
 @media (max-width: 900px) {
-  .touch-controls {
-    display: block;
+  .touch-controls-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
   }
 }
 
-.d-pad {
-  padding: 15px;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(10px);
-  border-radius: 20px;
-  border: 1px solid rgba(50, 205, 50, 0.2);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+.joystick-left, .joystick-right {
+  pointer-events: auto;
+  opacity: 0.8;
+  transition: opacity 0.3s;
 }
 
-.d-pad-horizontal {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.d-btn {
-  width: 70px;
-  height: 70px;
-  background: linear-gradient(135deg, #1a1a1a, #0d0d0d);
-  border: 2px solid #222;
-  border-bottom: 4px solid #000;
-  border-radius: 15px;
-  color: #32CD32;
-  font-size: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  user-select: none;
-  transition: all 0.1s ease;
-  box-shadow: 0 4px 0 #000;
-}
-
-.d-btn:active {
-  background: #32CD32;
-  color: #000;
-  border-bottom: 2px solid #000;
-  transform: translateY(2px);
-  box-shadow: 0 2px 0 #000, 0 0 20px rgba(50, 205, 50, 0.6);
-}
-
-.d-pad-center {
-  width: 70px;
-  height: 70px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.d-pad-center::after {
-  content: '';
-  width: 10px;
-  height: 10px;
-  background: #32CD32;
-  border-radius: 50%;
-  box-shadow: 0 0 10px #32CD32;
+.joystick-left:active, .joystick-right:active {
+  opacity: 1;
 }
 
 @media (max-width: 480px) {
-  .touch-controls {
-    bottom: 20px;
-    right: 20px;
-  }
-  .d-btn {
-    width: 60px;
-    height: 60px;
-    font-size: 24px;
-  }
-  .d-pad-center {
-    width: 60px;
-    height: 60px;
+  .touch-controls-container {
+    padding: 0 20px 20px 20px;
   }
 }

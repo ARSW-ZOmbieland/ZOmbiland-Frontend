@@ -1,0 +1,65 @@
+.joystick-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  user-select: none;
+  touch-action: none;
+}
+
+.joystick-label {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.7rem;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  opacity: 0.6;
+}
+
+.joystick-base {
+  width: 120px;
+  height: 120px;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  touch-action: none;
+}
+
+.joystick-stick {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.05s ease-out;
+  touch-action: none;
+  z-index: 10;
+}
+
+/* Decoración de la base */
+.joystick-base::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 20px;
+  height: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+}
+
+@media (max-width: 480px) {
+  .joystick-base {
+    width: 100px;
+    height: 100px;
+  }
+  .joystick-stick {
+    width: 40px;
+    height: 40px;
+  }
+}

@@ -235,7 +235,11 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
         isPaused={isPaused}
       />
       
-      <TouchControls onMove={handleManualMove} />
+      <TouchControls 
+        onMove={handleManualMove} 
+        onShoot={handleShoot}
+        onAimChange={(angle) => { window.currentAimAngle = angle; }}
+      />
     </div>
   );
 };
