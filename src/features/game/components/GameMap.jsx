@@ -349,7 +349,7 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
       cellEntities.zombies.forEach(z => {
         elements.push(
           <div key={`zombie-${z.id}`} className={`player-sprite zombie-sprite ${hitZombies.has(z.id) ? 'zombie-hit-flash' : ''}`} style={{ zIndex: y * 10 + 11 }}>
-            <SpriteZombie direction={z.direction} isAttacking={z.attacking} />
+            <SpriteZombie direction={z.direction} isAttacking={z.attacking} type={z.type} />
           </div>
         );
       });

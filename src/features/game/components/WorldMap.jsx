@@ -36,12 +36,14 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
         'abajo', 'arriba', 'derecha', 'izquierda',
         'ataque_adelante', 'ataque_atras', 'ataque_derecha', 'ataque_izquierda', 'ataque'
     ];
-    zombieStates.forEach(state => {
+    // Chasqueador preloading
+    const chasqueadorStates = ['abajo', 'arriba', 'dercha', 'izquierda', 'ataque atras', 'ataque derecha', 'ataque frente', 'ataque izquierda'];
+    chasqueadorStates.forEach(state => {
         const img = new Image();
-        img.src = `/zombies/comun/${state}.gif`;
+        img.src = `/zombies/chasqueador/${state}.gif`;
     });
     
-    console.log(">> Preloading assets for better performance (Players & Zombies)...");
+    console.log(">> Preloading assets for better performance (Players, Zombies & Chasqueadores)...");
   }, []);
 
   useEffect(() => {
