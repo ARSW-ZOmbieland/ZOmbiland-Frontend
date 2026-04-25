@@ -134,6 +134,13 @@
   pointer-events: none;
 }
 
+.medkit-prop {
+  transform: scale(0.5);
+  transform-origin: center center;
+  z-index: 6;
+  pointer-events: none;
+}
+
 .bush-prop, .tree-prop, .bunker-prop, .forest-prop, .urban-prop, .barricade-prop {
   object-fit: contain !important;
 }

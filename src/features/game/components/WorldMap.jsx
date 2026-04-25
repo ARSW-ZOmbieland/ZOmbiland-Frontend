@@ -167,12 +167,19 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
 
   // IA local del zombie eliminada (ahora se maneja vía WebSocket arriba)
 
-  // Update position once map is loaded
+  // Update position once map is loaded (ONLY ONCE per room)
+  const initialPosSet = React.useRef(false);
   useEffect(() => {
-      if (mapData && setPlayerPos) {
+      if (mapData && setPlayerPos && !initialPosSet.current) {
           setPlayerPos({ x: mapData.startX, y: mapData.startY });
+          initialPosSet.current = true;
       }
   }, [mapData, setPlayerPos]);
+
+  // Reset flag when room changes
+  useEffect(() => {
+      initialPosSet.current = false;
+  }, [roomCode]);
  
   // Broadcast de Puntería (Aim Angle) - Throttled a 10Hz
   useEffect(() => {
