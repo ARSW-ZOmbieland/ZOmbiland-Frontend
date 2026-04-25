@@ -364,7 +364,7 @@
 }
 
 /* Indicador de Puntería (Pistola) */
-.weapon-aim-indicator {
+.weapon-aim-indicator, .weapon-aim-indicator-player {
   position: absolute;
   width: var(--tile-size);
   height: var(--tile-size);
@@ -374,6 +374,11 @@
   pointer-events: none;
   z-index: 50;
   filter: drop-shadow(0 0 8px rgba(50, 205, 50, 0.4));
+}
+
+.weapon-aim-indicator-player {
+  top: 0;
+  left: 0;
 }
 
 .weapon-aim-image {

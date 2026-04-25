@@ -172,11 +172,17 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
     }
   }, [isDead, isPaused, playerPos, onShoot]);
 
-  // NUEVO: Escuchar disparos desde controles móviles (Después de definir executeShot)
+  // NUEVO: Escuchar disparos desde controles móviles (Con control de duplicados)
+  const lastProcessedShot = useRef(0);
   useEffect(() => {
-    if (mobileShotTrigger && !isPaused && !isDead) {
+    if (mobileShotTrigger && mobileShotTrigger.timestamp > lastProcessedShot.current && !isPaused && !isDead) {
+      console.log(">> GAME_MAP: Executing mobile shot", mobileShotTrigger.angle);
+      lastProcessedShot.current = mobileShotTrigger.timestamp;
+      
       setAimAngle(mobileShotTrigger.angle);
       if (onAimChange) onAimChange(mobileShotTrigger.angle);
+      
+      // Ejecutar el disparo físico
       executeShot(mobileShotTrigger.angle);
     }
   }, [mobileShotTrigger, isPaused, isDead, executeShot, onAimChange]);
@@ -362,6 +368,16 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
             isDead={isDead} 
             aimAngle={aimAngle}
           />
+          {/* Indicador de arma siempre visible sobre el jugador principal */}
+          {!isDead && !isPaused && (
+            <div className="weapon-aim-indicator-player">
+              <img 
+                src={`/assets/weapons/weapon direction/${getWeaponDirection(aimAngle)}.png`} 
+                alt="aim"
+                className="weapon-aim-image"
+              />
+            </div>
+          )}
         </div>
       );
     }
