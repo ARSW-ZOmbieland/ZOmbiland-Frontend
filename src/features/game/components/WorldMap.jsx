@@ -248,7 +248,7 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
     }}>
       {/* Ammo HUD */}
       <div className="ammo-hud pop-in">
-        <img src="/assets/weapons/weapon_pickups/weapon_pickup_pistol.png" alt="ammo" />
+        <img src="/assets/weapons/pistols/Bullets.png" alt="ammo" />
         <span className={ammo <= 5 ? 'ammo-low' : ''}>{ammo}</span>
       </div>
 
@@ -269,6 +269,7 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
         onAimChange={(angle) => { window.currentAimAngle = angle; }}
         isPaused={isPaused}
         mobileShotTrigger={mobileShotTrigger}
+        ammo={ammo}
       />
       
       <TouchControls 

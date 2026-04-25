@@ -16,7 +16,7 @@ const HealthBar = ({ health }) => {
   );
 };
 
-const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zombies = [], onRestart, onShoot, lastExternalShot, onAimChange, isPaused, mobileShotTrigger }) => {
+const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zombies = [], onRestart, onShoot, lastExternalShot, onAimChange, isPaused, mobileShotTrigger, ammo }) => {
   const [cooldown, setCooldown] = useState(90);
   const [aimAngle, setAimAngle] = useState(0);
   const [hoveredTile, setHoveredTile] = useState(null);
@@ -112,7 +112,7 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
 
   // Disparo al hacer clic (Memoizado para rendimiento)
   const executeShot = React.useCallback((input) => {
-    if (isDead || isPaused) return;
+    if (isDead || isPaused || ammo <= 0) return;
     
     let angle;
     if (typeof input === 'number') {
