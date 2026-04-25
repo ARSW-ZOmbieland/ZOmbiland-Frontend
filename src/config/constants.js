@@ -51,6 +51,7 @@ export const PROP_ASSETS = {
   74: '/assets/props/urban/traffic_cone.png',
   80: '/assets/vfx/barrilfuego.gif',
   90: '/assets/props/barricades/road_block_police.png',
+  100: '/assets/items/medkit_large.png',
 };
 
 // Map of all assets for easier pre-loading or type checking

@@ -107,6 +107,20 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
             }
         });
 
+        // Suscribirse a actualizaciones del mapa (Ej: medkits recogidos)
+        const mapUpdateTopic = `/topic/game.map.${roomCode}`;
+        webSocketService.subscribe(mapUpdateTopic, (update) => {
+            if (update && update.x !== undefined && update.y !== undefined) {
+                setMapData(prev => {
+                    if (!prev || !prev.matrix) return prev;
+                    const newMatrix = [...prev.matrix];
+                    newMatrix[update.y] = [...newMatrix[update.y]];
+                    newMatrix[update.y][update.x] = update.tile;
+                    return { ...prev, matrix: newMatrix };
+                });
+            }
+        });
+
         // Sincronizar estado inicial de la sala para ver a quienes ya estaban quietos
         fetch(`${API_BASE_URL}/api/game/rooms/${roomCode}/state`, { credentials: 'include' })
         .then(res => res.json())
