@@ -23,7 +23,8 @@ jobs:
           # Sincronizar archivos de infraestructura desde el frontend para asegurar independencia
           /usr/bin/cp /home/juan/ZOmbiland-Test/ZOmbiland-Frontend/docker-compose.yml ./docker-compose.test.yml
           /usr/bin/cp /home/juan/ZOmbiland-Test/ZOmbiland-Frontend/nginx.conf ./nginx.test.conf
-          # Limpiar posibles conflictos de nombres (Fuerza la recreación limpia)
-          /usr/bin/docker rm -f zombiland-frontend zombieland-backend zombieland-nginx || true
+          # Limpieza total para evitar conflictos de nombres y redes
+          /usr/bin/docker compose -f docker-compose.test.yml down || true
+          /usr/bin/docker rm -f zombiland-frontend zombieland-backend zombieland-nginx zombieland-postgres || true
           # Reiniciar específicamente el frontend y el proxy
           /usr/bin/docker compose -f docker-compose.test.yml up -d --build frontend nginx
