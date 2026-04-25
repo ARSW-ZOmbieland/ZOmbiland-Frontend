@@ -160,11 +160,11 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
     
     setTimeout(() => {
         setBullets(prev => prev.filter(b => b.id !== bulletId));
-    }, 200);
+    }, 400); // Aumentado a 400ms para asegurar visibilidad
     
     setTimeout(() => {
         setFlashes(prev => prev.filter(f => f.id !== flashId));
-    }, 100);
+    }, 200);
 
     // Notificar al servidor
     if (onShoot) {
@@ -441,8 +441,8 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
                 {renderCellEntities(x, y)}
               </div>
 
-              {/* Aim Layer */}
-              {isHovered && (
+              {/* Aim Layer (Solo para otros jugadores o efectos especiales, el principal ya tiene el suyo) */}
+              {isHovered && Math.floor(playerPos.x) !== x && Math.floor(playerPos.y) !== y && (
                 <div style={{ position: 'absolute', left: `calc(${x} * var(--tile-size))`, top: `calc(${y} * var(--tile-size))`, zIndex: y * 10 + 20 }}>
                   <div className="weapon-aim-indicator">
                     <img 
