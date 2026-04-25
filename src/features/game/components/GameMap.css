@@ -33,6 +33,7 @@
   box-shadow: none;
   border-radius: 0;
   z-index: 5;
+  touch-action: none; /* Crucial para evitar que el navegador intercepte el multitouch */
 }
 
 .game-map-container {
