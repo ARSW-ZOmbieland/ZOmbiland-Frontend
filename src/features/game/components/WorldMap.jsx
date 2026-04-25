@@ -107,6 +107,20 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
             }
         });
 
+        // Suscribirse a actualizaciones del mapa (Ej: medkits recogidos)
+        const mapUpdateTopic = `/topic/game.map.${roomCode}`;
+        webSocketService.subscribe(mapUpdateTopic, (update) => {
+            if (update && update.x !== undefined && update.y !== undefined) {
+                setMapData(prev => {
+                    if (!prev || !prev.matrix) return prev;
+                    const newMatrix = [...prev.matrix];
+                    newMatrix[update.y] = [...newMatrix[update.y]];
+                    newMatrix[update.y][update.x] = update.tile;
+                    return { ...prev, matrix: newMatrix };
+                });
+            }
+        });
+
         // Sincronizar estado inicial de la sala para ver a quienes ya estaban quietos
         fetch(`${API_BASE_URL}/api/game/rooms/${roomCode}/state`, { credentials: 'include' })
         .then(res => res.json())
@@ -153,12 +167,19 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
 
   // IA local del zombie eliminada (ahora se maneja vía WebSocket arriba)
 
-  // Update position once map is loaded
+  // Update position once map is loaded (ONLY ONCE per room)
+  const initialPosSet = React.useRef(false);
   useEffect(() => {
-      if (mapData && setPlayerPos) {
+      if (mapData && setPlayerPos && !initialPosSet.current) {
           setPlayerPos({ x: mapData.startX, y: mapData.startY });
+          initialPosSet.current = true;
       }
   }, [mapData, setPlayerPos]);
+
+  // Reset flag when room changes
+  useEffect(() => {
+      initialPosSet.current = false;
+  }, [roomCode]);
  
   // Broadcast de Puntería (Aim Angle) - Throttled a 10Hz
   useEffect(() => {
@@ -203,6 +224,12 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
     });
   }, [character, roomCode, playerPos, health]);
 
+  const [mobileShotTrigger, setMobileShotTrigger] = useState(null);
+
+  const handleMobileShoot = useCallback((angle) => {
+    setMobileShotTrigger({ angle, timestamp: Date.now() });
+  }, []);
+
   if (!mapData) {
     return <div style={{ color: '#32CD32', display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', backgroundColor: '#000', fontSize: '2rem' }}>Generando mapa aleatorio...</div>;
   }
@@ -233,9 +260,14 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
         lastExternalShot={lastExternalShot}
         onAimChange={(angle) => { window.currentAimAngle = angle; }}
         isPaused={isPaused}
+        mobileShotTrigger={mobileShotTrigger}
       />
       
-      <TouchControls onMove={handleManualMove} />
+      <TouchControls 
+        onMove={handleManualMove} 
+        onShoot={handleMobileShoot}
+        onAimChange={(angle) => { window.currentAimAngle = angle; }}
+      />
     </div>
   );
 };

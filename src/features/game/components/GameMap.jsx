@@ -16,7 +16,7 @@ const HealthBar = ({ health }) => {
   );
 };
 
-const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zombies = [], onRestart, onShoot, lastExternalShot, onAimChange, isPaused }) => {
+const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zombies = [], onRestart, onShoot, lastExternalShot, onAimChange, isPaused, mobileShotTrigger }) => {
   const [cooldown, setCooldown] = useState(90);
   const [aimAngle, setAimAngle] = useState(0);
   const [hoveredTile, setHoveredTile] = useState(null);
@@ -160,17 +160,32 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
     
     setTimeout(() => {
         setBullets(prev => prev.filter(b => b.id !== bulletId));
-    }, 200);
+    }, 400); // Aumentado a 400ms para asegurar visibilidad
     
     setTimeout(() => {
         setFlashes(prev => prev.filter(f => f.id !== flashId));
-    }, 100);
+    }, 200);
 
     // Notificar al servidor
     if (onShoot) {
         onShoot(targetX, targetY);
     }
   }, [isDead, isPaused, playerPos, onShoot]);
+
+  // NUEVO: Escuchar disparos desde controles móviles (Con control de duplicados)
+  const lastProcessedShot = useRef(0);
+  useEffect(() => {
+    if (mobileShotTrigger && mobileShotTrigger.timestamp > lastProcessedShot.current && !isPaused && !isDead) {
+      console.log(">> GAME_MAP: Executing mobile shot", mobileShotTrigger.angle);
+      lastProcessedShot.current = mobileShotTrigger.timestamp;
+      
+      setAimAngle(mobileShotTrigger.angle);
+      if (onAimChange) onAimChange(mobileShotTrigger.angle);
+      
+      // Ejecutar el disparo físico
+      executeShot(mobileShotTrigger.angle);
+    }
+  }, [mobileShotTrigger, isPaused, isDead, executeShot, onAimChange]);
 
   const handleMouseDown = (e) => {
     if (isDead || !onRestart) return;
@@ -293,11 +308,11 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
   const translateX = `calc(50vw - (${playerPos.x} * var(--tile-size)) - (var(--tile-size) / 2))`;
   const translateY = `calc(50vh - (${playerPos.y} * var(--tile-size)) - (var(--tile-size) / 2))`;
 
-  // Buffer de renderizado más amplio para evitar bordes cortados en pantallas panorámicas
-  const startX = Math.max(0, Math.floor(playerPos.x - 15));
-  const endX = Math.min(cols, Math.floor(playerPos.x + 16));
-  const startY = Math.max(0, Math.floor(playerPos.y - 12));
-  const endY = Math.min(rows, Math.floor(playerPos.y + 13));
+  // Buffer de renderizado más amplio para evitar bordes cortados en pantallas panorámicas (20 tiles de radio)
+  const startX = Math.max(0, Math.floor(playerPos.x - 20));
+  const endX = Math.min(cols, Math.floor(playerPos.x + 21));
+  const startY = Math.max(0, Math.floor(playerPos.y - 15));
+  const endY = Math.min(rows, Math.floor(playerPos.y + 16));
 
   // --- PERFORMANCE FIX: PRE-INDEX ENTITIES BY POSITION ---
   const entityMap = React.useMemo(() => {
@@ -353,6 +368,16 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
             isDead={isDead} 
             aimAngle={aimAngle}
           />
+          {/* Indicador de arma siempre visible sobre el jugador principal */}
+          {!isDead && !isPaused && (
+            <div className="weapon-aim-indicator-player">
+              <img 
+                src={`/assets/weapons/weapon direction/${getWeaponDirection(aimAngle)}.png`} 
+                alt="aim"
+                className="weapon-aim-image"
+              />
+            </div>
+          )}
         </div>
       );
     }
@@ -411,13 +436,13 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
               {/* Entities and Props */}
               <div className="entity-tile" style={{ position: 'absolute', left: `calc(${x} * var(--tile-size))`, top: `calc(${y} * var(--tile-size))`, zIndex: y * 10 + 5, pointerEvents: 'none' }}>
                 {propID && propID !== 99 && (
-                  <img src={PROP_ASSETS[propID]} alt="prop" className={`tile-image ${propID >= 20 && propID <= 22 ? 'bush-prop' : ''} ${propID >= 30 && propID <= 34 ? 'tree-prop' : ''} ${propID >= 40 && propID <= 49 ? 'bunker-prop' : ''} ${propID >= 50 && propID <= 59 ? 'forest-prop' : ''} ${propID >= 60 && propID <= 69 ? 'city-building' : ''} ${propID >= 70 && propID <= 89 && propID !== 72 ? 'urban-prop' : ''} ${propID === 72 ? 'street-light-prop' : ''} ${propID === 90 ? 'barricade-prop' : ''}`} style={{ position: 'absolute', zIndex: 1, top: 0, left: 0 }} />
+                  <img src={PROP_ASSETS[propID]} alt="prop" className={`tile-image ${propID >= 20 && propID <= 22 ? 'bush-prop' : ''} ${propID >= 30 && propID <= 34 ? 'tree-prop' : ''} ${propID >= 40 && propID <= 49 ? 'bunker-prop' : ''} ${propID >= 50 && propID <= 59 ? 'forest-prop' : ''} ${propID >= 60 && propID <= 69 ? 'city-building' : ''} ${propID >= 70 && propID <= 89 && propID !== 72 ? 'urban-prop' : ''} ${propID === 72 ? 'street-light-prop' : ''} ${propID === 90 ? 'barricade-prop' : ''} ${propID === 100 ? 'medkit-prop' : ''}`} style={{ position: 'absolute', zIndex: 1, top: 0, left: 0 }} />
                 )}
                 {renderCellEntities(x, y)}
               </div>
 
-              {/* Aim Layer */}
-              {isHovered && (
+              {/* Aim Layer (Solo para otros jugadores o efectos especiales, el principal ya tiene el suyo) */}
+              {isHovered && Math.floor(playerPos.x) !== x && Math.floor(playerPos.y) !== y && (
                 <div style={{ position: 'absolute', left: `calc(${x} * var(--tile-size))`, top: `calc(${y} * var(--tile-size))`, zIndex: y * 10 + 20 }}>
                   <div className="weapon-aim-indicator">
                     <img 

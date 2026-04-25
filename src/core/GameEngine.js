@@ -4,6 +4,7 @@ export const TILE_TYPES = {
     BUNKER_DOOR: 10,
     BARRICADE: 11,
     WALL: 15,
+    MEDKIT: 100,
 };
 
 export const generateWorldMap = () => {
@@ -54,5 +55,6 @@ export const isWalkable = (matrix, x, y) => {
     if (typeof tile === 'object') return false; // Future object handling
     if (tile === 72) return true;               // Street lights are walkable
     if (tile >= 20 && tile <= 22) return true;  // Bushes are walkable
+    if (tile === 100) return true;              // Medkits are walkable
     return tile < 10; // Simple collision logic: types >= 10 are solid or interactive
 };

@@ -33,6 +33,7 @@
   box-shadow: none;
   border-radius: 0;
   z-index: 5;
+  touch-action: none; /* Crucial para evitar que el navegador intercepte el multitouch */
 }
 
 .game-map-container {
@@ -129,6 +130,13 @@
 .barricade-prop {
   transform: scale(1.5);
   transform-origin: bottom center;
+  z-index: 6;
+  pointer-events: none;
+}
+
+.medkit-prop {
+  transform: scale(0.5);
+  transform-origin: center center;
   z-index: 6;
   pointer-events: none;
 }
@@ -254,6 +262,16 @@
   margin-bottom: 30px;
 }
 
+@media (max-width: 768px) {
+  .death-message {
+    font-size: 2.5rem;
+    letter-spacing: 8px;
+  }
+  .death-subtext {
+    font-size: 0.9rem;
+  }
+}
+
 .lobby-restart-btn {
   padding: 15px 40px;
   min-width: 280px;
@@ -353,7 +371,7 @@
 }
 
 /* Indicador de Puntería (Pistola) */
-.weapon-aim-indicator {
+.weapon-aim-indicator, .weapon-aim-indicator-player {
   position: absolute;
   width: var(--tile-size);
   height: var(--tile-size);
@@ -363,6 +381,11 @@
   pointer-events: none;
   z-index: 50;
   filter: drop-shadow(0 0 8px rgba(50, 205, 50, 0.4));
+}
+
+.weapon-aim-indicator-player {
+  top: 0;
+  left: 0;
 }
 
 .weapon-aim-image {

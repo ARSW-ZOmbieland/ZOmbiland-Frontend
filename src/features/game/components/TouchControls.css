@@ -1,92 +1,157 @@
-.touch-controls {
-  position: absolute;
-  bottom: 20px;
-  left: 20px;
+.touch-controls-container {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100vw;
+  height: 240px;
+  pointer-events: none;
+  display: none;
   z-index: 2000;
-  display: none; /* Hidden by default, shown on small screens */
-  pointer-events: auto;
+  padding: 0 20px 20px 20px;
+  touch-action: none; /* Crucial para multitouch */
 }
 
-@media (max-width: 900px) {
-  .touch-controls {
-    display: block;
+@media (max-width: 1024px) {
+  .touch-controls-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
   }
 }
 
-.d-pad {
-  padding: 15px;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(10px);
+.control-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  pointer-events: auto;
+  user-select: none;
+}
+
+.control-label {
+  font-family: 'Outfit', 'Inter', sans-serif;
+  font-size: 0.7rem;
+  color: #32CD32;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-weight: 700;
+  opacity: 0.9;
+  background: rgba(0,0,0,0.7);
+  padding: 4px 12px;
   border-radius: 20px;
+  border: 1px solid rgba(50, 205, 50, 0.3);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+}
+
+/* D-PAD MODERNO */
+.d-pad {
+  padding: 12px;
+  background: rgba(15, 15, 15, 0.6);
+  backdrop-filter: blur(12px);
+  border-radius: 30px;
   border: 1px solid rgba(50, 205, 50, 0.2);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.5);
 }
 
 .d-pad-horizontal {
   display: flex;
-  gap: 8px;
-  align-items: center;
+  gap: 6px;
 }
 
-.d-btn {
-  width: 70px;
-  height: 70px;
-  background: linear-gradient(135deg, #1a1a1a, #0d0d0d);
-  border: 2px solid #222;
-  border-bottom: 4px solid #000;
-  border-radius: 15px;
+.d-btn, .s-btn {
+  width: 58px;
+  height: 58px;
+  background: linear-gradient(145deg, #2a2a2a, #151515);
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 16px;
   color: #32CD32;
-  font-size: 28px;
+  font-size: 22px;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  user-select: none;
   transition: all 0.1s ease;
-  box-shadow: 0 4px 0 #000;
+  box-shadow: 4px 4px 10px rgba(0,0,0,0.4), 
+              inset 1px 1px 1px rgba(255,255,255,0.1);
+  touch-action: none;
 }
 
-.d-btn:active {
+.d-btn:active, .d-btn.active {
   background: #32CD32;
   color: #000;
-  border-bottom: 2px solid #000;
-  transform: translateY(2px);
-  box-shadow: 0 2px 0 #000, 0 0 20px rgba(50, 205, 50, 0.6);
+  transform: scale(0.95);
+  box-shadow: 0 0 20px rgba(50, 205, 50, 0.4);
 }
 
 .d-pad-center {
-  width: 70px;
-  height: 70px;
+  width: 58px;
+  height: 58px;
   display: flex;
   align-items: center;
   justify-content: center;
+  opacity: 0.2;
 }
 
-.d-pad-center::after {
-  content: '';
-  width: 10px;
-  height: 10px;
-  background: #32CD32;
-  border-radius: 50%;
-  box-shadow: 0 0 10px #32CD32;
+/* GRID DE DISPARO PREMIUM */
+.shoot-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 58px);
+  grid-template-rows: repeat(3, 58px);
+  gap: 6px;
+  padding: 12px;
+  background: rgba(20, 10, 10, 0.6);
+  backdrop-filter: blur(12px);
+  border-radius: 30px;
+  border: 1px solid rgba(255, 50, 50, 0.2);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.s-btn {
+  color: #ff4444;
+  background: linear-gradient(145deg, #2a0a0a, #150505);
+}
+
+.s-btn:active, .s-btn.active {
+  background: #ff4444;
+  color: #fff;
+  transform: scale(0.95);
+  box-shadow: 0 0 20px rgba(255, 68, 68, 0.4);
+}
+
+.center-fire {
+  background: radial-gradient(circle, #ff1111, #440000) !important;
+  font-size: 1.8rem !important;
+  border: 2px solid #ff4444 !important;
+  box-shadow: 0 0 25px rgba(255, 0, 0, 0.6) !important;
+}
+
+.center-fire:active {
+  transform: scale(0.9) !important;
+  box-shadow: 0 0 40px rgba(255, 0, 0, 0.8) !important;
 }
 
 @media (max-width: 480px) {
-  .touch-controls {
-    bottom: 20px;
-    right: 20px;
+  .touch-controls-container {
+    height: 220px;
+    padding: 0 10px 15px 10px;
   }
-  .d-btn {
-    width: 60px;
-    height: 60px;
-    font-size: 24px;
+  
+  .d-btn, .s-btn {
+    width: 50px;
+    height: 50px;
+    font-size: 18px;
   }
+  
+  .shoot-grid {
+    grid-template-columns: repeat(3, 50px);
+    grid-template-rows: repeat(3, 50px);
+  }
+  
   .d-pad-center {
-    width: 60px;
-    height: 60px;
+    width: 50px;
+    height: 50px;
   }
 }
