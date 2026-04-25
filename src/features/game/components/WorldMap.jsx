@@ -12,6 +12,7 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
   const [otherPlayers, setOtherPlayers] = useState({});
   const [zombies, setZombies] = useState([]);
   const [health, setHealth] = useState(100);
+  const [ammo, setAmmo] = useState(30);
   const [lastExternalShot, setLastExternalShot] = useState(null);
   const [myAimAngle, setMyAimAngle] = useState(0);
 
@@ -66,7 +67,7 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
         })
         .catch(err => console.error("Error fetching map", err));
 
-        // Suscribirse a los movimientos y estados (incluyendo vida)
+        // Suscribirse a los movimientos y estados (incluyendo vida y munición)
         const topic = `/topic/game.state.${roomCode}`;
         webSocketService.subscribe(topic, (message) => {
             if (message.action === 'PAUSE') {
@@ -79,10 +80,9 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
             }
 
             if (message.playerId === character) {
-                // Actualizar vida propia desde el servidor
-                if (message.health !== undefined) {
-                    setHealth(message.health);
-                }
+                // Actualizar vida y munición propia desde el servidor
+                if (message.health !== undefined) setHealth(message.health);
+                if (message.ammo !== undefined) setAmmo(message.ammo);
             } else if (message.playerId) {
                 // Si es un ataque externo, capturamos el evento para visualizarlo
                 if (message.action === 'ATTACK') {
@@ -162,7 +162,8 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
     roomCode,
     otherPlayers,
     health,
-    isPaused
+    isPaused,
+    ammo
   );
 
   // IA local del zombie eliminada (ahora se maneja vía WebSocket arriba)
@@ -210,7 +211,7 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
 
   // Combat Handling
   const handleShoot = useCallback((targetX, targetY) => {
-    if (health <= 0) return;
+    if (health <= 0 || ammo <= 0) return;
     
     webSocketService.sendMessage('/app/game.action', {
         playerId: character,
@@ -220,9 +221,10 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
         targetX: targetX,
         targetY: targetY,
         action: 'ATTACK',
-        health: health
+        health: health,
+        ammo: ammo
     });
-  }, [character, roomCode, playerPos, health]);
+  }, [character, roomCode, playerPos, health, ammo]);
 
   const [mobileShotTrigger, setMobileShotTrigger] = useState(null);
 
@@ -244,6 +246,12 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
       backgroundColor: '#000',
       position: 'relative'
     }}>
+      {/* Ammo HUD */}
+      <div className="ammo-hud pop-in">
+        <img src="/assets/weapons/weapon_pickups/weapon_pickup_pistol.png" alt="ammo" />
+        <span className={ammo <= 5 ? 'ammo-low' : ''}>{ammo}</span>
+      </div>
+
       <GameMap 
         matrix={mapData.matrix} 
         playerPos={playerPos} 
