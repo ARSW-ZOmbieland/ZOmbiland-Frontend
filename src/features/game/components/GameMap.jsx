@@ -1,4 +1,4 @@
-import React, { memo, useState, useEffect, useRef } from 'react';
+import React, { memo, useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import './GameMap.css';
 import SpritePlayer from './SpritePlayer';
 import SpriteZombie from './SpriteZombie';
@@ -25,7 +25,7 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
   const virtualMouse = useRef({ x: 0, y: 0 }); // Posición virtual para el modo capturado
   const isLocked = useRef(false);
   const [hitZombies, setHitZombies] = useState(new Set());
-  const prevHealthRef = React.useRef(new Map());
+  const prevHealthRef = useRef(new Map());
   const isDead = playerSprite.health <= 0;
 
   // Efecto visual de "Flash" al recibir daño (Transient)
@@ -57,7 +57,7 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
     }
   }, [zombies]);
   // Seguimiento del Mouse para apuntar (Relativo + Absoluto)
-  const handleMouseMove = React.useCallback((e) => {
+  const handleMouseMove = useCallback((e) => {
     if (isDead || isPaused) return;
     
     // Si el puntero está capturado (Pointer Lock)
@@ -315,7 +315,7 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
   const endY = Math.min(rows, Math.floor(playerPos.y + 16));
 
   // --- PERFORMANCE FIX: PRE-INDEX ENTITIES BY POSITION ---
-  const entityMap = React.useMemo(() => {
+  const entityMap = useMemo(() => {
     const map = new Map();
     
     // Index Zombies
@@ -441,18 +441,7 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
                 {renderCellEntities(x, y)}
               </div>
 
-              {/* Aim Layer (Solo para otros jugadores o efectos especiales, el principal ya tiene el suyo) */}
-              {isHovered && Math.floor(playerPos.x) !== x && Math.floor(playerPos.y) !== y && (
-                <div style={{ position: 'absolute', left: `calc(${x} * var(--tile-size))`, top: `calc(${y} * var(--tile-size))`, zIndex: y * 10 + 20 }}>
-                  <div className="weapon-aim-indicator">
-                    <img 
-                      src={`/assets/weapons/weapon direction/${getWeaponDirection(aimAngle)}.png`} 
-                      alt="aim"
-                      className="weapon-aim-image"
-                    />
-                  </div>
-                </div>
-              )}
+              {/* Aim Layer (Eliminado a petición del usuario para dejar solo la del centro) */}
             </React.Fragment>
           );
         })}
