@@ -307,6 +307,10 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
 
   const [mobileShotTrigger, setMobileShotTrigger] = useState(null);
 
+  const handleGlobalAimChange = useCallback((angle) => {
+    window.currentAimAngle = angle;
+  }, []);
+
   const handleMobileShoot = useCallback((angle) => {
     setMobileShotTrigger({ angle, timestamp: Date.now() });
   }, []);
@@ -345,7 +349,7 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
         onRestart={onRestart}
         onShoot={handleShoot}
         lastExternalShot={lastExternalShot}
-        onAimChange={(angle) => { window.currentAimAngle = angle; }}
+        onAimChange={handleGlobalAimChange}
         isPaused={isPaused}
         mobileShotTrigger={mobileShotTrigger}
         ammo={ammo}
