@@ -10,7 +10,7 @@ import webSocketService from '../core/WebSocketService';
  * @param {Function} onCollideSpecial - Callback for special tiles (doors, exits)
  * @param {string} roomCode - The active room code
  */
-export const usePlayerMovement = (initialPos, character, matrix, onCollideSpecial, roomCode, otherPlayers = {}, health = 100, isPaused = false, ammo = 30, location = 'world', isParalyzed = false) => {
+export const usePlayerMovement = (initialPos, character, matrix, onCollideSpecial, roomCode, otherPlayers = {}, health = 100, isPaused = false, ammo = 30, location = 'world', zombies = []) => {
   const [playerPos, setPlayerPos] = useState(initialPos);
   const [playerState, setPlayerState] = useState({
     direction: 'abajo',
@@ -66,6 +66,9 @@ export const usePlayerMovement = (initialPos, character, matrix, onCollideSpecia
             }
           }
         }
+
+        // Calcular parálisis localmente
+        const isParalyzed = zombies.some(z => z.type === 'llorona' && Math.abs(z.x - playerPos.x) < 0.5 && Math.abs(z.y - playerPos.y) < 0.5);
 
         if (!isOccupied && !isParalyzed) {
           setPlayerPos({ x: newX, y: newY });
