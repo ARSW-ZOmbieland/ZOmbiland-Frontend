@@ -30,7 +30,11 @@ const SpritePlayer = ({ characterId, direction, isMoving, isDead, aimAngle }) =>
       {/* Estado Muerto - Imagen estática específica */}
       {isDead && (
         <img 
-          src={`/personajes/${characterId}/${characterId === 'andres' ? 'juanandres' : characterId}_muerto.png`} 
+          src={`/personajes/${characterId}/${
+            characterId === 'andres' ? 'juanandres_muerto.png' : 
+            characterId === 'maria' ? 'maria_muerta.png' : 
+            `${characterId}_muerto.png`
+          }`} 
           alt={`${characterId}-dead`} 
           className="sprite-layer active"
         />
