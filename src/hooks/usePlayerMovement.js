@@ -10,7 +10,7 @@ import webSocketService from '../core/WebSocketService';
  * @param {Function} onCollideSpecial - Callback for special tiles (doors, exits)
  * @param {string} roomCode - The active room code
  */
-export const usePlayerMovement = (initialPos, character, matrix, onCollideSpecial, roomCode, otherPlayers = {}, health = 100, isPaused = false, ammo = 30, location = 'world') => {
+export const usePlayerMovement = (initialPos, character, matrix, onCollideSpecial, roomCode, otherPlayers = {}, health = 100, isPaused = false, ammo = 30, location = 'world', isParalyzed = false) => {
   const [playerPos, setPlayerPos] = useState(initialPos);
   const [playerState, setPlayerState] = useState({
     direction: 'abajo',
@@ -48,7 +48,7 @@ export const usePlayerMovement = (initialPos, character, matrix, onCollideSpecia
     // Special mapping for character sprites
     const mappedDir = (character === 'maria' && direction === 'abajo') ? 'adelante' : direction;
 
-    // ACTUALIZACIÓN: Siempre permitir girar, incluso si el movimiento está bloqueado
+    // Siempre permitir girar, incluso si el movimiento está bloqueado (parálisis)
     setPlayerState({ direction: mappedDir, isMoving: true });
     if (moveTimer.current) clearTimeout(moveTimer.current);
     moveTimer.current = setTimeout(() => {
@@ -67,7 +67,7 @@ export const usePlayerMovement = (initialPos, character, matrix, onCollideSpecia
           }
         }
 
-        if (!isOccupied) {
+        if (!isOccupied && !isParalyzed) {
           setPlayerPos({ x: newX, y: newY });
           
           if (roomCode) {

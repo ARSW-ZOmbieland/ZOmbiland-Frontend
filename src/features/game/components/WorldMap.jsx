@@ -220,7 +220,9 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
     health,
     isPaused,
     ammo,
-    'world'
+    'world',
+    // CALCULAR PARÁLISIS: Si hay una Llorona a menos de 0.5 bloques (encima)
+    zombies.some(z => z.type === 'llorona' && Math.abs(z.x - playerPos.x) < 0.5 && Math.abs(z.y - playerPos.y) < 0.5)
   );
 
   // IA local del zombie eliminada (ahora se maneja vía WebSocket arriba)
