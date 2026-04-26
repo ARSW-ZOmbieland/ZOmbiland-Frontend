@@ -134,7 +134,7 @@
   pointer-events: none;
 }
 
-.medkit-prop {
+.item-pickup-prop {
   transform: scale(0.5);
   transform-origin: center center;
   z-index: 6;
@@ -212,7 +212,6 @@
 
 /* Estado Muerto */
 .game-map-container.is-dead {
-  filter: grayscale(1) contrast(1.2) brightness(0.6);
   transition: filter 1s ease-in-out;
 }
 
@@ -233,9 +232,6 @@
 
 /* Compañeros muertos */
 .other-player-dead {
-  filter: grayscale(1) opacity(0.8);
-  transform: rotate(-90deg) scale(0.8);
-  transform-origin: center bottom;
   transition: all 0.5s ease-in-out;
 }
 
@@ -396,6 +392,54 @@
 }
 
 /* Ocultar el cursor default sobre el mapa para mayor inmersión */
-.game-viewport {
-  cursor: none !important;
+/* HUD de Munición */
+.ammo-hud {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.85) 0%, rgba(30, 30, 30, 0.7) 100%);
+  padding: 10px 20px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+  z-index: 100;
+  backdrop-filter: blur(5px);
+  transition: all 0.3s ease;
+}
+
+.ammo-hud img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.3));
+}
+
+.ammo-hud span {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #fff;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+.ammo-low {
+  color: #ff4444 !important;
+  animation: ammo-alert 0.5s infinite alternate;
+}
+
+@keyframes ammo-alert {
+  from { opacity: 1; transform: scale(1); }
+  to { opacity: 0.7; transform: scale(1.1); }
+}
+
+@keyframes pop-in {
+  0% { transform: scale(0.8); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.pop-in {
+  animation: pop-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }

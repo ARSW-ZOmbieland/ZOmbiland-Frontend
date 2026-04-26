@@ -5,16 +5,40 @@ import './SpritePlayer.css'; // Reutilizamos los estilos base de posicionamiento
  * SpriteZombie: Optimiza el renderizado de zombies para evitar el parpadeo en combate.
  * Mantiene las 9 animaciones (caminar + ataque) cargadas en el DOM.
  */
-const SpriteZombie = ({ direction, isAttacking }) => {
+const SpriteZombie = ({ direction, isAttacking, type = 'comun' }) => {
   const walkDirections = ['abajo', 'arriba', 'derecha', 'izquierda'];
-  const attackDirections = [
-    { key: 'abajo', asset: 'ataque_adelante' },
-    { key: 'arriba', asset: 'ataque_atras' },
-    { key: 'derecha', asset: 'ataque_derecha' },
-    { key: 'izquierda', asset: 'ataque_izquierda' },
-    { key: 'adelante', asset: 'ataque_adelante' }
-  ];
   
+  // Mapping logic for different asset naming conventions
+  const getAssetPath = (dir, mode) => {
+    const folder = type === 'chasqueador' ? 'chasqueador' : 'comun';
+    
+    if (mode === 'walk') {
+      if (type === 'chasqueador' && dir === 'derecha') return `/zombies/${folder}/dercha.gif`;
+      return `/zombies/${folder}/${dir}.gif`;
+    } else {
+      // Attack mapping
+      if (type === 'chasqueador') {
+        const attackMap = {
+          'abajo': 'ataque frente',
+          'arriba': 'ataque atras',
+          'derecha': 'ataque derecha',
+          'izquierda': 'ataque izquierda',
+          'adelante': 'ataque frente'
+        };
+        return `/zombies/${folder}/${attackMap[dir] || 'ataque frente'}.gif`;
+      } else {
+        const commonAttackMap = {
+          'abajo': 'ataque_adelante',
+          'arriba': 'ataque_atras',
+          'derecha': 'ataque_derecha',
+          'izquierda': 'ataque_izquierda',
+          'adelante': 'ataque_adelante'
+        };
+        return `/zombies/${folder}/${commonAttackMap[dir] || 'ataque'}.gif`;
+      }
+    }
+  };
+
   const currentDir = direction || 'abajo';
 
   return (
@@ -25,7 +49,7 @@ const SpriteZombie = ({ direction, isAttacking }) => {
         return (
           <img
             key={`walk-${dir}`}
-            src={`/zombies/comun/${dir}.gif`}
+            src={getAssetPath(dir, 'walk')}
             alt={`zombie-walk-${dir}`}
             className={`sprite-layer ${isActive ? 'active' : ''}`}
             style={{ display: isActive ? 'block' : 'none' }}
@@ -34,27 +58,18 @@ const SpriteZombie = ({ direction, isAttacking }) => {
       })}
 
       {/* Capas de Ataque */}
-      {attackDirections.map(atk => {
-        const isActive = isAttacking && currentDir === atk.key;
+      {['abajo', 'arriba', 'derecha', 'izquierda', 'adelante'].map(dir => {
+        const isActive = isAttacking && currentDir === dir;
         return (
           <img
-            key={`attack-${atk.key}`}
-            src={`/zombies/comun/${atk.asset}.gif`}
-            alt={`zombie-attack-${atk.key}`}
+            key={`attack-${dir}`}
+            src={getAssetPath(dir, 'attack')}
+            alt={`zombie-attack-${dir}`}
             className={`sprite-layer ${isActive ? 'active' : ''}`}
             style={{ display: isActive ? 'block' : 'none' }}
           />
         );
       })}
-
-      {/* Fallback ataque genérico si algo falla */}
-      {isAttacking && !attackDirections.some(a => a.key === currentDir) && (
-        <img 
-          src="/zombies/comun/ataque.gif" 
-          alt="zombie-attack-generic" 
-          className="sprite-layer active"
-        />
-      )}
     </div>
   );
 };

@@ -1,4 +1,4 @@
-import React, { memo, useState, useEffect, useRef } from 'react';
+import React, { memo, useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import './GameMap.css';
 import SpritePlayer from './SpritePlayer';
 import SpriteZombie from './SpriteZombie';
@@ -16,17 +16,20 @@ const HealthBar = ({ health }) => {
   );
 };
 
-const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zombies = [], onRestart, onShoot, lastExternalShot, onAimChange, isPaused, mobileShotTrigger }) => {
-  const [cooldown, setCooldown] = useState(90);
+const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zombies = [], onRestart, onShoot, lastExternalShot, onAimChange, isPaused, mobileShotTrigger, ammo, isSafeZone = false, location = 'world' }) => {
+  const [cooldown, setCooldown] = useState(30);
   const [aimAngle, setAimAngle] = useState(0);
   const [hoveredTile, setHoveredTile] = useState(null);
   const [bullets, setBullets] = useState([]);
   const [flashes, setFlashes] = useState([]);
-  const virtualMouse = useRef({ x: 0, y: 0 }); // Posición virtual para el modo capturado
+  const virtualMouse = useRef({ x: 0, y: 0 }); 
   const isLocked = useRef(false);
   const [hitZombies, setHitZombies] = useState(new Set());
-  const prevHealthRef = React.useRef(new Map());
-  const isDead = playerSprite.health <= 0;
+  const prevHealthRef = useRef(new Map());
+
+  // FIX: En zona segura (Búnker) nadie puede estar muerto
+  const isDead = isSafeZone ? false : (playerSprite.health <= 0);
+  const playerHealth = isSafeZone ? 100 : (playerSprite.health || 100);
 
   // Efecto visual de "Flash" al recibir daño (Transient)
   useEffect(() => {
@@ -57,7 +60,7 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
     }
   }, [zombies]);
   // Seguimiento del Mouse para apuntar (Relativo + Absoluto)
-  const handleMouseMove = React.useCallback((e) => {
+  const handleMouseMove = useCallback((e) => {
     if (isDead || isPaused) return;
     
     // Si el puntero está capturado (Pointer Lock)
@@ -112,7 +115,7 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
 
   // Disparo al hacer clic (Memoizado para rendimiento)
   const executeShot = React.useCallback((input) => {
-    if (isDead || isPaused) return;
+    if (isDead || isPaused || ammo <= 0) return;
     
     let angle;
     if (typeof input === 'number') {
@@ -272,16 +275,14 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
   useEffect(() => {
     let timer;
     if (isDead) {
-      if (cooldown > 0) {
-        timer = setInterval(() => {
-          setCooldown(prev => Math.max(0, prev - 1));
-        }, 1000);
-      } else {
-        if (onRestart) onRestart();
-      }
+      timer = setInterval(() => {
+        setCooldown(prev => Math.max(0, prev - 1));
+      }, 1000);
+    } else {
+      setCooldown(30);
     }
     return () => clearInterval(timer);
-  }, [isDead, cooldown, onRestart]);
+  }, [isDead]);
 
   // Helper para obtener la imagen de la pistola según el ángulo
   const getWeaponDirection = (angle) => {
@@ -308,17 +309,30 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
   const translateX = `calc(50vw - (${playerPos.x} * var(--tile-size)) - (var(--tile-size) / 2))`;
   const translateY = `calc(50vh - (${playerPos.y} * var(--tile-size)) - (var(--tile-size) / 2))`;
 
-  // Buffer de renderizado más amplio para evitar bordes cortados en pantallas panorámicas (20 tiles de radio)
-  const startX = Math.max(0, Math.floor(playerPos.x - 20));
-  const endX = Math.min(cols, Math.floor(playerPos.x + 21));
-  const startY = Math.max(0, Math.floor(playerPos.y - 15));
-  const endY = Math.min(rows, Math.floor(playerPos.y + 16));
+  // --- OPTIMIZATION: Memoize Viewport Calculation ---
+  const visibleTiles = useMemo(() => {
+    if (!matrix || matrix.length === 0) return [];
+    const rows = matrix.length;
+    const cols = matrix[0].length;
+    
+    // Buffer reducido para mejor rendimiento (12 tiles a la redonda)
+    const startX = Math.max(0, Math.floor(playerPos.x - 12));
+    const endX = Math.min(cols, Math.floor(playerPos.x + 13));
+    const startY = Math.max(0, Math.floor(playerPos.y - 10));
+    const endY = Math.min(rows, Math.floor(playerPos.y + 11));
+
+    const tiles = [];
+    for (let y = startY; y < endY; y++) {
+      for (let x = startX; x < endX; x++) {
+        tiles.push({ x, y, cell: matrix[y][x] });
+      }
+    }
+    return tiles;
+  }, [Math.floor(playerPos.x), Math.floor(playerPos.y), matrix]);
 
   // --- PERFORMANCE FIX: PRE-INDEX ENTITIES BY POSITION ---
-  const entityMap = React.useMemo(() => {
+  const entityMap = useMemo(() => {
     const map = new Map();
-    
-    // Index Zombies
     if (zombies) {
       zombies.forEach(z => {
         const key = `${Math.floor(z.x)}-${Math.floor(z.y)}`;
@@ -326,16 +340,16 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
         map.get(key).zombies.push(z);
       });
     }
-
-    // Index Other Players
     if (otherPlayers) {
       Object.values(otherPlayers).forEach(p => {
-        const key = `${Math.floor(p.x)}-${Math.floor(p.y)}`;
-        if (!map.has(key)) map.set(key, { zombies: [], players: [] });
-        map.get(key).players.push(p);
+        // Solo dibujar si están en la misma ubicación que el jugador local
+        if (p.location === location) {
+          const key = `${Math.floor(p.x)}-${Math.floor(p.y)}`;
+          if (!map.has(key)) map.set(key, { zombies: [], players: [] });
+          map.get(key).players.push(p);
+        }
       });
     }
-    
     return map;
   }, [zombies, otherPlayers]);
 
@@ -349,7 +363,7 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
       cellEntities.zombies.forEach(z => {
         elements.push(
           <div key={`zombie-${z.id}`} className={`player-sprite zombie-sprite ${hitZombies.has(z.id) ? 'zombie-hit-flash' : ''}`} style={{ zIndex: y * 10 + 11 }}>
-            <SpriteZombie direction={z.direction} isAttacking={z.attacking} />
+            <SpriteZombie direction={z.direction} isAttacking={z.attacking} type={z.type} />
           </div>
         );
       });
@@ -357,10 +371,10 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
 
     // 2. Main Player
     if (Math.floor(playerPos.x) === x && Math.floor(playerPos.y) === y) {
-      const { character, direction, isMoving, health } = playerSprite;
+      const { character, direction, isMoving } = playerSprite;
       elements.push(
         <div key="main-player" className="player-sprite" style={{ zIndex: y * 10 + 12 }}>
-          <HealthBar health={health || 100} />
+          <HealthBar health={playerHealth} />
           <SpritePlayer 
             characterId={character} 
             direction={direction} 
@@ -368,7 +382,6 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
             isDead={isDead} 
             aimAngle={aimAngle}
           />
-          {/* Indicador de arma siempre visible sobre el jugador principal */}
           {!isDead && !isPaused && (
             <div className="weapon-aim-indicator-player">
               <img 
@@ -385,10 +398,14 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
     // 3. Other Players
     if (cellEntities && cellEntities.players.length > 0) {
       cellEntities.players.forEach(p => {
+        // En zona segura, otros jugadores también tienen 100 HP visualmente
+        const h = isSafeZone ? 100 : (p.health !== undefined ? p.health : 100);
+        const dead = isSafeZone ? false : (h <= 0);
+        
         elements.push(
           <div key={`other-${p.playerId}`} className="player-sprite" style={{ zIndex: y * 10 + 12 }}>
-            <HealthBar health={p.health !== undefined ? p.health : 100} />
-            <SpritePlayer characterId={p.playerId} direction={p.action || 'abajo'} isMoving={true} isDead={p.health <= 0} aimAngle={p.aimAngle || 0} />
+            <HealthBar health={h} />
+            <SpritePlayer characterId={p.playerId} direction={p.action || 'abajo'} isMoving={true} isDead={dead} aimAngle={p.aimAngle || 0} />
           </div>
         );
       });
@@ -396,13 +413,6 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
 
     return elements;
   };
-
-  const visibleTiles = [];
-  for (let y = startY; y < endY; y++) {
-    for (let x = startX; x < endX; x++) {
-      visibleTiles.push({ x, y, cell: matrix[y][x] });
-    }
-  }
 
   return (
     <div 
@@ -436,23 +446,23 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
               {/* Entities and Props */}
               <div className="entity-tile" style={{ position: 'absolute', left: `calc(${x} * var(--tile-size))`, top: `calc(${y} * var(--tile-size))`, zIndex: y * 10 + 5, pointerEvents: 'none' }}>
                 {propID && propID !== 99 && (
-                  <img src={PROP_ASSETS[propID]} alt="prop" className={`tile-image ${propID >= 20 && propID <= 22 ? 'bush-prop' : ''} ${propID >= 30 && propID <= 34 ? 'tree-prop' : ''} ${propID >= 40 && propID <= 49 ? 'bunker-prop' : ''} ${propID >= 50 && propID <= 59 ? 'forest-prop' : ''} ${propID >= 60 && propID <= 69 ? 'city-building' : ''} ${propID >= 70 && propID <= 89 && propID !== 72 ? 'urban-prop' : ''} ${propID === 72 ? 'street-light-prop' : ''} ${propID === 90 ? 'barricade-prop' : ''} ${propID === 100 ? 'medkit-prop' : ''}`} style={{ position: 'absolute', zIndex: 1, top: 0, left: 0 }} />
+                  <img 
+                    src={PROP_ASSETS[propID]} 
+                    alt="prop" 
+                    className={`tile-image ${propID >= 20 && propID <= 22 ? 'bush-prop' : ''} ${propID >= 30 && propID <= 34 ? 'tree-prop' : ''} ${propID >= 40 && propID <= 49 ? 'bunker-prop' : ''} ${propID >= 50 && propID <= 59 ? 'forest-prop' : ''} ${propID >= 60 && propID <= 69 ? 'city-building' : ''} ${propID >= 70 && propID <= 89 && propID !== 72 ? 'urban-prop' : ''} ${propID === 72 ? 'street-light-prop' : ''} ${propID === 90 ? 'barricade-prop' : ''} ${(propID === 100 || propID === 101) ? 'item-pickup-prop' : ''}`} 
+                    style={{ 
+                      position: 'absolute', 
+                      zIndex: 1, 
+                      top: 0, 
+                      left: 0,
+                      opacity: (propID >= 40 && propID <= 49 && Math.floor(playerPos.x) === x && Math.floor(playerPos.y) === y) ? 0 : 1 
+                    }} 
+                  />
                 )}
                 {renderCellEntities(x, y)}
               </div>
 
-              {/* Aim Layer (Solo para otros jugadores o efectos especiales, el principal ya tiene el suyo) */}
-              {isHovered && Math.floor(playerPos.x) !== x && Math.floor(playerPos.y) !== y && (
-                <div style={{ position: 'absolute', left: `calc(${x} * var(--tile-size))`, top: `calc(${y} * var(--tile-size))`, zIndex: y * 10 + 20 }}>
-                  <div className="weapon-aim-indicator">
-                    <img 
-                      src={`/assets/weapons/weapon direction/${getWeaponDirection(aimAngle)}.png`} 
-                      alt="aim"
-                      className="weapon-aim-image"
-                    />
-                  </div>
-                </div>
-              )}
+              {/* Aim Layer (Eliminado a petición del usuario para dejar solo la del centro) */}
             </React.Fragment>
           );
         })}
@@ -490,15 +500,18 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
       
       {isDead && (
         <div className="death-overlay">
-          <div className="death-message">HAS MUERTO</div>
-          <button className="game-btn lobby-restart-btn is-active" onClick={() => onRestart && onRestart()}>
+          <div className="death-message pop-in">HAS MUERTO</div>
+          <div className="lobby-restart-btn">
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px' }}>
-              <span>Volver al Menú</span>
-              <span className="countdown-timer-red" style={{ fontSize: '0.9rem', opacity: 0.8 }}>
-                Salida automática en: {Math.floor(cooldown / 60)}:{(cooldown % 60).toString().padStart(2, '0')}
+              <span>REAPARECIENDO EN</span>
+              <span style={{ fontSize: '2rem', fontWeight: 'bold' }}>
+                {cooldown}s
               </span>
             </div>
-          </button>
+          </div>
+          <p style={{ color: '#ccc', marginTop: '20px', fontSize: '0.9rem' }}>
+            Aparecerás en la entrada del mapa automáticamente.
+          </p>
         </div>
       )}
     </div>

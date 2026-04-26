@@ -27,7 +27,8 @@ const BunkerRoom = ({ onTeleport, character, roomCode, onRestart, isPaused, onPa
         roomCode: roomCode,
         x: SPAWN_POINTS[character].x,
         y: SPAWN_POINTS[character].y,
-        action: 'abajo'
+        action: 'abajo',
+        location: 'bunker'
       });
 
       const topic = `/topic/game.state.${roomCode}`;
@@ -86,7 +87,9 @@ const BunkerRoom = ({ onTeleport, character, roomCode, onRestart, isPaused, onPa
     roomCode,
     otherPlayers,
     100,
-    isPaused
+    isPaused,
+    999, // Ammo not needed in bunker but keeping signature
+    'bunker'
   );
 
   return (
@@ -103,6 +106,8 @@ const BunkerRoom = ({ onTeleport, character, roomCode, onRestart, isPaused, onPa
         otherPlayers={otherPlayers}
         onRestart={onRestart}
         isPaused={isPaused}
+        isSafeZone={true}
+        location="bunker"
       />
       <TouchControls 
         onMove={handleManualMove} 

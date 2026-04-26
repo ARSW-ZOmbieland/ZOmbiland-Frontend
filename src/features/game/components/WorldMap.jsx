@@ -12,8 +12,10 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
   const [otherPlayers, setOtherPlayers] = useState({});
   const [zombies, setZombies] = useState([]);
   const [health, setHealth] = useState(100);
+  const [ammo, setAmmo] = useState(30);
   const [lastExternalShot, setLastExternalShot] = useState(null);
   const [myAimAngle, setMyAimAngle] = useState(0);
+  const [respawnTimeLeft, setRespawnTimeLeft] = useState(30);
 
   // Asset Preloading: Force browser to cache all GIFs at once
   useEffect(() => {
@@ -25,9 +27,13 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
         const img = new Image();
         img.src = `/personajes/${charId}/${dir}.gif`;
       });
-      // Also idle
-      const idle = new Image();
-      idle.src = `/personajes/${charId}/no-seleccion.png`;
+      // Death image
+      const death = new Image();
+      death.src = `/personajes/${charId}/${
+        charId === 'andres' ? 'juanandres_muerto.png' : 
+        charId === 'maria' ? 'maria_muerta.png' : 
+        `${charId}_muerto.png`
+      }`;
     });
 
     // Zombie preloading
@@ -35,12 +41,14 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
         'abajo', 'arriba', 'derecha', 'izquierda',
         'ataque_adelante', 'ataque_atras', 'ataque_derecha', 'ataque_izquierda', 'ataque'
     ];
-    zombieStates.forEach(state => {
+    // Chasqueador preloading
+    const chasqueadorStates = ['abajo', 'arriba', 'dercha', 'izquierda', 'ataque atras', 'ataque derecha', 'ataque frente', 'ataque izquierda'];
+    chasqueadorStates.forEach(state => {
         const img = new Image();
-        img.src = `/zombies/comun/${state}.gif`;
+        img.src = `/zombies/chasqueador/${state}.gif`;
     });
     
-    console.log(">> Preloading assets for better performance (Players & Zombies)...");
+    console.log(">> Preloading assets for better performance (Players, Zombies & Chasqueadores)...");
   }, []);
 
   useEffect(() => {
@@ -61,12 +69,13 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
                 x: data.startX,
                 y: data.startY,
                 action: 'abajo',
-                health: 100
+                health: 100,
+                location: 'world'
             });
         })
         .catch(err => console.error("Error fetching map", err));
 
-        // Suscribirse a los movimientos y estados (incluyendo vida)
+        // Suscribirse a los movimientos y estados (incluyendo vida y munición)
         const topic = `/topic/game.state.${roomCode}`;
         webSocketService.subscribe(topic, (message) => {
             if (message.action === 'PAUSE') {
@@ -79,10 +88,9 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
             }
 
             if (message.playerId === character) {
-                // Actualizar vida propia desde el servidor
-                if (message.health !== undefined) {
-                    setHealth(message.health);
-                }
+                // Actualizar vida y munición propia desde el servidor
+                if (message.health !== undefined) setHealth(message.health);
+                if (message.ammo !== undefined) setAmmo(message.ammo);
             } else if (message.playerId) {
                 // Si es un ataque externo, capturamos el evento para visualizarlo
                 if (message.action === 'ATTACK') {
@@ -149,10 +157,21 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
     const cellID = typeof cell === 'object' ? cell.p : cell;
     if (cellID === TILE_TYPES.BUNKER_DOOR) {
       if (mapData && (x !== mapData.startX || y !== mapData.startY)) {
-        onExit();
+        // AVISO INMEDIATO: Antes de cambiar de pantalla, avisamos al servidor
+        webSocketService.sendMessage('/app/game.action', {
+            playerId: character,
+            roomCode: roomCode,
+            x: x,
+            y: y,
+            action: 'abajo',
+            location: 'bunker'
+        });
+        
+        // Pequeño retardo para asegurar que el mensaje se envíe antes de desmontar el componente
+        setTimeout(() => onExit(), 50);
       }
     }
-  }, [onExit, mapData]);
+  }, [onExit, mapData, character, roomCode]);
 
   const { playerPos, playerState, setPlayerPos, handleManualMove } = usePlayerMovement(
     { x: 1, y: 1 }, 
@@ -162,7 +181,9 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
     roomCode,
     otherPlayers,
     health,
-    isPaused
+    isPaused,
+    ammo,
+    'world'
   );
 
   // IA local del zombie eliminada (ahora se maneja vía WebSocket arriba)
@@ -180,7 +201,27 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
   useEffect(() => {
       initialPosSet.current = false;
   }, [roomCode]);
- 
+
+  // Respawn Timer Logic
+  useEffect(() => {
+    let timer;
+    if (health <= 0) {
+      setRespawnTimeLeft(30);
+      timer = setInterval(() => {
+        setRespawnTimeLeft(prev => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    } else {
+      setRespawnTimeLeft(30);
+    }
+    return () => clearInterval(timer);
+  }, [health]);
+  
   // Broadcast de Puntería (Aim Angle) - Throttled a 10Hz
   useEffect(() => {
     if (!roomCode || health <= 0) return;
@@ -198,7 +239,8 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
                 y: playerPos.y,
                 aimAngle: currentAngle,
                 action: playerState.direction, // Mantener dirección actual
-                health: health
+                health: health,
+                location: 'world' // <--- IMPORTANTE: Mantener la ubicación
             });
             lastSentAngle = currentAngle;
         }
@@ -210,7 +252,7 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
 
   // Combat Handling
   const handleShoot = useCallback((targetX, targetY) => {
-    if (health <= 0) return;
+    if (health <= 0 || ammo <= 0) return;
     
     webSocketService.sendMessage('/app/game.action', {
         playerId: character,
@@ -220,9 +262,10 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
         targetX: targetX,
         targetY: targetY,
         action: 'ATTACK',
-        health: health
+        health: health,
+        ammo: ammo
     });
-  }, [character, roomCode, playerPos, health]);
+  }, [character, roomCode, playerPos, health, ammo]);
 
   const [mobileShotTrigger, setMobileShotTrigger] = useState(null);
 
@@ -244,6 +287,12 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
       backgroundColor: '#000',
       position: 'relative'
     }}>
+      {/* Ammo HUD */}
+      <div className="ammo-hud pop-in">
+        <img src="/assets/weapons/pistols/Bullets.png" alt="ammo" />
+        <span className={ammo <= 5 ? 'ammo-low' : ''}>{ammo}</span>
+      </div>
+
       <GameMap 
         matrix={mapData.matrix} 
         playerPos={playerPos} 
@@ -261,6 +310,8 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
         onAimChange={(angle) => { window.currentAimAngle = angle; }}
         isPaused={isPaused}
         mobileShotTrigger={mobileShotTrigger}
+        ammo={ammo}
+        location="world"
       />
       
       <TouchControls 
