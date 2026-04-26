@@ -50,14 +50,15 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
         'abajo', 'arriba', 'derecha', 'izquierda',
         'ataque_adelante', 'ataque_atras', 'ataque_derecha', 'ataque_izquierda', 'ataque'
     ];
-    // Chasqueador preloading
-    const chasqueadorStates = ['abajo', 'arriba', 'dercha', 'izquierda', 'ataque atras', 'ataque derecha', 'ataque frente', 'ataque izquierda'];
-    chasqueadorStates.forEach(state => {
+    // Hunter preloading (Special path)
+    directions.forEach(dir => {
         const img = new Image();
-        img.src = `/zombies/chasqueador/${state}.gif`;
+        img.src = `/villanos/hunter/${dir}.gif`;
     });
+    const hunterAttack = new Image();
+    hunterAttack.src = `/villanos/hunter/ataque.gif`;
     
-    console.log(">> Preloading assets for better performance (Players, Zombies & Chasqueadores)...");
+    console.log(">> Preloading assets (Players, Zombies, Chasqueadores & HUNTERS)...");
   }, []);
 
   useEffect(() => {

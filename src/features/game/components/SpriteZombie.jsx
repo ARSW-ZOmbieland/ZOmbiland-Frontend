@@ -10,14 +10,26 @@ const SpriteZombie = ({ direction, isAttacking, type = 'comun' }) => {
   
   // Mapping logic for different asset naming conventions
   const getAssetPath = (dir, mode) => {
-    const folder = type === 'chasqueador' ? 'chasqueador' : 'comun';
+    // Definir carpetas base
+    let folder = 'comun';
+    let basePath = '/zombies';
+
+    if (type === 'chasqueador') {
+      folder = 'chasqueador';
+    } else if (type === 'hunter') {
+      folder = 'hunter';
+      basePath = '/villanos'; // Ruta especial pedida por el usuario
+    }
     
+    const isChasqueador = type === 'chasqueador';
+    const isHunter = type === 'hunter';
+
     if (mode === 'walk') {
-      if (type === 'chasqueador' && dir === 'derecha') return `/zombies/${folder}/dercha.gif`;
-      return `/zombies/${folder}/${dir}.gif`;
+      if (isChasqueador && dir === 'derecha') return `${basePath}/${folder}/dercha.gif`;
+      return `${basePath}/${folder}/${dir}.gif`;
     } else {
       // Attack mapping
-      if (type === 'chasqueador') {
+      if (isChasqueador) {
         const attackMap = {
           'abajo': 'ataque frente',
           'arriba': 'ataque atras',
@@ -25,7 +37,10 @@ const SpriteZombie = ({ direction, isAttacking, type = 'comun' }) => {
           'izquierda': 'ataque izquierda',
           'adelante': 'ataque frente'
         };
-        return `/zombies/${folder}/${attackMap[dir] || 'ataque frente'}.gif`;
+        return `${basePath}/${folder}/${attackMap[dir] || 'ataque frente'}.gif`;
+      } else if (isHunter) {
+        // Hunter solo tiene ataque.gif
+        return `${basePath}/${folder}/ataque.gif`;
       } else {
         const commonAttackMap = {
           'abajo': 'ataque_adelante',
@@ -34,7 +49,7 @@ const SpriteZombie = ({ direction, isAttacking, type = 'comun' }) => {
           'izquierda': 'ataque_izquierda',
           'adelante': 'ataque_adelante'
         };
-        return `/zombies/${folder}/${commonAttackMap[dir] || 'ataque'}.gif`;
+        return `${basePath}/${folder}/${commonAttackMap[dir] || 'ataque'}.gif`;
       }
     }
   };
