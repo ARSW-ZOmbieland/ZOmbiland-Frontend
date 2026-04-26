@@ -52,19 +52,15 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
     ];
     // Hunter preloading (Special path)
     directions.forEach(dir => {
-        const img = new Image();
-        img.src = `/villanos/hunter/${dir}.gif`;
+        new Image().src = `/villanos/hunter/${dir}.gif`;
     });
-    const hunterAttack = new Image();
-    hunterAttack.src = `/villanos/hunter/ataque.gif`;
+    new Image().src = `/villanos/hunter/ataque.gif`;
 
     // Llorona preloading
     directions.forEach(dir => {
-        const img = new Image();
-        img.src = `/villanos/llorona/${dir}.gif`;
+        new Image().src = `/villanos/llorona/${dir}.gif`;
     });
-    const lloronaAttack = new Image();
-    lloronaAttack.src = `/villanos/llorona/ataque.gif`;
+    new Image().src = `/villanos/llorona/ataque.gif`;
     
     console.log(">> Preloading assets (Players, Zombies, Chasqueadores, Hunters & LLORONAS)...");
   }, []);
