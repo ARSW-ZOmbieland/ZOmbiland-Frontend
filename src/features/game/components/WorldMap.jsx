@@ -16,6 +16,15 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
   const [lastExternalShot, setLastExternalShot] = useState(null);
   const [myAimAngle, setMyAimAngle] = useState(0);
   const [respawnTimeLeft, setRespawnTimeLeft] = useState(30);
+  const [kills, setKills] = useState({
+    comun: 0,
+    chasqueador: 0,
+    llorona: 0,
+    tanke: 0,
+    hunter: 0
+  });
+  
+  const prevZombiesRef = useRef([]);
 
   // Asset Preloading: Force browser to cache all GIFs at once
   useEffect(() => {
@@ -111,6 +120,27 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
         const zombieTopic = `/topic/game.zombies.${roomCode}`;
         webSocketService.subscribe(zombieTopic, (zombieList) => {
             if (Array.isArray(zombieList)) {
+                // Tracking de muertes comparando con la lista anterior
+                if (prevZombiesRef.current.length > 0) {
+                    const currentIds = new Set(zombieList.map(z => z.id));
+                    const missingZombies = prevZombiesRef.current.filter(z => !currentIds.has(z.id));
+                    
+                    if (missingZombies.length > 0) {
+                        setKills(prev => {
+                            const newKills = { ...prev };
+                            missingZombies.forEach(z => {
+                                const typeKey = z.type || 'comun';
+                                if (newKills[typeKey] !== undefined) {
+                                    newKills[typeKey]++;
+                                } else {
+                                    newKills.comun++;
+                                }
+                            });
+                            return newKills;
+                        });
+                    }
+                }
+                prevZombiesRef.current = zombieList;
                 setZombies(zombieList);
             }
         });
@@ -156,22 +186,24 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
   const handleCollideSpecial = useCallback((x, y, cell) => {
     const cellID = typeof cell === 'object' ? cell.p : cell;
     if (cellID === TILE_TYPES.BUNKER_DOOR) {
-      if (mapData && (x !== mapData.startX || y !== mapData.startY)) {
-        // AVISO INMEDIATO: Antes de cambiar de pantalla, avisamos al servidor
-        webSocketService.sendMessage('/app/game.action', {
-            playerId: character,
-            roomCode: roomCode,
-            x: x,
-            y: y,
-            action: 'abajo',
-            location: 'bunker'
-        });
-        
-        // Pequeño retardo para asegurar que el mensaje se envíe antes de desmontar el componente
-        setTimeout(() => onExit(), 50);
-      }
+        if (mapData && (x !== mapData.startX || y !== mapData.startY)) {
+            // AVISO INMEDIATO: Antes de cambiar de pantalla, avisamos al servidor
+            webSocketService.sendMessage('/app/game.action', {
+                playerId: character,
+                roomCode: roomCode,
+                x: x,
+                y: y,
+                action: 'abajo',
+                location: 'bunker'
+            });
+            
+            // Pequeño retardo para asegurar que el mensaje se envíe antes de desmontar el componente
+            setTimeout(() => {
+                if (onExit) onExit(kills);
+            }, 100);
+        }
     }
-  }, [onExit, mapData, character, roomCode]);
+  }, [onExit, mapData, character, roomCode, kills]);
 
   const { playerPos, playerState, setPlayerPos, handleManualMove } = usePlayerMovement(
     { x: 1, y: 1 }, 

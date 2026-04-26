@@ -17,6 +17,7 @@ function App() {
   const [selectedCharacter, setSelectedCharacter] = useState(null);
   const [roomCode, setRoomCode] = useState(null);
   const [isPaused, setIsPaused] = useState(false);
+  const [victoryStats, setVictoryStats] = useState(null);
 
   // Player Stats for HUD
   const [stats, setStats] = useState({
@@ -30,7 +31,8 @@ function App() {
     setGameState('WORLD_MAP');
   };
 
-  const handleWorldExit = () => {
+  const handleWorldExit = (kills) => {
+    setVictoryStats(kills);
     setGameState('BUNKER_END');
   };
 
@@ -218,11 +220,38 @@ function App() {
             justifyContent: 'center', 
             backgroundColor: '#000',
             color: 'white',
-            textAlign: 'center'
+            textAlign: 'center',
+            padding: '20px'
           }}>
-            <h1 className="title-glow" style={{ fontSize: '4rem', color: '#32CD32' }}>¡REFUGIO ALCANZADO!</h1>
-            <p style={{ fontSize: '1.5rem', marginBottom: '30px' }}>Has sobrevivido al exterior y llegado al búnker final.</p>
-            <button className="game-btn create-btn" onClick={handleRestart}>Volver al Menú</button>
+            <h1 className="title-glow pop-in" style={{ fontSize: '4rem', color: '#32CD32', marginBottom: '10px' }}>¡REFUGIO ALCANZADO!</h1>
+            <p style={{ fontSize: '1.2rem', marginBottom: '30px', opacity: 0.8 }}>Has sobrevivido al exterior y llegado al búnker final.</p>
+            
+            {victoryStats && (
+                <div className="victory-stats-panel pop-in" style={{ 
+                    backgroundColor: 'rgba(50, 205, 50, 0.1)', 
+                    padding: '25px', 
+                    borderRadius: '20px', 
+                    border: '2px solid #32CD32',
+                    marginBottom: '40px',
+                    minWidth: '320px',
+                    boxShadow: '0 0 20px rgba(50, 205, 50, 0.2)'
+                }}>
+                    <h3 style={{ color: '#32CD32', textTransform: 'uppercase', marginBottom: '20px', letterSpacing: '3px', fontSize: '1.4rem' }}>Zombies Eliminados</h3>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', textAlign: 'left', fontSize: '1.1rem' }}>
+                        <div style={{ color: '#ccc' }}>Chasqueadores: <span style={{ color: '#fff', fontWeight: 'bold' }}>{victoryStats.chasqueador}</span></div>
+                        <div style={{ color: '#ccc' }}>Lloronas: <span style={{ color: '#fff', fontWeight: 'bold' }}>{victoryStats.llorona}</span></div>
+                        <div style={{ color: '#ccc' }}>Tankes: <span style={{ color: '#fff', fontWeight: 'bold' }}>{victoryStats.tanke}</span></div>
+                        <div style={{ color: '#ccc' }}>Hunters: <span style={{ color: '#fff', fontWeight: 'bold' }}>{victoryStats.hunter}</span></div>
+                        <div style={{ color: '#ccc', gridColumn: 'span 2', textAlign: 'center', marginTop: '10px', paddingTop: '10px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+                            Total Comunes: <span style={{ color: '#fff', fontWeight: 'bold' }}>{victoryStats.comun}</span>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            <button className="lobby-restart-btn" onClick={handleRestart}>
+                VOLVER AL MENÚ
+            </button>
           </div>
         )}
       </div>
