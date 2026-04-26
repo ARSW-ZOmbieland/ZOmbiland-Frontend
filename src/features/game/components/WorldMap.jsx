@@ -352,9 +352,36 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
         onAimChange={handleGlobalAimChange}
         isPaused={isPaused}
         mobileShotTrigger={mobileShotTrigger}
+        isSafeZone={false}
         ammo={ammo}
         location="world"
       />
+
+      {/* OVERLAY DE PARÁLISIS */}
+      {isParalyzed && (
+        <div style={{
+          position: 'absolute',
+          top: 0, left: 0, width: '100%', height: '100%',
+          backgroundColor: 'rgba(128, 0, 128, 0.2)', // Tinte morado ligero
+          boxShadow: 'inset 0 0 100px rgba(128, 0, 128, 0.8)',
+          pointerEvents: 'none', // No bloquear clicks
+          zIndex: 100,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          animation: 'pulse 1.5s infinite'
+        }}>
+          <h2 style={{
+            color: '#fff',
+            textShadow: '0 0 10px #800080',
+            fontFamily: 'monospace',
+            fontSize: '3rem',
+            opacity: 0.8
+          }}>
+            ¡ESTÁS PARALIZADO!
+          </h2>
+        </div>
+      )}
       
       <TouchControls 
         onMove={handleManualMove} 
