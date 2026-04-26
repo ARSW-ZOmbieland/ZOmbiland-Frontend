@@ -48,14 +48,14 @@ export const usePlayerMovement = (initialPos, character, matrix, onCollideSpecia
     // Special mapping for character sprites
     const mappedDir = (character === 'maria' && direction === 'abajo') ? 'adelante' : direction;
 
-    if (newX !== playerPos.x || newY !== playerPos.y) {
-      setPlayerState({ direction: mappedDir, isMoving: true });
-      
-      if (moveTimer.current) clearTimeout(moveTimer.current);
-      moveTimer.current = setTimeout(() => {
-        setPlayerState(prev => ({ ...prev, isMoving: false }));
-      }, 2000);
+    // ACTUALIZACIÓN: Siempre permitir girar, incluso si el movimiento está bloqueado
+    setPlayerState({ direction: mappedDir, isMoving: true });
+    if (moveTimer.current) clearTimeout(moveTimer.current);
+    moveTimer.current = setTimeout(() => {
+      setPlayerState(prev => ({ ...prev, isMoving: false }));
+    }, 1000);
 
+    if (newX !== playerPos.x || newY !== playerPos.y) {
       if (isWalkable(matrix, newX, newY)) {
         let isOccupied = false;
         if (otherPlayers) {
@@ -84,6 +84,19 @@ export const usePlayerMovement = (initialPos, character, matrix, onCollideSpecia
         }
       } else if (onCollideSpecial) {
         onCollideSpecial(newX, newY, matrix[newY]?.[newX]);
+      }
+    } else {
+      // Si solo giró (sin moverse), también enviamos el estado al servidor para que otros vean el giro
+      if (roomCode) {
+        webSocketService.sendMessage('/app/game.action', {
+            playerId: character,
+            roomCode: roomCode,
+            x: playerPos.x,
+            y: playerPos.y,
+            action: mappedDir,
+            health: health,
+            location: location
+        });
       }
     }
   };
