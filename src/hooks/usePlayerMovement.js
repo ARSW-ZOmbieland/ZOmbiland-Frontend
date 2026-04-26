@@ -10,7 +10,7 @@ import webSocketService from '../core/WebSocketService';
  * @param {Function} onCollideSpecial - Callback for special tiles (doors, exits)
  * @param {string} roomCode - The active room code
  */
-export const usePlayerMovement = (initialPos, character, matrix, onCollideSpecial, roomCode, otherPlayers = {}, health = 100, isPaused = false) => {
+export const usePlayerMovement = (initialPos, character, matrix, onCollideSpecial, roomCode, otherPlayers = {}, health = 100, isPaused = false, ammo = 30, location = 'world') => {
   const [playerPos, setPlayerPos] = useState(initialPos);
   const [playerState, setPlayerState] = useState({
     direction: 'abajo',
@@ -77,7 +77,8 @@ export const usePlayerMovement = (initialPos, character, matrix, onCollideSpecia
                   x: newX,
                   y: newY,
                   action: mappedDir,
-                  health: health
+                  health: health,
+                  location: location
               });
           }
         }

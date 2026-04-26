@@ -16,7 +16,7 @@ const HealthBar = ({ health }) => {
   );
 };
 
-const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zombies = [], onRestart, onShoot, lastExternalShot, onAimChange, isPaused, mobileShotTrigger, ammo, isSafeZone = false }) => {
+const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zombies = [], onRestart, onShoot, lastExternalShot, onAimChange, isPaused, mobileShotTrigger, ammo, isSafeZone = false, location = 'world' }) => {
   const [cooldown, setCooldown] = useState(30);
   const [aimAngle, setAimAngle] = useState(0);
   const [hoveredTile, setHoveredTile] = useState(null);
@@ -342,9 +342,12 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
     }
     if (otherPlayers) {
       Object.values(otherPlayers).forEach(p => {
-        const key = `${Math.floor(p.x)}-${Math.floor(p.y)}`;
-        if (!map.has(key)) map.set(key, { zombies: [], players: [] });
-        map.get(key).players.push(p);
+        // Solo dibujar si están en la misma ubicación que el jugador local
+        if (p.location === location) {
+          const key = `${Math.floor(p.x)}-${Math.floor(p.y)}`;
+          if (!map.has(key)) map.set(key, { zombies: [], players: [] });
+          map.get(key).players.push(p);
+        }
       });
     }
     return map;

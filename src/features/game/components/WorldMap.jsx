@@ -69,7 +69,8 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
                 x: data.startX,
                 y: data.startY,
                 action: 'abajo',
-                health: 100
+                health: 100,
+                location: 'world'
             });
         })
         .catch(err => console.error("Error fetching map", err));
@@ -170,7 +171,8 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
     otherPlayers,
     health,
     isPaused,
-    ammo
+    ammo,
+    'world'
   );
 
   // IA local del zombie eliminada (ahora se maneja vía WebSocket arriba)
@@ -297,6 +299,7 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
         isPaused={isPaused}
         mobileShotTrigger={mobileShotTrigger}
         ammo={ammo}
+        location="world"
       />
       
       <TouchControls 
