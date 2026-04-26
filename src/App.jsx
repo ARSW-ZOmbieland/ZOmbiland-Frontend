@@ -237,13 +237,28 @@ function App() {
                     boxShadow: '0 0 20px rgba(50, 205, 50, 0.2)'
                 }}>
                     <h3 style={{ color: '#32CD32', textTransform: 'uppercase', marginBottom: '20px', letterSpacing: '3px', fontSize: '1.4rem' }}>Zombies Eliminados</h3>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', textAlign: 'left', fontSize: '1.1rem' }}>
-                        <div style={{ color: '#ccc' }}>Chasqueadores: <span style={{ color: '#fff', fontWeight: 'bold' }}>{victoryStats.chasqueador}</span></div>
-                        <div style={{ color: '#ccc' }}>Lloronas: <span style={{ color: '#fff', fontWeight: 'bold' }}>{victoryStats.llorona}</span></div>
-                        <div style={{ color: '#ccc' }}>Tankes: <span style={{ color: '#fff', fontWeight: 'bold' }}>{victoryStats.tanke}</span></div>
-                        <div style={{ color: '#ccc' }}>Hunters: <span style={{ color: '#fff', fontWeight: 'bold' }}>{victoryStats.hunter}</span></div>
-                        <div style={{ color: '#ccc', gridColumn: 'span 2', textAlign: 'center', marginTop: '10px', paddingTop: '10px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-                            Total Comunes: <span style={{ color: '#fff', fontWeight: 'bold' }}>{victoryStats.comun}</span>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', textAlign: 'left', fontSize: '1.2rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', color: '#ccc', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '5px' }}>Chasqueadores: <span style={{ color: '#fff', fontWeight: 'bold' }}>{victoryStats.chasqueador}</span></div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', color: '#ccc', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '5px' }}>Lloronas: <span style={{ color: '#fff', fontWeight: 'bold' }}>{victoryStats.llorona}</span></div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', color: '#ccc', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '5px' }}>Tankes: <span style={{ color: '#fff', fontWeight: 'bold' }}>{victoryStats.tanke}</span></div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', color: '#ccc', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '5px' }}>Hunters: <span style={{ color: '#fff', fontWeight: 'bold' }}>{victoryStats.hunter}</span></div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', color: '#ccc', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '5px' }}>Comunes: <span style={{ color: '#fff', fontWeight: 'bold' }}>{victoryStats.comun}</span></div>
+                        
+                        <div style={{ 
+                            display: 'flex', 
+                            justifyContent: 'space-between', 
+                            marginTop: '15px', 
+                            paddingTop: '15px', 
+                            borderTop: '2px solid rgba(50, 205, 50, 0.4)', 
+                            color: '#32CD32', 
+                            fontWeight: 'bold',
+                            fontSize: '1.4rem',
+                            textShadow: '0 0 10px rgba(50, 205, 50, 0.3)'
+                        }}>
+                            TOTAL ELIMINADOS: 
+                            <span>
+                                {victoryStats.chasqueador + victoryStats.llorona + victoryStats.tanke + victoryStats.hunter + victoryStats.comun}
+                            </span>
                         </div>
                     </div>
                 </div>
