@@ -15,6 +15,7 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
   const [ammo, setAmmo] = useState(30);
   const [lastExternalShot, setLastExternalShot] = useState(null);
   const [myAimAngle, setMyAimAngle] = useState(0);
+  const [respawnTimeLeft, setRespawnTimeLeft] = useState(30);
 
   // Asset Preloading: Force browser to cache all GIFs at once
   useEffect(() => {
@@ -26,9 +27,13 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
         const img = new Image();
         img.src = `/personajes/${charId}/${dir}.gif`;
       });
-      // Also idle
-      const idle = new Image();
-      idle.src = `/personajes/${charId}/no-seleccion.png`;
+      // Death image
+      const death = new Image();
+      death.src = `/personajes/${charId}/${
+        charId === 'andres' ? 'juanandres_muerto.png' : 
+        charId === 'maria' ? 'maria_muerta.png' : 
+        `${charId}_muerto.png`
+      }`;
     });
 
     // Zombie preloading
@@ -183,7 +188,27 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
   useEffect(() => {
       initialPosSet.current = false;
   }, [roomCode]);
- 
+
+  // Respawn Timer Logic
+  useEffect(() => {
+    let timer;
+    if (health <= 0) {
+      setRespawnTimeLeft(30);
+      timer = setInterval(() => {
+        setRespawnTimeLeft(prev => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    } else {
+      setRespawnTimeLeft(30);
+    }
+    return () => clearInterval(timer);
+  }, [health]);
+  
   // Broadcast de Puntería (Aim Angle) - Throttled a 10Hz
   useEffect(() => {
     if (!roomCode || health <= 0) return;

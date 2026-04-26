@@ -17,7 +17,7 @@ const HealthBar = ({ health }) => {
 };
 
 const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zombies = [], onRestart, onShoot, lastExternalShot, onAimChange, isPaused, mobileShotTrigger, ammo }) => {
-  const [cooldown, setCooldown] = useState(90);
+  const [cooldown, setCooldown] = useState(30);
   const [aimAngle, setAimAngle] = useState(0);
   const [hoveredTile, setHoveredTile] = useState(null);
   const [bullets, setBullets] = useState([]);
@@ -272,16 +272,14 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
   useEffect(() => {
     let timer;
     if (isDead) {
-      if (cooldown > 0) {
-        timer = setInterval(() => {
-          setCooldown(prev => Math.max(0, prev - 1));
-        }, 1000);
-      } else {
-        if (onRestart) onRestart();
-      }
+      timer = setInterval(() => {
+        setCooldown(prev => Math.max(0, prev - 1));
+      }, 1000);
+    } else {
+      setCooldown(30);
     }
     return () => clearInterval(timer);
-  }, [isDead, cooldown, onRestart]);
+  }, [isDead]);
 
   // Helper para obtener la imagen de la pistola según el ángulo
   const getWeaponDirection = (angle) => {
@@ -479,15 +477,18 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
       
       {isDead && (
         <div className="death-overlay">
-          <div className="death-message">HAS MUERTO</div>
-          <button className="game-btn lobby-restart-btn is-active" onClick={() => onRestart && onRestart()}>
+          <div className="death-message pop-in">HAS MUERTO</div>
+          <div className="lobby-restart-btn">
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px' }}>
-              <span>Volver al Menú</span>
-              <span className="countdown-timer-red" style={{ fontSize: '0.9rem', opacity: 0.8 }}>
-                Salida automática en: {Math.floor(cooldown / 60)}:{(cooldown % 60).toString().padStart(2, '0')}
+              <span>REAPARECIENDO EN</span>
+              <span style={{ fontSize: '2rem', fontWeight: 'bold' }}>
+                {cooldown}s
               </span>
             </div>
-          </button>
+          </div>
+          <p style={{ color: '#ccc', marginTop: '20px', fontSize: '0.9rem' }}>
+            Aparecerás en la entrada del mapa automáticamente.
+          </p>
         </div>
       )}
     </div>
