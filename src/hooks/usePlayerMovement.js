@@ -68,22 +68,24 @@ export const usePlayerMovement = (initialPos, character, matrix, onCollideSpecia
         }
 
         // Calcular parálisis localmente
-        const isParalyzed = zombies.some(z => z.type === 'llorona' && Math.abs(z.x - playerPos.x) < 0.5 && Math.abs(z.y - playerPos.y) < 0.5);
+        const isCurrentlyParalyzed = zombies.some(z => z.type === 'llorona' && Math.abs(z.x - playerPos.x) < 0.5 && Math.abs(z.y - playerPos.y) < 0.5);
 
-        if (!isOccupied && !isParalyzed) {
+        if (!isOccupied && !isCurrentlyParalyzed) {
           setPlayerPos({ x: newX, y: newY });
-          
-          if (roomCode) {
-              webSocketService.sendMessage('/app/game.action', {
-                  playerId: character,
-                  roomCode: roomCode,
-                  x: newX,
-                  y: newY,
-                  action: mappedDir,
-                  health: health,
-                  location: location
-              });
-          }
+        }
+
+        // Siempre enviar el mensaje al servidor para poder girar/disparar, 
+        // pero usando la posición actual si está paralizado u ocupado.
+        if (roomCode) {
+            webSocketService.sendMessage('/app/game.action', {
+                playerId: character,
+                roomCode: roomCode,
+                x: (!isOccupied && !isCurrentlyParalyzed) ? newX : playerPos.x,
+                y: (!isOccupied && !isCurrentlyParalyzed) ? newY : playerPos.y,
+                action: mappedDir,
+                health: health,
+                location: location
+            });
         }
       } else if (onCollideSpecial) {
         onCollideSpecial(newX, newY, matrix[newY]?.[newX]);
@@ -132,7 +134,10 @@ export const usePlayerMovement = (initialPos, character, matrix, onCollideSpecia
       window.removeEventListener('keydown', handleKeyDown);
       if (moveTimer.current) clearTimeout(moveTimer.current);
     };
-  }, [playerPos, character, matrix, onCollideSpecial, isPaused]);
+  }, [playerPos, character, matrix, onCollideSpecial, isPaused, health, zombies, roomCode]);
 
-  return { playerPos, playerState, setPlayerPos, handleManualMove };
+  // Calcula la parálisis globalmente para el renderizado
+  const isParalyzed = zombies.some(z => z.type === 'llorona' && Math.abs(z.x - playerPos.x) < 0.5 && Math.abs(z.y - playerPos.y) < 0.5);
+
+  return { playerPos, playerState, setPlayerPos, handleManualMove, isParalyzed };
 };
