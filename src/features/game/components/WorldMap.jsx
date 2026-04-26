@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import GameMap from './GameMap';
 import TouchControls from './TouchControls';
 import { TILE_TYPES } from '../../../core/GameEngine';
