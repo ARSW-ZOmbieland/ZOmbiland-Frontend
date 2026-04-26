@@ -210,7 +210,7 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
     }
   }, [onExit, mapData, character, roomCode, kills]);
 
-  const { playerPos, playerState, setPlayerPos, handleManualMove } = usePlayerMovement(
+  const { playerPos, playerState, setPlayerPos, handleManualMove, isParalyzed } = usePlayerMovement(
     { x: 1, y: 1 }, 
     character, 
     mapData ? mapData.matrix : [[0]], 
