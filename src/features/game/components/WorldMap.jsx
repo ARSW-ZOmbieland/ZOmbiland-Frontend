@@ -157,10 +157,21 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
     const cellID = typeof cell === 'object' ? cell.p : cell;
     if (cellID === TILE_TYPES.BUNKER_DOOR) {
       if (mapData && (x !== mapData.startX || y !== mapData.startY)) {
-        onExit();
+        // AVISO INMEDIATO: Antes de cambiar de pantalla, avisamos al servidor
+        webSocketService.sendMessage('/app/game.action', {
+            playerId: character,
+            roomCode: roomCode,
+            x: x,
+            y: y,
+            action: 'abajo',
+            location: 'bunker'
+        });
+        
+        // Pequeño retardo para asegurar que el mensaje se envíe antes de desmontar el componente
+        setTimeout(() => onExit(), 50);
       }
     }
-  }, [onExit, mapData]);
+  }, [onExit, mapData, character, roomCode]);
 
   const { playerPos, playerState, setPlayerPos, handleManualMove } = usePlayerMovement(
     { x: 1, y: 1 }, 
@@ -228,7 +239,8 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
                 y: playerPos.y,
                 aimAngle: currentAngle,
                 action: playerState.direction, // Mantener dirección actual
-                health: health
+                health: health,
+                location: 'world' // <--- IMPORTANTE: Mantener la ubicación
             });
             lastSentAngle = currentAngle;
         }
