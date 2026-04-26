@@ -95,9 +95,13 @@ export const usePlayerMovement = (initialPos, character, matrix, onCollideSpecia
         ArrowLeft: 'izquierda',
         ArrowRight: 'derecha',
         w: 'arriba',
+        W: 'arriba',
         s: 'abajo',
+        S: 'abajo',
         a: 'izquierda',
-        d: 'derecha'
+        A: 'izquierda',
+        d: 'derecha',
+        D: 'derecha'
       };
 
       const dir = keys[e.key];
