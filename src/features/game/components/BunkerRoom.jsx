@@ -103,6 +103,7 @@ const BunkerRoom = ({ onTeleport, character, roomCode, onRestart, isPaused, onPa
         otherPlayers={otherPlayers}
         onRestart={onRestart}
         isPaused={isPaused}
+        isSafeZone={true}
       />
       <TouchControls 
         onMove={handleManualMove} 

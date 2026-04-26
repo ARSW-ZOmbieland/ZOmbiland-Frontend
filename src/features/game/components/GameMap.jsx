@@ -16,17 +16,20 @@ const HealthBar = ({ health }) => {
   );
 };
 
-const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zombies = [], onRestart, onShoot, lastExternalShot, onAimChange, isPaused, mobileShotTrigger, ammo }) => {
+const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zombies = [], onRestart, onShoot, lastExternalShot, onAimChange, isPaused, mobileShotTrigger, ammo, isSafeZone = false }) => {
   const [cooldown, setCooldown] = useState(30);
   const [aimAngle, setAimAngle] = useState(0);
   const [hoveredTile, setHoveredTile] = useState(null);
   const [bullets, setBullets] = useState([]);
   const [flashes, setFlashes] = useState([]);
-  const virtualMouse = useRef({ x: 0, y: 0 }); // Posición virtual para el modo capturado
+  const virtualMouse = useRef({ x: 0, y: 0 }); 
   const isLocked = useRef(false);
   const [hitZombies, setHitZombies] = useState(new Set());
   const prevHealthRef = useRef(new Map());
-  const isDead = playerSprite.health <= 0;
+
+  // FIX: En zona segura (Búnker) nadie puede estar muerto
+  const isDead = isSafeZone ? false : (playerSprite.health <= 0);
+  const playerHealth = isSafeZone ? 100 : (playerSprite.health || 100);
 
   // Efecto visual de "Flash" al recibir daño (Transient)
   useEffect(() => {
@@ -306,17 +309,30 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
   const translateX = `calc(50vw - (${playerPos.x} * var(--tile-size)) - (var(--tile-size) / 2))`;
   const translateY = `calc(50vh - (${playerPos.y} * var(--tile-size)) - (var(--tile-size) / 2))`;
 
-  // Buffer de renderizado más amplio para evitar bordes cortados en pantallas panorámicas (20 tiles de radio)
-  const startX = Math.max(0, Math.floor(playerPos.x - 20));
-  const endX = Math.min(cols, Math.floor(playerPos.x + 21));
-  const startY = Math.max(0, Math.floor(playerPos.y - 15));
-  const endY = Math.min(rows, Math.floor(playerPos.y + 16));
+  // --- OPTIMIZATION: Memoize Viewport Calculation ---
+  const visibleTiles = useMemo(() => {
+    if (!matrix || matrix.length === 0) return [];
+    const rows = matrix.length;
+    const cols = matrix[0].length;
+    
+    // Buffer reducido para mejor rendimiento (12 tiles a la redonda)
+    const startX = Math.max(0, Math.floor(playerPos.x - 12));
+    const endX = Math.min(cols, Math.floor(playerPos.x + 13));
+    const startY = Math.max(0, Math.floor(playerPos.y - 10));
+    const endY = Math.min(rows, Math.floor(playerPos.y + 11));
+
+    const tiles = [];
+    for (let y = startY; y < endY; y++) {
+      for (let x = startX; x < endX; x++) {
+        tiles.push({ x, y, cell: matrix[y][x] });
+      }
+    }
+    return tiles;
+  }, [Math.floor(playerPos.x), Math.floor(playerPos.y), matrix]);
 
   // --- PERFORMANCE FIX: PRE-INDEX ENTITIES BY POSITION ---
   const entityMap = useMemo(() => {
     const map = new Map();
-    
-    // Index Zombies
     if (zombies) {
       zombies.forEach(z => {
         const key = `${Math.floor(z.x)}-${Math.floor(z.y)}`;
@@ -324,8 +340,6 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
         map.get(key).zombies.push(z);
       });
     }
-
-    // Index Other Players
     if (otherPlayers) {
       Object.values(otherPlayers).forEach(p => {
         const key = `${Math.floor(p.x)}-${Math.floor(p.y)}`;
@@ -333,7 +347,6 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
         map.get(key).players.push(p);
       });
     }
-    
     return map;
   }, [zombies, otherPlayers]);
 
@@ -355,10 +368,10 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
 
     // 2. Main Player
     if (Math.floor(playerPos.x) === x && Math.floor(playerPos.y) === y) {
-      const { character, direction, isMoving, health } = playerSprite;
+      const { character, direction, isMoving } = playerSprite;
       elements.push(
         <div key="main-player" className="player-sprite" style={{ zIndex: y * 10 + 12 }}>
-          <HealthBar health={health || 100} />
+          <HealthBar health={playerHealth} />
           <SpritePlayer 
             characterId={character} 
             direction={direction} 
@@ -366,7 +379,6 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
             isDead={isDead} 
             aimAngle={aimAngle}
           />
-          {/* Indicador de arma siempre visible sobre el jugador principal */}
           {!isDead && !isPaused && (
             <div className="weapon-aim-indicator-player">
               <img 
@@ -383,10 +395,14 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
     // 3. Other Players
     if (cellEntities && cellEntities.players.length > 0) {
       cellEntities.players.forEach(p => {
+        // En zona segura, otros jugadores también tienen 100 HP visualmente
+        const h = isSafeZone ? 100 : (p.health !== undefined ? p.health : 100);
+        const dead = isSafeZone ? false : (h <= 0);
+        
         elements.push(
           <div key={`other-${p.playerId}`} className="player-sprite" style={{ zIndex: y * 10 + 12 }}>
-            <HealthBar health={p.health !== undefined ? p.health : 100} />
-            <SpritePlayer characterId={p.playerId} direction={p.action || 'abajo'} isMoving={true} isDead={p.health <= 0} aimAngle={p.aimAngle || 0} />
+            <HealthBar health={h} />
+            <SpritePlayer characterId={p.playerId} direction={p.action || 'abajo'} isMoving={true} isDead={dead} aimAngle={p.aimAngle || 0} />
           </div>
         );
       });
@@ -394,13 +410,6 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
 
     return elements;
   };
-
-  const visibleTiles = [];
-  for (let y = startY; y < endY; y++) {
-    for (let x = startX; x < endX; x++) {
-      visibleTiles.push({ x, y, cell: matrix[y][x] });
-    }
-  }
 
   return (
     <div 
@@ -434,7 +443,18 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
               {/* Entities and Props */}
               <div className="entity-tile" style={{ position: 'absolute', left: `calc(${x} * var(--tile-size))`, top: `calc(${y} * var(--tile-size))`, zIndex: y * 10 + 5, pointerEvents: 'none' }}>
                 {propID && propID !== 99 && (
-                  <img src={PROP_ASSETS[propID]} alt="prop" className={`tile-image ${propID >= 20 && propID <= 22 ? 'bush-prop' : ''} ${propID >= 30 && propID <= 34 ? 'tree-prop' : ''} ${propID >= 40 && propID <= 49 ? 'bunker-prop' : ''} ${propID >= 50 && propID <= 59 ? 'forest-prop' : ''} ${propID >= 60 && propID <= 69 ? 'city-building' : ''} ${propID >= 70 && propID <= 89 && propID !== 72 ? 'urban-prop' : ''} ${propID === 72 ? 'street-light-prop' : ''} ${propID === 90 ? 'barricade-prop' : ''} ${(propID === 100 || propID === 101) ? 'item-pickup-prop' : ''}`} style={{ position: 'absolute', zIndex: 1, top: 0, left: 0 }} />
+                  <img 
+                    src={PROP_ASSETS[propID]} 
+                    alt="prop" 
+                    className={`tile-image ${propID >= 20 && propID <= 22 ? 'bush-prop' : ''} ${propID >= 30 && propID <= 34 ? 'tree-prop' : ''} ${propID >= 40 && propID <= 49 ? 'bunker-prop' : ''} ${propID >= 50 && propID <= 59 ? 'forest-prop' : ''} ${propID >= 60 && propID <= 69 ? 'city-building' : ''} ${propID >= 70 && propID <= 89 && propID !== 72 ? 'urban-prop' : ''} ${propID === 72 ? 'street-light-prop' : ''} ${propID === 90 ? 'barricade-prop' : ''} ${(propID === 100 || propID === 101) ? 'item-pickup-prop' : ''}`} 
+                    style={{ 
+                      position: 'absolute', 
+                      zIndex: 1, 
+                      top: 0, 
+                      left: 0,
+                      opacity: (propID >= 40 && propID <= 49 && Math.floor(playerPos.x) === x && Math.floor(playerPos.y) === y) ? 0 : 1 
+                    }} 
+                  />
                 )}
                 {renderCellEntities(x, y)}
               </div>
