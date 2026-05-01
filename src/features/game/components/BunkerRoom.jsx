@@ -19,25 +19,6 @@ const BunkerRoom = ({ onTeleport, character, roomCode, onRestart, isPaused, onPa
   const [myAimAngle, setMyAimAngle] = useState(0);
   const [mobileShotTrigger, setMobileShotTrigger] = useState(null);
 
-  const handleMobileShoot = useCallback((angle) => {
-    setMobileShotTrigger({ angle, timestamp: Date.now() });
-  }, []);
-
-  const handleShoot = useCallback((targetX, targetY) => {
-    webSocketService.sendMessage('/app/game.action', {
-        playerId: character,
-        roomCode: roomCode,
-        x: playerPos.x,
-        y: playerPos.y,
-        targetX: targetX,
-        targetY: targetY,
-        action: 'ATTACK',
-        health: 100,
-        ammo: 999, // Munición infinita en el búnker para probar
-        location: 'bunker'
-    });
-  }, [character, roomCode, playerPos]);
-
   useEffect(() => {
     if (!roomCode) return; // Prevent crash if roomCode is somehow missing
     
@@ -112,6 +93,25 @@ const BunkerRoom = ({ onTeleport, character, roomCode, onRestart, isPaused, onPa
     999, // Ammo not needed in bunker but keeping signature
     'bunker'
   );
+
+  const handleMobileShoot = useCallback((angle) => {
+    setMobileShotTrigger({ angle, timestamp: Date.now() });
+  }, []);
+
+  const handleShoot = useCallback((targetX, targetY) => {
+    webSocketService.sendMessage('/app/game.action', {
+        playerId: character,
+        roomCode: roomCode,
+        x: playerPos.x,
+        y: playerPos.y,
+        targetX: targetX,
+        targetY: targetY,
+        action: 'ATTACK',
+        health: 100,
+        ammo: 999, // Munición infinita en el búnker para probar
+        location: 'bunker'
+    });
+  }, [character, roomCode, playerPos]);
 
   return (
     <div className="game-view-cinematic" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', backgroundColor: '#000' }}>
