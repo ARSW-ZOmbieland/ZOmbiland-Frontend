@@ -38,7 +38,14 @@ function GameRoom({ onConfirm }) {
         }
     }, [view, roomCode, joinCode, selectedCharacter]);
 
-    const handleCreateRoom = () => {
+    const [roomMode, setRoomMode] = useState('TRADICIONAL');
+
+    const handleSelectMode = () => {
+        setView('mode-selection');
+    };
+
+    const handleCreateRoom = (mode) => {
+        setRoomMode(mode);
         setView('creating');
         setTimeout(() => {
             const newCode = Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -47,7 +54,7 @@ function GameRoom({ onConfirm }) {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
-                body: JSON.stringify({ roomCode: newCode })
+                body: JSON.stringify({ roomCode: newCode, mode: mode })
             }).then(() => {
                 setRoomCode(newCode);
                 setTimeout(() => setView('character-selection'), 2000);
@@ -88,7 +95,19 @@ function GameRoom({ onConfirm }) {
 
     const confirmSelection = () => {
         const activeCode = roomCode || joinCode;
-        onConfirm(selectedCharacter, activeCode);
+        // Obtenemos el modo del backend si fue un unirse
+        if (!roomCode && activeCode) {
+            fetch(`${API_BASE_URL}/api/game/rooms/${activeCode}/mode`, { credentials: 'include' })
+                .then(res => res.json())
+                .then(data => {
+                    onConfirm(selectedCharacter, activeCode, data.mode);
+                })
+                .catch(() => {
+                    onConfirm(selectedCharacter, activeCode, 'TRADICIONAL');
+                });
+        } else {
+            onConfirm(selectedCharacter, activeCode, roomMode);
+        }
     };
 
     // Determine current step for progress indicator
@@ -117,7 +136,7 @@ function GameRoom({ onConfirm }) {
                             <p className="subtitle">¿Crearás un nuevo refugio o te unirás a uno?</p>
                             
                             <div className="menu-options">
-                                <button className="game-btn primary-btn" onClick={handleCreateRoom}>
+                                <button className="game-btn primary-btn" onClick={handleSelectMode}>
                                     Crear Nueva Sala
                                 </button>
                                 <span className="divider">O</span>
@@ -125,6 +144,27 @@ function GameRoom({ onConfirm }) {
                                     Unirse con Código
                                 </button>
                             </div>
+                        </div>
+                    )}
+
+                    {/* MODE SELECTION VIEW */}
+                    {view === 'mode-selection' && (
+                        <div className="step-view fade-in">
+                            <h2 className="title-glow">Selecciona el Modo</h2>
+                            <p className="subtitle">Elige las reglas de supervivencia</p>
+                            
+                            <div className="menu-options" style={{ marginTop: '20px' }}>
+                                <button className="game-btn primary-btn" onClick={() => handleCreateRoom('TRADICIONAL')}>
+                                    Modo Tradicional
+                                    <div style={{ fontSize: '0.8rem', opacity: 0.8, marginTop: '5px', textTransform: 'none' }}>Cooperativo - Sobrevivan juntos</div>
+                                </button>
+                                <button className="game-btn secondary-btn" style={{ borderColor: '#ff3333', color: '#ff3333' }} onClick={() => handleCreateRoom('TORNEO')}>
+                                    Modo Torneo
+                                    <div style={{ fontSize: '0.8rem', opacity: 0.8, marginTop: '5px', textTransform: 'none' }}>PvP - El último en pie gana</div>
+                                </button>
+                            </div>
+                            
+                            <button className="text-btn mt-auto" onClick={handleReset}>Atrás</button>
                         </div>
                     )}
 

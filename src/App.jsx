@@ -16,6 +16,7 @@ function App() {
   const [gameState, setGameState] = useState('LOBBY'); // LOBBY, BUNKER_START, WORLD_MAP, BUNKER_END
   const [selectedCharacter, setSelectedCharacter] = useState(null);
   const [roomCode, setRoomCode] = useState(null);
+  const [roomMode, setRoomMode] = useState('TRADICIONAL');
   const [isPaused, setIsPaused] = useState(false);
   const [victoryStats, setVictoryStats] = useState(null);
 
@@ -36,9 +37,10 @@ function App() {
     setGameState('BUNKER_END');
   };
 
-  const handleStartGame = (character, code) => {
+  const handleStartGame = (character, code, mode) => {
     setSelectedCharacter(character);
     setRoomCode(code);
+    setRoomMode(mode || 'TRADICIONAL');
     setGameState('BUNKER_START');
   };
 
@@ -207,6 +209,7 @@ function App() {
               onRestart={handleRestart} 
               isPaused={isPaused} 
               onPauseSync={setIsPaused} 
+              mode={roomMode}
             />
           </ErrorBoundary>
         )}

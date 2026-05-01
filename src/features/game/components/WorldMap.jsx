@@ -7,7 +7,7 @@ import { API_BASE_URL } from '../../../config/constants';
 import webSocketService from '../../../core/WebSocketService';
 // IA local elinidada para usar Sincronización de Servidor
 
-const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSync }) => {
+const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSync, mode }) => {
   const [mapData, setMapData] = useState(null);
   const [otherPlayers, setOtherPlayers] = useState({});
   const [zombies, setZombies] = useState([]);
@@ -234,20 +234,36 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
   const initialPosSet = React.useRef(false);
   useEffect(() => {
       if (mapData && setPlayerPos && !initialPosSet.current) {
-          setPlayerPos({ x: mapData.startX, y: mapData.startY });
+          let spawnX = mapData.startX;
+          let spawnY = mapData.startY;
+          
+          if (mode === 'TORNEO' && mapData.doors && mapData.doors.length >= 4) {
+              const charIndex = ['andres', 'juanpablo', 'maria', 'tomas'].indexOf(character);
+              if (charIndex >= 0 && mapData.doors[charIndex]) {
+                  spawnX = mapData.doors[charIndex][0];
+                  spawnY = mapData.doors[charIndex][1];
+              }
+          }
+          
+          setPlayerPos({ x: spawnX, y: spawnY });
           initialPosSet.current = true;
       }
-  }, [mapData, setPlayerPos]);
+  }, [mapData, setPlayerPos, mode, character]);
 
   // Reset flag when room changes
   useEffect(() => {
       initialPosSet.current = false;
   }, [roomCode]);
 
-  // Respawn Timer Logic
+  // Respawn Timer Logic & Tournament Logic
   useEffect(() => {
     let timer;
     if (health <= 0) {
+      if (mode === 'TORNEO') {
+          setRespawnTimeLeft('ELIMINADO');
+          return;
+      }
+      
       setRespawnTimeLeft(15);
       timer = setInterval(() => {
         setRespawnTimeLeft(prev => {
@@ -262,7 +278,25 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
       setRespawnTimeLeft(15);
     }
     return () => clearInterval(timer);
-  }, [health]);
+  }, [health, mode]);
+
+  // Tournament Victory Check
+  useEffect(() => {
+      if (mode === 'TORNEO' && health > 0) {
+          const others = Object.values(otherPlayers);
+          // Sólo comprobar si hay al menos otro jugador que alguna vez se conectó
+          if (others.length > 0) {
+              const allDead = others.every(p => p.health <= 0);
+              if (allDead) {
+                  // ¡Victoria Royale!
+                  setTimeout(() => {
+                      alert("¡VICTORIA ROYALE! Eres el último superviviente.");
+                      if (onExit) onExit({ ...kills, torneoGanado: true });
+                  }, 1000);
+              }
+          }
+      }
+  }, [mode, health, otherPlayers, kills, onExit]);
   
   // Broadcast de Puntería (Aim Angle) - Throttled a 10Hz
   useEffect(() => {
