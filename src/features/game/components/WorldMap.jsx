@@ -196,6 +196,11 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
   const handleCollideSpecial = useCallback((x, y, cell) => {
     const cellID = typeof cell === 'object' ? cell.p : cell;
     if (cellID === TILE_TYPES.BUNKER_DOOR) {
+        // En modo torneo, nadie puede escapar. Es combate a muerte.
+        if (mode === 'TORNEO') {
+            return;
+        }
+
         if (mapData && (x !== mapData.startX || y !== mapData.startY)) {
             // AVISO INMEDIATO: Antes de cambiar de pantalla, avisamos al servidor
             webSocketService.sendMessage('/app/game.action', {
@@ -213,7 +218,7 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
             }, 100);
         }
     }
-  }, [onExit, mapData, character, roomCode, kills]);
+  }, [onExit, mapData, character, roomCode, kills, mode]);
 
   const { playerPos, playerState, setPlayerPos, handleManualMove } = usePlayerMovement(
     { x: 1, y: 1 }, 
