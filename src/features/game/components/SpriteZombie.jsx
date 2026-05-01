@@ -18,11 +18,15 @@ const SpriteZombie = ({ direction, isAttacking, type = 'comun' }) => {
       folder = 'chasqueador';
     } else if (type === 'hunter') {
       folder = 'hunter';
-      basePath = '/villanos'; // Ruta especial pedida por el usuario
+      basePath = '/villanos';
+    } else if (type === 'tanke') {
+      folder = 'tanque';
+      basePath = '/villanos';
     }
     
     const isChasqueador = type === 'chasqueador';
     const isHunter = type === 'hunter';
+    const isTanke = type === 'tanke';
 
     if (mode === 'walk') {
       if (isChasqueador && dir === 'derecha') return `${basePath}/${folder}/dercha.gif`;
@@ -41,6 +45,15 @@ const SpriteZombie = ({ direction, isAttacking, type = 'comun' }) => {
       } else if (isHunter) {
         // Hunter solo tiene ataque.gif
         return `${basePath}/${folder}/ataque.gif`;
+      } else if (isTanke) {
+        const tankeAttackMap = {
+          'abajo': 'ataqueabajo',
+          'arriba': 'ataquearriba',
+          'derecha': 'ataquederecho',
+          'izquierda': 'ataqueizquierdo',
+          'adelante': 'ataqueabajo'
+        };
+        return `${basePath}/${folder}/${tankeAttackMap[dir] || 'ataqueabajo'}.gif`;
       } else {
         const commonAttackMap = {
           'abajo': 'ataque_adelante',

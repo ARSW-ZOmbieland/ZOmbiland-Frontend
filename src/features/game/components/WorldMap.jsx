@@ -57,8 +57,17 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
     });
     const hunterAttack = new Image();
     hunterAttack.src = `/villanos/hunter/ataque.gif`;
+
+    // Tanke preloading
+    directions.forEach(dir => {
+        const walk = new Image();
+        walk.src = `/villanos/tanque/${dir}.gif`;
+        const attack = new Image();
+        const tankeAttackMap = { 'derecha': 'derecho', 'izquierda': 'izquierdo' };
+        attack.src = `/villanos/tanque/ataque${tankeAttackMap[dir] || dir}.gif`;
+    });
     
-    console.log(">> Preloading assets (Players, Zombies, Chasqueadores & HUNTERS)...");
+    console.log(">> Preloading assets (Players, Zombies, Chasqueadores, HUNTERS & TANKES)...");
   }, []);
 
   useEffect(() => {
