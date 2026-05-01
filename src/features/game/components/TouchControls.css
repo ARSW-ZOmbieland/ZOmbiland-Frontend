@@ -49,6 +49,7 @@
   flex-direction: column;
   align-items: center;
   gap: 10px;
+  pointer-events: auto;
 }
 
 .joystick-base {
