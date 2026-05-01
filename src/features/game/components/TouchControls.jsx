@@ -10,22 +10,38 @@ const TouchControls = ({ onMove, onShoot, onAimChange }) => {
   const activeMoveRef = useRef(null);
   const activeAimRef = useRef(0);
 
-  // --- JOYSTICK IZQUIERDO: MOVIMIENTO ---
-  const handleMoveTouch = (e, isEnd = false) => {
-    if (isEnd) {
-      setMoveStick({ x: 0, y: 0, active: false });
-      activeMoveRef.current = null;
-      if (moveInterval.current) clearInterval(moveInterval.current);
-      return;
-    }
+  // Identificadores de puntero para soporte multitouch real
+  const movePointerId = useRef(null);
+  const shootPointerId = useRef(null);
 
-    const touch = e.touches[0];
+  // Evitar que el menú contextual aparezca al mantener presionado en móviles
+  useEffect(() => {
+    const handleContextMenu = (e) => {
+        // Prevenir context menu en los joysticks
+        if (e.target.closest('.joystick-wrapper')) {
+            e.preventDefault();
+        }
+    };
+    document.addEventListener('contextmenu', handleContextMenu);
+    return () => document.removeEventListener('contextmenu', handleContextMenu);
+  }, []);
+
+  // --- JOYSTICK IZQUIERDO: MOVIMIENTO ---
+  const handleMoveStart = (e) => {
+    e.currentTarget.setPointerCapture(e.pointerId);
+    movePointerId.current = e.pointerId;
+    handleMoveActive(e);
+  };
+
+  const handleMoveActive = (e) => {
+    if (movePointerId.current !== e.pointerId) return;
+
     const container = e.currentTarget.getBoundingClientRect();
     const centerX = container.left + container.width / 2;
     const centerY = container.top + container.height / 2;
     
-    let dx = touch.clientX - centerX;
-    let dy = touch.clientY - centerY;
+    let dx = e.clientX - centerX;
+    let dy = e.clientY - centerY;
     const distance = Math.sqrt(dx * dx + dy * dy);
     const maxRadius = container.width / 2;
     
@@ -56,25 +72,34 @@ const TouchControls = ({ onMove, onShoot, onAimChange }) => {
     }
   };
 
-  // --- JOYSTICK DERECHO: APUNTAR Y DISPARAR ---
-  const handleShootTouch = (e, isEnd = false) => {
-    if (isEnd) {
-      setShootStick({ x: 0, y: 0, active: false });
-      if (shootInterval.current) clearInterval(shootInterval.current);
-      return;
-    }
+  const handleMoveEnd = (e) => {
+    if (movePointerId.current !== e.pointerId) return;
+    
+    // Solo liberamos captura si aún la tenemos (para evitar errores DOM)
+    try { e.currentTarget.releasePointerCapture(e.pointerId); } catch(err){}
+    movePointerId.current = null;
 
-    const touch = Array.from(e.touches).find(t => {
-        const rect = e.currentTarget.getBoundingClientRect();
-        return t.clientX >= rect.left && t.clientX <= rect.right;
-    }) || e.touches[0];
+    setMoveStick({ x: 0, y: 0, active: false });
+    activeMoveRef.current = null;
+    if (moveInterval.current) clearInterval(moveInterval.current);
+  };
+
+  // --- JOYSTICK DERECHO: APUNTAR Y DISPARAR ---
+  const handleShootStart = (e) => {
+    e.currentTarget.setPointerCapture(e.pointerId);
+    shootPointerId.current = e.pointerId;
+    handleShootActive(e);
+  };
+
+  const handleShootActive = (e) => {
+    if (shootPointerId.current !== e.pointerId) return;
 
     const container = e.currentTarget.getBoundingClientRect();
     const centerX = container.left + container.width / 2;
     const centerY = container.top + container.height / 2;
     
-    let dx = touch.clientX - centerX;
-    let dy = touch.clientY - centerY;
+    let dx = e.clientX - centerX;
+    let dy = e.clientY - centerY;
     const distance = Math.sqrt(dx * dx + dy * dy);
     const maxRadius = container.width / 2;
     
@@ -108,15 +133,27 @@ const TouchControls = ({ onMove, onShoot, onAimChange }) => {
     }
   };
 
+  const handleShootEnd = (e) => {
+    if (shootPointerId.current !== e.pointerId) return;
+    
+    try { e.currentTarget.releasePointerCapture(e.pointerId); } catch(err){}
+    shootPointerId.current = null;
+
+    setShootStick({ x: 0, y: 0, active: false });
+    if (shootInterval.current) clearInterval(shootInterval.current);
+  };
+
   return (
     <div className="touch-controls-container">
       {/* JOYSTICK MOVIMIENTO */}
       <div className="joystick-wrapper move-stick-wrapper">
         <div 
           className="joystick-base"
-          onTouchStart={(e) => handleMoveTouch(e)}
-          onTouchMove={(e) => handleMoveTouch(e)}
-          onTouchEnd={(e) => handleMoveTouch(e, true)}
+          onPointerDown={handleMoveStart}
+          onPointerMove={handleMoveActive}
+          onPointerUp={handleMoveEnd}
+          onPointerCancel={handleMoveEnd}
+          onContextMenu={(e) => e.preventDefault()}
         >
           <div 
             className="joystick-handle move-handle" 
@@ -130,9 +167,11 @@ const TouchControls = ({ onMove, onShoot, onAimChange }) => {
       <div className="joystick-wrapper shoot-stick-wrapper">
         <div 
           className="joystick-base shoot-base"
-          onTouchStart={(e) => handleShootTouch(e)}
-          onTouchMove={(e) => handleShootTouch(e)}
-          onTouchEnd={(e) => handleShootTouch(e, true)}
+          onPointerDown={handleShootStart}
+          onPointerMove={handleShootActive}
+          onPointerUp={handleShootEnd}
+          onPointerCancel={handleShootEnd}
+          onContextMenu={(e) => e.preventDefault()}
         >
           <div 
             className="joystick-handle shoot-handle" 
