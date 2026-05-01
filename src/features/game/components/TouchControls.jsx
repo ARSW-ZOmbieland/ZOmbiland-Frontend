@@ -29,13 +29,11 @@ const TouchControls = ({ onMove, onShoot, onAimChange }) => {
   }, [activeMove, onMove]);
 
   const handleStart = (e, action, type) => {
-    // Intentamos preventDefault para evitar scroll, pero si falla no bloqueamos
-    try { if (e.cancelable) e.preventDefault(); } catch(err) {}
-    
     if (type === 'move') {
+      // Intentamos preventDefault para evitar scroll, pero si falla no bloqueamos
+      try { if (e.cancelable) e.preventDefault(); } catch(err) {}
       setActiveMove(action);
     } else if (type === 'shoot') {
-      console.log(">> SHOOTING ACTION");
       action();
     }
   };
@@ -100,17 +98,44 @@ const TouchControls = ({ onMove, onShoot, onAimChange }) => {
       {/* PANEL DE DISPARO */}
       <div className="control-group shoot-group">
         <div className="shoot-grid">
-          <button className="s-btn" onPointerDown={(e) => handleStart(e, () => handleShootDirection(-1, -1), 'shoot')}>◤</button>
-          <button className="s-btn" onPointerDown={(e) => handleStart(e, () => handleShootDirection(0, -1), 'shoot')}>▲</button>
-          <button className="s-btn" onPointerDown={(e) => handleStart(e, () => handleShootDirection(1, -1), 'shoot')}>◥</button>
+          <button className="s-btn" 
+            onTouchStart={(e) => { e.preventDefault(); handleShootDirection(-1, -1); }}
+            onMouseDown={(e) => { e.preventDefault(); handleShootDirection(-1, -1); }}
+          >◤</button>
+          <button className="s-btn" 
+            onTouchStart={(e) => { e.preventDefault(); handleShootDirection(0, -1); }}
+            onMouseDown={(e) => { e.preventDefault(); handleShootDirection(0, -1); }}
+          >▲</button>
+          <button className="s-btn" 
+            onTouchStart={(e) => { e.preventDefault(); handleShootDirection(1, -1); }}
+            onMouseDown={(e) => { e.preventDefault(); handleShootDirection(1, -1); }}
+          >◥</button>
           
-          <button className="s-btn" onPointerDown={(e) => handleStart(e, () => handleShootDirection(-1, 0), 'shoot')}>◀</button>
-          <button className="s-btn center-fire" onPointerDown={(e) => handleStart(e, handleCenterShoot, 'shoot')}>🔥</button>
-          <button className="s-btn" onPointerDown={(e) => handleStart(e, () => handleShootDirection(1, 0), 'shoot')}>▶</button>
+          <button className="s-btn" 
+            onTouchStart={(e) => { e.preventDefault(); handleShootDirection(-1, 0); }}
+            onMouseDown={(e) => { e.preventDefault(); handleShootDirection(-1, 0); }}
+          >◀</button>
+          <button className="s-btn center-fire" 
+            onTouchStart={(e) => { e.preventDefault(); handleCenterShoot(); }}
+            onMouseDown={(e) => { e.preventDefault(); handleCenterShoot(); }}
+          >🔥</button>
+          <button className="s-btn" 
+            onTouchStart={(e) => { e.preventDefault(); handleShootDirection(1, 0); }}
+            onMouseDown={(e) => { e.preventDefault(); handleShootDirection(1, 0); }}
+          >▶</button>
           
-          <button className="s-btn" onPointerDown={(e) => handleStart(e, () => handleShootDirection(-1, 1), 'shoot')}>◣</button>
-          <button className="s-btn" onPointerDown={(e) => handleStart(e, () => handleShootDirection(0, 1), 'shoot')}>▼</button>
-          <button className="s-btn" onPointerDown={(e) => handleStart(e, () => handleShootDirection(1, 1), 'shoot')}>◢</button>
+          <button className="s-btn" 
+            onTouchStart={(e) => { e.preventDefault(); handleShootDirection(-1, 1); }}
+            onMouseDown={(e) => { e.preventDefault(); handleShootDirection(-1, 1); }}
+          >◣</button>
+          <button className="s-btn" 
+            onTouchStart={(e) => { e.preventDefault(); handleShootDirection(0, 1); }}
+            onMouseDown={(e) => { e.preventDefault(); handleShootDirection(0, 1); }}
+          >▼</button>
+          <button className="s-btn" 
+            onTouchStart={(e) => { e.preventDefault(); handleShootDirection(1, 1); }}
+            onMouseDown={(e) => { e.preventDefault(); handleShootDirection(1, 1); }}
+          >◢</button>
         </div>
         <span className="control-label">Disparar</span>
       </div>
