@@ -180,7 +180,7 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
     if (onShoot) {
         onShoot(targetX, targetY);
     }
-  }, [isDead, isPaused, playerPos, onShoot]);
+  }, [isDead, isPaused, playerPos, onShoot, ammo]);
 
   // NUEVO: Escuchar disparos desde controles móviles (Con control de duplicados)
   const lastProcessedShot = useRef(0);
