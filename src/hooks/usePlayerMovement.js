@@ -116,7 +116,7 @@ export const usePlayerMovement = (initialPos, character, matrix, onCollideSpecia
       window.removeEventListener('keydown', handleKeyDown);
       if (moveTimer.current) clearTimeout(moveTimer.current);
     };
-  }, [playerPos, character, matrix, onCollideSpecial, isPaused]);
+  }, [playerPos, character, matrix, onCollideSpecial, isPaused, health]);
 
   return { playerPos, playerState, setPlayerPos, handleManualMove };
 };

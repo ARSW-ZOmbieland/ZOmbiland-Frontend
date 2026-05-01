@@ -15,7 +15,7 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
   const [ammo, setAmmo] = useState(30);
   const [lastExternalShot, setLastExternalShot] = useState(null);
   const [myAimAngle, setMyAimAngle] = useState(0);
-  const [respawnTimeLeft, setRespawnTimeLeft] = useState(30);
+  const [respawnTimeLeft, setRespawnTimeLeft] = useState(15);
   const [kills, setKills] = useState({
     comun: 0,
     chasqueador: 0,
@@ -248,7 +248,7 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
   useEffect(() => {
     let timer;
     if (health <= 0) {
-      setRespawnTimeLeft(30);
+      setRespawnTimeLeft(15);
       timer = setInterval(() => {
         setRespawnTimeLeft(prev => {
           if (prev <= 1) {
@@ -259,7 +259,7 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
         });
       }, 1000);
     } else {
-      setRespawnTimeLeft(30);
+      setRespawnTimeLeft(15);
     }
     return () => clearInterval(timer);
   }, [health]);

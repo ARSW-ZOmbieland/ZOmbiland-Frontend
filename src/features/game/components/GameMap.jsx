@@ -17,7 +17,7 @@ const HealthBar = ({ health }) => {
 };
 
 const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zombies = [], onRestart, onShoot, lastExternalShot, onAimChange, isPaused, mobileShotTrigger, ammo, isSafeZone = false, location = 'world' }) => {
-  const [cooldown, setCooldown] = useState(30);
+  const [cooldown, setCooldown] = useState(15);
   const [aimAngle, setAimAngle] = useState(0);
   const [hoveredTile, setHoveredTile] = useState(null);
   const [bullets, setBullets] = useState([]);
@@ -279,7 +279,7 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
         setCooldown(prev => Math.max(0, prev - 1));
       }, 1000);
     } else {
-      setCooldown(30);
+      setCooldown(15);
     }
     return () => clearInterval(timer);
   }, [isDead]);
