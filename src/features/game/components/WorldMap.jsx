@@ -352,6 +352,7 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
         onAimChange={(angle) => { window.currentAimAngle = angle; }}
         isPaused={isPaused}
         mobileShotTrigger={mobileShotTrigger}
+        mobileAimAngle={myAimAngle}
         ammo={ammo}
         location="world"
       />
@@ -359,7 +360,10 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
       <TouchControls 
         onMove={handleManualMove} 
         onShoot={handleMobileShoot}
-        onAimChange={(angle) => { window.currentAimAngle = angle; }}
+        onAimChange={(angle) => { 
+            window.currentAimAngle = angle;
+            setMyAimAngle(angle);
+        }}
       />
     </div>
   );

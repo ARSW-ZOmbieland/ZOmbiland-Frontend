@@ -54,7 +54,7 @@ const TouchControls = ({ onMove, onShoot, onAimChange }) => {
 
     // Determinar dirección cardinal
     let dir = null;
-    if (distance > 20) {
+    if (distance > 10) {
         if (Math.abs(dx) > Math.abs(dy)) {
             dir = dx > 0 ? 'derecha' : 'izquierda';
         } else {

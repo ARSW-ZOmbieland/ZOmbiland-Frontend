@@ -16,7 +16,7 @@ const HealthBar = ({ health }) => {
   );
 };
 
-const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zombies = [], onRestart, onShoot, lastExternalShot, onAimChange, isPaused, mobileShotTrigger, ammo, isSafeZone = false, location = 'world' }) => {
+const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zombies = [], onRestart, onShoot, lastExternalShot, onAimChange, isPaused, mobileShotTrigger, mobileAimAngle, ammo, isSafeZone = false, location = 'world' }) => {
   const [cooldown, setCooldown] = useState(15);
   const [aimAngle, setAimAngle] = useState(0);
   const [hoveredTile, setHoveredTile] = useState(null);
@@ -89,6 +89,13 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
     setAimAngle(angle);
     if (onAimChange) onAimChange(angle);
   }, [isDead, isPaused, onAimChange]);
+
+  // Sincronizar el ángulo del joystick móvil con el estado interno
+  useEffect(() => {
+    if (mobileAimAngle !== undefined) {
+      setAimAngle(mobileAimAngle);
+    }
+  }, [mobileAimAngle]);
 
   // NUEVO: Efecto reactivo para actualizar la baldosa vecina (hoveredTile) cuando el personaje se mueva o cambie el ángulo
   useEffect(() => {

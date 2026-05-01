@@ -25,8 +25,8 @@ export const usePlayerMovement = (initialPos, character, matrix, onCollideSpecia
     if (health <= 0 || isPaused) return;
 
     const now = Date.now();
-    // Cooldown optimizado para mejor respuesta (200ms)
-    if (now - lastMoveRef.current < 200) return;
+    // Cooldown optimizado para mejor respuesta (180ms para no interferir con joystick de 200ms)
+    if (now - lastMoveRef.current < 180) return;
     lastMoveRef.current = now;
     
     let newX = playerPos.x;
