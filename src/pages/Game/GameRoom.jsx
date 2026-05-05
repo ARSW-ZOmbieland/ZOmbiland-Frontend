@@ -10,6 +10,7 @@ function GameRoom({ onConfirm }) {
     const [selectedCharacter, setSelectedCharacter] = useState(null);
     const [takenCharacters, setTakenCharacters] = useState([]);
     const [joinError, setJoinError] = useState('');
+    const [gameMode, setGameMode] = useState('coop'); // 'coop' or 'torneo'
 
     useEffect(() => {
         if (view === 'character-selection') {
@@ -47,7 +48,7 @@ function GameRoom({ onConfirm }) {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
-                body: JSON.stringify({ roomCode: newCode })
+                body: JSON.stringify({ roomCode: newCode, mode: gameMode })
             }).then(() => {
                 setRoomCode(newCode);
                 setTimeout(() => setView('character-selection'), 2000);
@@ -116,14 +117,32 @@ function GameRoom({ onConfirm }) {
                             <h1 className="title-glow">Punto de Encuentro</h1>
                             <p className="subtitle">¿Crearás un nuevo refugio o te unirás a uno?</p>
                             
-                            <div className="menu-options">
-                                <button className="game-btn primary-btn" onClick={handleCreateRoom}>
-                                    Crear Nueva Sala
-                                </button>
-                                <span className="divider">O</span>
-                                <button className="game-btn secondary-btn" onClick={() => setView('joining')}>
-                                    Unirse con Código
-                                </button>
+                            <div className="menu-options" style={{ flexDirection: 'column', gap: '15px' }}>
+                                <div className="mode-selector" style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginBottom: '10px' }}>
+                                    <button 
+                                        className={`game-btn ${gameMode === 'coop' ? 'primary-btn' : 'secondary-btn'}`} 
+                                        onClick={() => setGameMode('coop')}
+                                        style={{ padding: '10px 20px', fontSize: '1rem' }}
+                                    >
+                                        Cooperativo
+                                    </button>
+                                    <button 
+                                        className={`game-btn ${gameMode === 'torneo' ? 'primary-btn' : 'secondary-btn'}`} 
+                                        onClick={() => setGameMode('torneo')}
+                                        style={{ padding: '10px 20px', fontSize: '1rem' }}
+                                    >
+                                        Torneo (PvP)
+                                    </button>
+                                </div>
+                                <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', alignItems: 'center' }}>
+                                    <button className="game-btn primary-btn" onClick={handleCreateRoom}>
+                                        Crear Nueva Sala
+                                    </button>
+                                    <span className="divider">O</span>
+                                    <button className="game-btn secondary-btn" onClick={() => setView('joining')}>
+                                        Unirse con Código
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     )}

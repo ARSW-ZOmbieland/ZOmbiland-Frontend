@@ -22,15 +22,18 @@ function App() {
   const [stats, setStats] = useState({
     health: 100,
     stamina: 100,
-    medkits: 1,
     weapons: 1
   });
+  const [finalKills, setFinalKills] = useState(0);
 
   const handleTeleport = () => {
     setGameState('WORLD_MAP');
   };
 
-  const handleWorldExit = () => {
+  const handleWorldExit = (exitStats) => {
+    if (exitStats && exitStats.kills !== undefined) {
+      setFinalKills(exitStats.kills);
+    }
     setGameState('BUNKER_END');
   };
 
@@ -222,6 +225,10 @@ function App() {
           }}>
             <h1 className="title-glow" style={{ fontSize: '4rem', color: '#32CD32' }}>¡REFUGIO ALCANZADO!</h1>
             <p style={{ fontSize: '1.5rem', marginBottom: '30px' }}>Has sobrevivido al exterior y llegado al búnker final.</p>
+            <div style={{ padding: '20px', backgroundColor: 'rgba(50, 205, 50, 0.1)', border: '2px solid #32CD32', borderRadius: '15px', marginBottom: '30px', minWidth: '300px' }}>
+                <h3 style={{ fontSize: '2rem', color: '#fff', margin: '0' }}>Clasificación Final</h3>
+                <p style={{ fontSize: '1.5rem', color: '#32CD32', fontWeight: 'bold', margin: '10px 0 0 0' }}>Bajas confirmadas: {finalKills}</p>
+            </div>
             <button className="game-btn create-btn" onClick={handleRestart}>Volver al Menú</button>
           </div>
         )}

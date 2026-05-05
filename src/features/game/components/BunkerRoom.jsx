@@ -16,6 +16,7 @@ const SPAWN_POINTS = {
 const BunkerRoom = ({ onTeleport, character, roomCode, onRestart, isPaused, onPauseSync }) => {
   const [matrix] = useState(INITIAL_BUNKER_MATRIX);
   const [otherPlayers, setOtherPlayers] = useState({});
+  const [mobileShotTrigger, setMobileShotTrigger] = useState(null);
 
   useEffect(() => {
     if (!roomCode) return; // Prevent crash if roomCode is somehow missing
@@ -92,6 +93,24 @@ const BunkerRoom = ({ onTeleport, character, roomCode, onRestart, isPaused, onPa
     'bunker'
   );
 
+  const handleShoot = useCallback((targetX, targetY) => {
+    webSocketService.sendMessage('/app/game.action', {
+        playerId: character,
+        roomCode: roomCode,
+        x: playerPos.x,
+        y: playerPos.y,
+        targetX: targetX,
+        targetY: targetY,
+        action: 'ATTACK',
+        health: 100,
+        ammo: 999
+    });
+  }, [character, roomCode, playerPos]);
+
+  const handleMobileShoot = useCallback((angle) => {
+    setMobileShotTrigger({ angle, timestamp: Date.now() });
+  }, []);
+
   return (
     <div className="game-view-cinematic" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', backgroundColor: '#000' }}>
       <GameMap 
@@ -105,14 +124,17 @@ const BunkerRoom = ({ onTeleport, character, roomCode, onRestart, isPaused, onPa
         }}
         otherPlayers={otherPlayers}
         onRestart={onRestart}
+        onShoot={handleShoot}
+        onAimChange={(angle) => { window.currentAimAngle = angle; }}
         isPaused={isPaused}
+        mobileShotTrigger={mobileShotTrigger}
         isSafeZone={true}
         location="bunker"
       />
       <TouchControls 
         onMove={handleManualMove} 
-        onShoot={() => {}} // Bunker is safe, no shooting for now
-        onAimChange={() => {}}
+        onShoot={handleMobileShoot}
+        onAimChange={(angle) => { window.currentAimAngle = angle; }}
       />
     </div>
   );
