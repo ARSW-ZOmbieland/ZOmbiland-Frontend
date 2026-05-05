@@ -10,7 +10,7 @@ import webSocketService from '../core/WebSocketService';
  * @param {Function} onCollideSpecial - Callback for special tiles (doors, exits)
  * @param {string} roomCode - The active room code
  */
-export const usePlayerMovement = (initialPos, character, matrix, onCollideSpecial, roomCode, otherPlayers = {}, health = 100, isPaused = false, ammo = 30, location = 'world') => {
+export const usePlayerMovement = (initialPos, character, matrix, onCollideSpecial, roomCode, otherPlayers = {}, health = 100, isPaused = false, ammo = 30, location = 'world', paralyzed = false) => {
   const [playerPos, setPlayerPos] = useState(initialPos);
   const [playerState, setPlayerState] = useState({
     direction: 'abajo',
@@ -21,8 +21,8 @@ export const usePlayerMovement = (initialPos, character, matrix, onCollideSpecia
   const lastMoveRef = useRef(0);
 
   const handleManualMove = (direction) => {
-    // No moverse si está muerto o pausado
-    if (health <= 0 || isPaused) return;
+    // No moverse si está muerto, pausado o paralizado
+    if (health <= 0 || isPaused || paralyzed) return;
 
     const now = Date.now();
     // Cooldown optimizado para mejor respuesta (180ms para no interferir con joystick de 200ms)
@@ -116,7 +116,7 @@ export const usePlayerMovement = (initialPos, character, matrix, onCollideSpecia
       window.removeEventListener('keydown', handleKeyDown);
       if (moveTimer.current) clearTimeout(moveTimer.current);
     };
-  }, [playerPos, character, matrix, onCollideSpecial, isPaused, health]);
+  }, [playerPos, character, matrix, onCollideSpecial, isPaused, health, paralyzed]);
 
   return { playerPos, playerState, setPlayerPos, handleManualMove };
 };

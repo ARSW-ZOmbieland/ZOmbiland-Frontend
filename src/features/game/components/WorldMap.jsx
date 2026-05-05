@@ -16,6 +16,7 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
   const [lastExternalShot, setLastExternalShot] = useState(null);
   const [myAimAngle, setMyAimAngle] = useState(0);
   const [respawnTimeLeft, setRespawnTimeLeft] = useState(30);
+  const [paralyzed, setParalyzed] = useState(false);
 
   // Asset Preloading: Force browser to cache all GIFs at once
   useEffect(() => {
@@ -91,6 +92,7 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
                 // Actualizar vida y munición propia desde el servidor
                 if (message.health !== undefined) setHealth(message.health);
                 if (message.ammo !== undefined) setAmmo(message.ammo);
+                if (message.paralyzed !== undefined) setParalyzed(message.paralyzed);
             } else if (message.playerId) {
                 // Si es un ataque externo, capturamos el evento para visualizarlo
                 if (message.action === 'ATTACK') {
@@ -183,7 +185,8 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
     health,
     isPaused,
     ammo,
-    'world'
+    'world',
+    paralyzed
   );
 
   // IA local del zombie eliminada (ahora se maneja vía WebSocket arriba)
