@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import GameMap from './GameMap';
 import TouchControls from './TouchControls';
 import { TILE_TYPES } from '../../../core/GameEngine';
@@ -7,7 +7,7 @@ import { API_BASE_URL } from '../../../config/constants';
 import webSocketService from '../../../core/WebSocketService';
 // IA local elinidada para usar Sincronización de Servidor
 
-const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSync, mode }) => {
+const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSync }) => {
   const [mapData, setMapData] = useState(null);
   const [otherPlayers, setOtherPlayers] = useState({});
   const [zombies, setZombies] = useState([]);
@@ -15,16 +15,7 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
   const [ammo, setAmmo] = useState(30);
   const [lastExternalShot, setLastExternalShot] = useState(null);
   const [myAimAngle, setMyAimAngle] = useState(0);
-  const [respawnTimeLeft, setRespawnTimeLeft] = useState(15);
-  const [kills, setKills] = useState({
-    comun: 0,
-    chasqueador: 0,
-    llorona: 0,
-    tanke: 0,
-    hunter: 0
-  });
-  
-  const prevZombiesRef = useRef([]);
+  const [respawnTimeLeft, setRespawnTimeLeft] = useState(30);
 
   // Asset Preloading: Force browser to cache all GIFs at once
   useEffect(() => {
@@ -50,24 +41,14 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
         'abajo', 'arriba', 'derecha', 'izquierda',
         'ataque_adelante', 'ataque_atras', 'ataque_derecha', 'ataque_izquierda', 'ataque'
     ];
-    // Hunter preloading (Special path)
-    directions.forEach(dir => {
+    // Chasqueador preloading
+    const chasqueadorStates = ['abajo', 'arriba', 'dercha', 'izquierda', 'ataque atras', 'ataque derecha', 'ataque frente', 'ataque izquierda'];
+    chasqueadorStates.forEach(state => {
         const img = new Image();
-        img.src = `/villanos/hunter/${dir}.gif`;
-    });
-    const hunterAttack = new Image();
-    hunterAttack.src = `/villanos/hunter/ataque.gif`;
-
-    // Tanke preloading
-    directions.forEach(dir => {
-        const walk = new Image();
-        walk.src = `/villanos/tanque/${dir}.gif`;
-        const attack = new Image();
-        const tankeAttackMap = { 'derecha': 'derecho', 'izquierda': 'izquierdo' };
-        attack.src = `/villanos/tanque/ataque${tankeAttackMap[dir] || dir}.gif`;
+        img.src = `/zombies/chasqueador/${state}.gif`;
     });
     
-    console.log(">> Preloading assets (Players, Zombies, Chasqueadores, HUNTERS & TANKES)...");
+    console.log(">> Preloading assets for better performance (Players, Zombies & Chasqueadores)...");
   }, []);
 
   useEffect(() => {
@@ -130,27 +111,6 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
         const zombieTopic = `/topic/game.zombies.${roomCode}`;
         webSocketService.subscribe(zombieTopic, (zombieList) => {
             if (Array.isArray(zombieList)) {
-                // Tracking de muertes comparando con la lista anterior
-                if (prevZombiesRef.current.length > 0) {
-                    const currentIds = new Set(zombieList.map(z => z.id));
-                    const missingZombies = prevZombiesRef.current.filter(z => !currentIds.has(z.id));
-                    
-                    if (missingZombies.length > 0) {
-                        setKills(prev => {
-                            const newKills = { ...prev };
-                            missingZombies.forEach(z => {
-                                const typeKey = z.type || 'comun';
-                                if (newKills[typeKey] !== undefined) {
-                                    newKills[typeKey]++;
-                                } else {
-                                    newKills.comun++;
-                                }
-                            });
-                            return newKills;
-                        });
-                    }
-                }
-                prevZombiesRef.current = zombieList;
                 setZombies(zombieList);
             }
         });
@@ -196,29 +156,22 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
   const handleCollideSpecial = useCallback((x, y, cell) => {
     const cellID = typeof cell === 'object' ? cell.p : cell;
     if (cellID === TILE_TYPES.BUNKER_DOOR) {
-        // En modo torneo, nadie puede escapar. Es combate a muerte.
-        if (mode === 'TORNEO') {
-            return;
-        }
-
-        if (mapData && (x !== mapData.startX || y !== mapData.startY)) {
-            // AVISO INMEDIATO: Antes de cambiar de pantalla, avisamos al servidor
-            webSocketService.sendMessage('/app/game.action', {
-                playerId: character,
-                roomCode: roomCode,
-                x: x,
-                y: y,
-                action: 'abajo',
-                location: 'bunker'
-            });
-            
-            // Pequeño retardo para asegurar que el mensaje se envíe antes de desmontar el componente
-            setTimeout(() => {
-                if (onExit) onExit(kills);
-            }, 100);
-        }
+      if (mapData && (x !== mapData.startX || y !== mapData.startY)) {
+        // AVISO INMEDIATO: Antes de cambiar de pantalla, avisamos al servidor
+        webSocketService.sendMessage('/app/game.action', {
+            playerId: character,
+            roomCode: roomCode,
+            x: x,
+            y: y,
+            action: 'abajo',
+            location: 'bunker'
+        });
+        
+        // Pequeño retardo para asegurar que el mensaje se envíe antes de desmontar el componente
+        setTimeout(() => onExit(), 50);
+      }
     }
-  }, [onExit, mapData, character, roomCode, kills, mode]);
+  }, [onExit, mapData, character, roomCode]);
 
   const { playerPos, playerState, setPlayerPos, handleManualMove } = usePlayerMovement(
     { x: 1, y: 1 }, 
@@ -239,37 +192,21 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
   const initialPosSet = React.useRef(false);
   useEffect(() => {
       if (mapData && setPlayerPos && !initialPosSet.current) {
-          let spawnX = mapData.startX;
-          let spawnY = mapData.startY;
-          
-          if (mode === 'TORNEO' && mapData.doors && mapData.doors.length >= 4) {
-              const charIndex = ['andres', 'juanpablo', 'maria', 'tomas'].indexOf(character);
-              if (charIndex >= 0 && mapData.doors[charIndex]) {
-                  spawnX = mapData.doors[charIndex][0];
-                  spawnY = mapData.doors[charIndex][1];
-              }
-          }
-          
-          setPlayerPos({ x: spawnX, y: spawnY });
+          setPlayerPos({ x: mapData.startX, y: mapData.startY });
           initialPosSet.current = true;
       }
-  }, [mapData, setPlayerPos, mode, character]);
+  }, [mapData, setPlayerPos]);
 
   // Reset flag when room changes
   useEffect(() => {
       initialPosSet.current = false;
   }, [roomCode]);
 
-  // Respawn Timer Logic & Tournament Logic
+  // Respawn Timer Logic
   useEffect(() => {
     let timer;
     if (health <= 0) {
-      if (mode === 'TORNEO') {
-          setRespawnTimeLeft('ELIMINADO');
-          return;
-      }
-      
-      setRespawnTimeLeft(15);
+      setRespawnTimeLeft(30);
       timer = setInterval(() => {
         setRespawnTimeLeft(prev => {
           if (prev <= 1) {
@@ -280,28 +217,10 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
         });
       }, 1000);
     } else {
-      setRespawnTimeLeft(15);
+      setRespawnTimeLeft(30);
     }
     return () => clearInterval(timer);
-  }, [health, mode]);
-
-  // Tournament Victory Check
-  useEffect(() => {
-      if (mode === 'TORNEO' && health > 0) {
-          const others = Object.values(otherPlayers);
-          // Sólo comprobar si hay al menos otro jugador que alguna vez se conectó
-          if (others.length > 0) {
-              const allDead = others.every(p => p.health <= 0);
-              if (allDead) {
-                  // ¡Victoria Royale!
-                  setTimeout(() => {
-                      alert("¡VICTORIA ROYALE! Eres el último superviviente.");
-                      if (onExit) onExit({ ...kills, torneoGanado: true });
-                  }, 1000);
-              }
-          }
-      }
-  }, [mode, health, otherPlayers, kills, onExit]);
+  }, [health]);
   
   // Broadcast de Puntería (Aim Angle) - Throttled a 10Hz
   useEffect(() => {
@@ -391,7 +310,6 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
         onAimChange={(angle) => { window.currentAimAngle = angle; }}
         isPaused={isPaused}
         mobileShotTrigger={mobileShotTrigger}
-        mobileAimAngle={myAimAngle}
         ammo={ammo}
         location="world"
       />
@@ -399,10 +317,7 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
       <TouchControls 
         onMove={handleManualMove} 
         onShoot={handleMobileShoot}
-        onAimChange={(angle) => { 
-            window.currentAimAngle = angle;
-            setMyAimAngle(angle);
-        }}
+        onAimChange={(angle) => { window.currentAimAngle = angle; }}
       />
     </div>
   );
