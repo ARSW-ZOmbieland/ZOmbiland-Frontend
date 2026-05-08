@@ -1,3 +1,4 @@
+// Trigger redeploy: Backend compilation fixed
 import { useState, useEffect } from 'react';
 import Login from './pages/Login/Login';
 import GameRoom from './pages/Game/GameRoom';
