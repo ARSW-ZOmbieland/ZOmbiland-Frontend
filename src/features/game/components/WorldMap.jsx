@@ -19,6 +19,7 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
   const [paralyzed, setParalyzed] = useState(false);
   const [roomMode, setRoomMode] = useState('TRADICIONAL');
   const [zoneData, setZoneData] = useState({ radius: 50, timeLeft: 300 });
+  const [tournamentOutcome, setTournamentOutcome] = useState(null); // 'WIN', 'LOSS', 'END'
 
   // Asset Preloading: Force browser to cache all GIFs at once
   useEffect(() => {
@@ -87,12 +88,16 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
         // Suscribirse a los movimientos y estados (incluyendo vida y munición)
         const topic = `/topic/game.state.${roomCode}`;
         webSocketService.subscribe(topic, (message) => {
-            if (message.action === 'PAUSE') {
-                if (onPauseSync) onPauseSync(true);
+            if (message.action === 'TOURNAMENT_WIN') {
+                if (message.winnerId === character) {
+                    setTournamentOutcome('WIN');
+                } else {
+                    setTournamentOutcome('LOSS');
+                }
                 return;
             }
-            if (message.action === 'RESUME') {
-                if (onPauseSync) onPauseSync(false);
+            if (message.action === 'TOURNAMENT_END') {
+                setTournamentOutcome('END');
                 return;
             }
 
@@ -353,6 +358,33 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
         onShoot={handleMobileShoot}
         onAimChange={(angle) => { window.currentAimAngle = angle; }}
       />
+
+      {/* Tournament Win/Loss Overlay */}
+      {tournamentOutcome && (
+        <div className="death-overlay tournament-end-overlay fade-in">
+          {tournamentOutcome === 'WIN' && (
+            <div className="victory-box pop-in">
+              <h1 className="victory-title">¡VICTORIA MAGISTRAL!</h1>
+              <p>Eres el último superviviente en pie.</p>
+            </div>
+          )}
+          {tournamentOutcome === 'LOSS' && (
+            <div className="eliminated-box pop-in">
+              <h1 className="text-danger">TORNEO FINALIZADO</h1>
+              <p>Alguien más ha reclamado la victoria.</p>
+            </div>
+          )}
+          {tournamentOutcome === 'END' && (
+            <div className="eliminated-box pop-in">
+              <h1>TIEMPO AGOTADO</h1>
+              <p>Nadie logró sobrevivir a la zona tóxica.</p>
+            </div>
+          )}
+          <button className="game-btn primary-btn mt-4" onClick={onRestart}>
+            VOLVER AL MENÚ
+          </button>
+        </div>
+      )}
     </div>
   );
 };
