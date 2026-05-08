@@ -480,7 +480,7 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
                             zIndex: y * 10 + 5 
                         }}
                     >
-                        {propID && propID !== 99 && (
+                        {propID && propID !== 99 && !(roomMode === 'TORNEO' && propID === 40 && location === 'world') && (
                             <img 
                                 src={PROP_ASSETS[propID]} 
                                 alt="prop" 
