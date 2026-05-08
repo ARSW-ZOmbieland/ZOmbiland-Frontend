@@ -433,46 +433,63 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
         style={{ 
           width: `calc(${cols} * var(--tile-size))`,
           height: `calc(${rows} * var(--tile-size))`,
-          transform: `translate(${translateX}, ${translateY})`,
-          position: 'relative'
+          transform: `translate3d(${translateX}, ${translateY}, 0)`,
+          position: 'relative',
+          willChange: 'transform'
         }}
       >
-        {/* Pass 1: Unified Map Render (Ground + Props + Entities + Aim) */}
-        {visibleTiles.map(({ x, y, cell }) => {
-          const groundID = typeof cell === 'object' ? cell.g : (cell < 10 ? cell : 0);
-          const propID = typeof cell === 'object' ? cell.p : (cell >= 10 && cell !== 99 ? cell : null);
-          const isHovered = !isDead && !isPaused && hoveredTile && hoveredTile.x === x && hoveredTile.y === y;
-          
-          return (
-            <React.Fragment key={`tile-group-${x}-${y}`}>
-              {/* Ground */}
-              <div className="tile ground-tile" style={{ position: 'absolute', left: `calc(${x} * var(--tile-size))`, top: `calc(${y} * var(--tile-size))`, zIndex: 1 }}>
-                <img src={GROUND_ASSETS[groundID] || GROUND_ASSETS[0]} alt="ground" className="tile-image" />
-              </div>
-              
-              {/* Entities and Props */}
-              <div className="entity-tile" style={{ position: 'absolute', left: `calc(${x} * var(--tile-size))`, top: `calc(${y} * var(--tile-size))`, zIndex: y * 10 + 5, pointerEvents: 'none' }}>
-                {propID && propID !== 99 && (
-                  <img 
-                    src={PROP_ASSETS[propID]} 
-                    alt="prop" 
-                    className={`tile-image ${propID >= 20 && propID <= 22 ? 'bush-prop' : ''} ${propID >= 30 && propID <= 34 ? 'tree-prop' : ''} ${propID >= 40 && propID <= 49 ? 'bunker-prop' : ''} ${propID >= 50 && propID <= 59 ? 'forest-prop' : ''} ${propID >= 60 && propID <= 69 ? 'city-building' : ''} ${propID >= 70 && propID <= 89 && propID !== 72 ? 'urban-prop' : ''} ${propID === 72 ? 'street-light-prop' : ''} ${propID === 90 ? 'barricade-prop' : ''} ${(propID === 100 || propID === 101) ? 'item-pickup-prop' : ''}`} 
-                    style={{ 
-                      position: 'absolute', 
-                      zIndex: 1, 
-                      top: 0, 
-                      left: 0,
-                      opacity: (propID >= 40 && propID <= 49 && Math.floor(playerPos.x) === x && Math.floor(playerPos.y) === y) ? 0 : 1 
-                    }} 
-                  />
-                )}
-                {renderCellEntities(x, y)}
-              </div>
+        {/* Layer 1: Ground (Optimized Static Render) */}
+        <div className="ground-layer" style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}>
+            {visibleTiles.map(({ x, y, cell }) => {
+                const groundID = typeof cell === 'object' ? cell.g : (cell < 10 ? cell : 0);
+                return (
+                    <div 
+                        key={`ground-${x}-${y}`} 
+                        className="tile ground-tile" 
+                        style={{ 
+                            position: 'absolute', 
+                            left: `calc(${x} * var(--tile-size))`, 
+                            top: `calc(${y} * var(--tile-size))`, 
+                            zIndex: 1 
+                        }}
+                    >
+                        <img src={GROUND_ASSETS[groundID] || GROUND_ASSETS[0]} alt="ground" className="tile-image" />
+                    </div>
+                );
+            })}
+        </div>
 
-              {/* Aim Layer (Eliminado a petición del usuario para dejar solo la del centro) */}
-            </React.Fragment>
-          );
-        })}
+        {/* Layer 2: Props and Entities (Dynamic Z-indexing) */}
+        <div className="entities-layer" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}>
+            {visibleTiles.map(({ x, y, cell }) => {
+                const propID = typeof cell === 'object' ? cell.p : (cell >= 10 && cell !== 99 ? cell : null);
+                const isHovered = !isDead && !isPaused && hoveredTile && hoveredTile.x === x && hoveredTile.y === y;
+                const entities = renderCellEntities(x, y);
+                
+                if (!propID && entities.length === 0 && !isHovered) return null;
+
+                return (
+                    <div key={`dynamic-${x}-${y}`} style={{ position: 'absolute', left: `calc(${x} * var(--tile-size))`, top: `calc(${y} * var(--tile-size))`, zIndex: y * 10 + 5 }}>
+                        {propID && propID !== 99 && (
+                            <img 
+                                src={PROP_ASSETS[propID]} 
+                                alt="prop" 
+                                className={`tile-image ${propID >= 20 && propID <= 22 ? 'bush-prop' : ''} ${propID >= 30 && propID <= 34 ? 'tree-prop' : ''} ${propID >= 40 && propID <= 49 ? 'bunker-prop' : ''} ${propID >= 50 && propID <= 59 ? 'forest-prop' : ''} ${propID >= 60 && propID <= 69 ? 'city-building' : ''} ${propID >= 70 && propID <= 89 && propID !== 72 ? 'urban-prop' : ''} ${propID === 72 ? 'street-light-prop' : ''} ${propID === 90 ? 'barricade-prop' : ''} ${(propID === 100 || propID === 101) ? 'item-pickup-prop' : ''}`} 
+                                style={{ 
+                                    position: 'absolute', 
+                                    zIndex: 1, 
+                                    top: 0, 
+                                    left: 0,
+                                    opacity: (propID >= 40 && propID <= 49 && Math.floor(playerPos.x) === x && Math.floor(playerPos.y) === y) ? 0 : 1 
+                                }} 
+                            />
+                        )}
+                        {entities}
+                        {isHovered && <div className="tile-hover-highlight" style={{ zIndex: 20 }} />}
+                    </div>
+                );
+            })}
+        </div>
         {/* --- PERFORMANCE FIX: INDEPENDENT BULLET LAYER --- */}
         <div className="bullet-overlay-layer" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 999 }}>
             {bullets.map(b => (
