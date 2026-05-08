@@ -540,7 +540,7 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
                         fill="none" 
                         stroke="rgba(255, 0, 0, 0.8)" 
                         strokeWidth="10"
-                        style={{ filter: 'blur(4px)', transition: 'r 1s linear' }}
+                        style={{ filter: 'blur(4px)', transition: 'r 0.5s ease-out' }}
                     />
                     <circle 
                         cx={`calc(32.5 * var(--tile-size))`} 
@@ -549,7 +549,7 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
                         fill="none" 
                         stroke="white" 
                         strokeWidth="2"
-                        style={{ transition: 'r 1s linear' }}
+                        style={{ transition: 'r 0.5s ease-out' }}
                     />
                 </svg>
             </div>

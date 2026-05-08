@@ -126,7 +126,11 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
         const zoneTopic = `/topic/game.zone.${roomCode}`;
         webSocketService.subscribe(zoneTopic, (data) => {
             if (data && data.radius !== undefined) {
-                setZoneData(data);
+                // Solo actualizar si hay un cambio real para evitar re-renders innecesarios
+                setZoneData(prev => {
+                    if (Math.abs(prev.radius - data.radius) < 0.1 && prev.timeLeft === data.timeLeft) return prev;
+                    return data;
+                });
             }
         });
 
@@ -246,32 +250,34 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
     return () => clearInterval(timer);
   }, [health, roomMode]);
   
-  // Broadcast de Puntería (Aim Angle) - Throttled a 10Hz
+  // Broadcast de Puntería (Aim Angle) - Throttled a 5Hz (Más lento para estabilidad)
   useEffect(() => {
     if (!roomCode || health <= 0) return;
     
     let lastSentAngle = -999;
     const interval = setInterval(() => {
-        // Obtenemos el ángulo actual desde el componente a través de window (hack rápido y eficiente)
         const currentAngle = window.currentAimAngle || 0;
         
-        if (Math.abs(currentAngle - lastSentAngle) > 2) { // Variación mínima para enviar
-            webSocketService.sendMessage('/app/game.action', {
-                playerId: character,
-                roomCode: roomCode,
-                x: playerPos.x,
-                y: playerPos.y,
-                aimAngle: currentAngle,
-                action: playerState.direction, // Mantener dirección actual
-                health: health,
-                location: 'world' // <--- IMPORTANTE: Mantener la ubicación
-            });
-            lastSentAngle = currentAngle;
+        // Solo enviar si el ángulo cambió más de 5 grados (Menos spam al servidor)
+        if (Math.abs(currentAngle - lastSentAngle) > 5) { 
+            if (webSocketService.stompClient && webSocketService.stompClient.connected) {
+                webSocketService.sendMessage('/app/game.action', {
+                    playerId: character,
+                    roomCode: roomCode,
+                    x: playerPos.x,
+                    y: playerPos.y,
+                    aimAngle: currentAngle,
+                    action: playerState.direction,
+                    health: health,
+                    location: 'world'
+                });
+                lastSentAngle = currentAngle;
+            }
         }
-    }, 100); // 100ms = 10Hz
+    }, 200); // 200ms = 5Hz
     
     return () => clearInterval(interval);
-  }, [roomCode, character, playerPos, playerState.direction, health]);
+  }, [roomCode, character, playerPos.x, playerPos.y, playerState.direction, health]);
 
 
   // Combat Handling
