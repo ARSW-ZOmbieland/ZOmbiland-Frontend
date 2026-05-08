@@ -106,6 +106,12 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
                 if (message.health !== undefined) setHealth(message.health);
                 if (message.ammo !== undefined) setAmmo(message.ammo);
                 if (message.paralyzed !== undefined) setParalyzed(message.paralyzed);
+                
+                // FORCE local position update on teleport (random exit)
+                if (message.action === 'TELEPORT') {
+                    console.log(">> TELEPORTING LOCAL PLAYER:", message.x, message.y);
+                    setPlayerPos({ x: message.x, y: message.y });
+                }
             } else if (message.playerId) {
                 // Si es un ataque externo, capturamos el evento para visualizarlo
                 if (message.action === 'ATTACK') {
