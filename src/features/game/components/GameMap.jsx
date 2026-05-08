@@ -473,7 +473,32 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
             </React.Fragment>
           );
         })}
-
+        {/* --- PERFORMANCE FIX: INDEPENDENT BULLET LAYER --- */}
+        <div className="bullet-overlay-layer" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 999 }}>
+            {bullets.map(b => (
+              <div 
+                key={b.id} 
+                className="bullet-projectile"
+                style={{
+                    position: 'absolute',
+                    left: `calc(${b.startX + 0.5} * var(--tile-size))`, // Center logic
+                    top: `calc(${b.startY + 0.5} * var(--tile-size))`,
+                    '--tx': (b.endX - b.startX) * 1, // Normalized to tile units
+                    '--ty': (b.endY - b.startY) * 1
+                }}
+              />
+            ))}
+            {flashes.map(f => (
+              <div 
+                key={f.id}
+                className="muzzle-flash"
+                style={{
+                  position: 'absolute',
+                  left: `calc(${(f.x || playerPos.x) + 0.5} * var(--tile-size))`,
+                  top: `calc(${(f.y || playerPos.y) + 0.5} * var(--tile-size))`,
+                  transform: `translate(-50%, -50%) rotate(${f.angle !== undefined ? f.angle : aimAngle}deg) translate(25px, 0)`
+                }}
+              />
             ))}
         </div>
 
@@ -529,8 +554,8 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
                 </svg>
             </div>
         )}
+        <div className="vision-vignette"></div>
       </div>
-      <div className="vision-vignette"></div>
       
       {isDead && (
         <div className="death-overlay">
