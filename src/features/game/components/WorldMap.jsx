@@ -116,8 +116,6 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
                 }));
             }
         });
-
-        });
         
         // Suscribirse a la zona del torneo
         const zoneTopic = `/topic/game.zone.${roomCode}`;
