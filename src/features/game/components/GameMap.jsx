@@ -469,7 +469,17 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
                 if (!propID && entities.length === 0 && !isHovered) return null;
 
                 return (
-                    <div key={`dynamic-${x}-${y}`} style={{ position: 'absolute', left: `calc(${x} * var(--tile-size))`, top: `calc(${y} * var(--tile-size))`, zIndex: y * 10 + 5 }}>
+                    <div 
+                        key={`dynamic-${x}-${y}`} 
+                        style={{ 
+                            position: 'absolute', 
+                            left: `calc(${x} * var(--tile-size))`, 
+                            top: `calc(${y} * var(--tile-size))`, 
+                            width: 'var(--tile-size)',
+                            height: 'var(--tile-size)',
+                            zIndex: y * 10 + 5 
+                        }}
+                    >
                         {propID && propID !== 99 && (
                             <img 
                                 src={PROP_ASSETS[propID]} 
