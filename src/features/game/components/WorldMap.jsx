@@ -17,6 +17,8 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
   const [myAimAngle, setMyAimAngle] = useState(0);
   const [respawnTimeLeft, setRespawnTimeLeft] = useState(30);
   const [paralyzed, setParalyzed] = useState(false);
+  const [roomMode, setRoomMode] = useState('TRADICIONAL');
+  const [zoneData, setZoneData] = useState({ radius: 50, timeLeft: 300 });
 
   // Asset Preloading: Force browser to cache all GIFs at once
   useEffect(() => {
@@ -57,6 +59,12 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
     
     // Configurar WebSockets para la sala
     webSocketService.connect(() => {
+        // Obtenemos el modo de la sala
+        fetch(`${API_BASE_URL}/api/game/rooms/${roomCode}/mode`, { credentials: 'include' })
+        .then(res => res.json())
+        .then(data => setRoomMode(data.mode || 'TRADICIONAL'))
+        .catch(err => console.error("Error fetching room mode", err));
+
         // Obtenemos el mapa
         fetch(`${API_BASE_URL}/api/game/rooms/${roomCode}/map`, { credentials: 'include' })
         .then(res => res.json())
@@ -106,6 +114,16 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
                     ...prev,
                     [message.playerId]: { ...prev[message.playerId], ...message }
                 }));
+            }
+        });
+
+        });
+        
+        // Suscribirse a la zona del torneo
+        const zoneTopic = `/topic/game.zone.${roomCode}`;
+        webSocketService.subscribe(zoneTopic, (data) => {
+            if (data && data.radius !== undefined) {
+                setZoneData(data);
             }
         });
 
@@ -208,7 +226,7 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
   // Respawn Timer Logic
   useEffect(() => {
     let timer;
-    if (health <= 0) {
+    if (health <= 0 && roomMode === 'TRADICIONAL') {
       setRespawnTimeLeft(30);
       timer = setInterval(() => {
         setRespawnTimeLeft(prev => {
@@ -223,7 +241,7 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
       setRespawnTimeLeft(30);
     }
     return () => clearInterval(timer);
-  }, [health]);
+  }, [health, roomMode]);
   
   // Broadcast de Puntería (Aim Angle) - Throttled a 10Hz
   useEffect(() => {
@@ -315,8 +333,23 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
         mobileShotTrigger={mobileShotTrigger}
         ammo={ammo}
         location="world"
+        zoneData={zoneData}
+        roomMode={roomMode}
       />
       
+      {/* Tournament Timer */}
+      {roomMode === 'TORNEO' && (
+        <div className="tournament-hud fade-in">
+          <div className="timer-box">
+            <span className="timer-label">MUERTE SÚBITA EN:</span>
+            <span className="timer-value">
+              {Math.floor(zoneData.timeLeft / 60)}:{String(zoneData.timeLeft % 60).padStart(2, '0')}
+            </span>
+          </div>
+          <div className="zone-status">ZONA AL {Math.round((zoneData.radius / 50) * 100)}%</div>
+        </div>
+      )}
+
       <TouchControls 
         onMove={handleManualMove} 
         onShoot={handleMobileShoot}

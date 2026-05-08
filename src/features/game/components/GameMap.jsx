@@ -16,7 +16,7 @@ const HealthBar = ({ health }) => {
   );
 };
 
-const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zombies = [], onRestart, onShoot, lastExternalShot, onAimChange, isPaused, mobileShotTrigger, mobileAimAngle, ammo, isSafeZone = false, location = 'world' }) => {
+const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zombies = [], onRestart, onShoot, lastExternalShot, onAimChange, isPaused, mobileShotTrigger, mobileAimAngle, ammo, isSafeZone = false, location = 'world', zoneData = { radius: 50 }, roomMode = 'TRADICIONAL' }) => {
   const [cooldown, setCooldown] = useState(15);
   const [aimAngle, setAimAngle] = useState(0);
   const [hoveredTile, setHoveredTile] = useState(null);
@@ -474,51 +474,90 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
           );
         })}
 
-        {/* --- PERFORMANCE FIX: INDEPENDENT BULLET LAYER --- */}
-        <div className="bullet-overlay-layer" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 999 }}>
-            {bullets.map(b => (
-              <div 
-                key={b.id} 
-                className="bullet-projectile"
-                style={{
-                    position: 'absolute',
-                    left: `calc(${b.startX + 0.5} * var(--tile-size))`, // Center logic
-                    top: `calc(${b.startY + 0.5} * var(--tile-size))`,
-                    '--tx': (b.endX - b.startX) * 1, // Normalized to tile units
-                    '--ty': (b.endY - b.startY) * 1
-                }}
-              />
-            ))}
-            {flashes.map(f => (
-              <div 
-                key={f.id}
-                className="muzzle-flash"
-                style={{
-                  position: 'absolute',
-                  left: `calc(${(f.x || playerPos.x) + 0.5} * var(--tile-size))`,
-                  top: `calc(${(f.y || playerPos.y) + 0.5} * var(--tile-size))`,
-                  transform: `translate(-50%, -50%) rotate(${f.angle !== undefined ? f.angle : aimAngle}deg) translate(25px, 0)`
-                }}
-              />
             ))}
         </div>
+
+        {/* --- TOURNAMENT ZONE LAYER --- */}
+        {roomMode === 'TORNEO' && location === 'world' && (
+            <div className="zone-overlay-layer" style={{ 
+                position: 'absolute', 
+                top: 0, 
+                left: 0, 
+                width: '100%', 
+                height: '100%', 
+                zIndex: 900,
+                pointerEvents: 'none'
+            }}>
+                <svg width="100%" height="100%" style={{ overflow: 'visible' }}>
+                    <defs>
+                        <mask id="zone-mask">
+                            <rect width="100%" height="100%" fill="white" />
+                            <circle 
+                                cx={`calc(32.5 * var(--tile-size))`} 
+                                cy={`calc(32.5 * var(--tile-size))`} 
+                                r={`calc(${zoneData.radius} * var(--tile-size))`} 
+                                fill="black" 
+                            />
+                        </mask>
+                    </defs>
+                    {/* Dark overlay outside the safe zone */}
+                    <rect 
+                        width="100%" 
+                        height="100%" 
+                        fill="rgba(255, 0, 0, 0.2)" 
+                        mask="url(#zone-mask)"
+                    />
+                    {/* The glowing border of the zone */}
+                    <circle 
+                        cx={`calc(32.5 * var(--tile-size))`} 
+                        cy={`calc(32.5 * var(--tile-size))`} 
+                        r={`calc(${zoneData.radius} * var(--tile-size))`} 
+                        fill="none" 
+                        stroke="rgba(255, 0, 0, 0.8)" 
+                        strokeWidth="10"
+                        style={{ filter: 'blur(4px)', transition: 'r 1s linear' }}
+                    />
+                    <circle 
+                        cx={`calc(32.5 * var(--tile-size))`} 
+                        cy={`calc(32.5 * var(--tile-size))`} 
+                        r={`calc(${zoneData.radius} * var(--tile-size))`} 
+                        fill="none" 
+                        stroke="white" 
+                        strokeWidth="2"
+                        style={{ transition: 'r 1s linear' }}
+                    />
+                </svg>
+            </div>
+        )}
       </div>
       <div className="vision-vignette"></div>
       
       {isDead && (
         <div className="death-overlay">
           <div className="death-message pop-in">HAS MUERTO</div>
-          <div className="lobby-restart-btn">
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px' }}>
-              <span>REAPARECIENDO EN</span>
-              <span style={{ fontSize: '2rem', fontWeight: 'bold' }}>
-                {cooldown}s
-              </span>
+          
+          {roomMode === 'TORNEO' ? (
+            <div className="eliminated-box fade-in">
+              <h2 className="text-danger">ELIMINADO</h2>
+              <p>No puedes reaparecer en modo Torneo.</p>
+              <p>Espera a que termine la partida para ver los resultados.</p>
             </div>
-          </div>
-          <p style={{ color: '#ccc', marginTop: '20px', fontSize: '0.9rem' }}>
-            Aparecerás en la entrada del mapa automáticamente.
-          </p>
+          ) : (
+            <div className="lobby-restart-btn">
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px' }}>
+                <span>REAPARECIENDO EN</span>
+                <span style={{ fontSize: '2rem', fontWeight: 'bold' }}>
+                  {cooldown}s
+                </span>
+              </div>
+            </div>
+          )}
+          
+          {roomMode !== 'TORNEO' && (
+            <p style={{ color: '#ccc', marginTop: '20px', fontSize: '0.9rem' }}>
+              Aparecerás en la entrada del mapa automáticamente.
+            </p>
+          )}
         </div>
       )}
     </div>
