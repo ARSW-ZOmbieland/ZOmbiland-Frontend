@@ -433,7 +433,7 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
         style={{ 
           width: `calc(${cols} * var(--tile-size))`,
           height: `calc(${rows} * var(--tile-size))`,
-          transform: `translate3d(${translateX}, ${translateY}, 0)`,
+          transform: `translate(${translateX}, ${translateY})`,
           position: 'relative',
           willChange: 'transform'
         }}
