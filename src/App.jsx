@@ -1,4 +1,4 @@
-// Trigger redeploy: Backend compilation fixed
+// Trigger redeploy: Tournament victory logic synchronized
 import { useState, useEffect } from 'react';
 import Login from './pages/Login/Login';
 import GameRoom from './pages/Game/GameRoom';
