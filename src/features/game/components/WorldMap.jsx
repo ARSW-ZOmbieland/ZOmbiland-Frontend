@@ -195,7 +195,7 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
         let changed = false;
         const newState = { ...prev };
         for (const id in newState) {
-          if (newState[id].isMoving && now - (newState[id].lastMoveTime || 0) > 400) {
+          if (newState[id].isMoving && now - (newState[id].lastMoveTime || 0) > 600) {
             newState[id] = { ...newState[id], isMoving: false };
             changed = true;
           }

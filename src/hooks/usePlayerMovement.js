@@ -32,7 +32,7 @@ export const usePlayerMovement = (initialPos, character, matrix, onCollideSpecia
     if (moveTimer.current) clearTimeout(moveTimer.current);
     moveTimer.current = setTimeout(() => {
       setPlayerState(prev => ({ ...prev, isMoving: false }));
-    }, 300);
+    }, 500);
 
     const now = Date.now();
     // Cooldown optimizado para mejor respuesta (180ms para no interferir con joystick de 200ms)
