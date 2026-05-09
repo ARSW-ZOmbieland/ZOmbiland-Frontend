@@ -266,7 +266,7 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
         
         // Solo enviar si el ángulo cambió más de 5 grados (Menos spam al servidor)
         if (Math.abs(currentAngle - lastSentAngle) > 5) { 
-            if (webSocketService.stompClient && webSocketService.stompClient.connected) {
+            if (webSocketService.connected) {
                 webSocketService.sendMessage('/app/game.action', {
                     playerId: character,
                     roomCode: roomCode,

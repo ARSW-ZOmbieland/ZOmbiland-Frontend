@@ -338,39 +338,27 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
   }, [Math.floor(playerPos.x), Math.floor(playerPos.y), matrix]);
 
 
-  // --- PERFORMANCE FIX: PRE-INDEX ENTITIES BY POSITION ---
-  const entityMap = useMemo(() => {
-    const map = new Map();
-    if (zombies) {
-      zombies.forEach(z => {
-        const key = `${Math.floor(z.x)}-${Math.floor(z.y)}`;
-        if (!map.has(key)) map.set(key, { zombies: [], players: [] });
-        map.get(key).zombies.push(z);
-      });
-    }
-    if (otherPlayers) {
-      Object.values(otherPlayers).forEach(p => {
-        // Solo dibujar si están en la misma ubicación que el jugador local
-        if (p.location === location) {
-          const key = `${Math.floor(p.x)}-${Math.floor(p.y)}`;
-          if (!map.has(key)) map.set(key, { zombies: [], players: [] });
-          map.get(key).players.push(p);
-        }
-      });
-    }
-    return map;
-  }, [zombies, otherPlayers]);
+  // Entities are now rendered flatly to prevent DOM recreation when moving across tiles
 
-  const renderCellEntities = (x, y) => {
-    const key = `${x}-${y}`;
-    const cellEntities = entityMap.get(key);
+  const renderFlatEntities = () => {
     const elements = [];
 
     // 1. Zombies
-    if (cellEntities && cellEntities.zombies.length > 0) {
-      cellEntities.zombies.forEach(z => {
+    if (zombies) {
+      zombies.forEach(z => {
         elements.push(
-          <div key={`zombie-${z.id}`} className={`player-sprite zombie-sprite ${hitZombies.has(z.id) ? 'zombie-hit-flash' : ''}`} style={{ zIndex: y * 10 + 11 }}>
+          <div 
+            key={`zombie-${z.id}`} 
+            className={`player-sprite zombie-sprite ${hitZombies.has(z.id) ? 'zombie-hit-flash' : ''}`} 
+            style={{ 
+              position: 'absolute', 
+              left: `calc(${z.x} * var(--tile-size))`, 
+              top: `calc(${z.y} * var(--tile-size))`, 
+              width: 'var(--tile-size)',
+              height: 'var(--tile-size)',
+              zIndex: Math.floor(z.y) * 10 + 11 
+            }}
+          >
             <SpriteZombie direction={z.direction} isAttacking={z.attacking} type={z.type} />
           </div>
         );
@@ -378,49 +366,70 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
     }
 
     // 2. Main Player
-    if (Math.floor(playerPos.x) === x && Math.floor(playerPos.y) === y) {
-      const { character, direction, isMoving } = playerSprite;
-      elements.push(
-        <div key="main-player" className="player-sprite" style={{ zIndex: y * 10 + 12 }}>
-          <HealthBar health={playerHealth} />
-          <SpritePlayer 
-            characterId={character} 
-            direction={direction} 
-            isMoving={isMoving} 
-            isDead={isDead} 
-            aimAngle={aimAngle}
-          />
-          {!isDead && !isPaused && (
-            <div className="weapon-aim-indicator-player">
-              <img 
-                src={`/assets/weapons/weapon direction/${getWeaponDirection(aimAngle)}.png`} 
-                alt="aim"
-                className="weapon-aim-image"
-              />
-            </div>
-          )}
-        </div>
-      );
-    }
+    const { character, direction, isMoving } = playerSprite;
+    elements.push(
+      <div 
+        key="main-player" 
+        className="player-sprite" 
+        style={{ 
+          position: 'absolute', 
+          left: `calc(${playerPos.x} * var(--tile-size))`, 
+          top: `calc(${playerPos.y} * var(--tile-size))`, 
+          width: 'var(--tile-size)',
+          height: 'var(--tile-size)',
+          zIndex: Math.floor(playerPos.y) * 10 + 12 
+        }}
+      >
+        <HealthBar health={playerHealth} />
+        <SpritePlayer 
+          characterId={character} 
+          direction={direction} 
+          isMoving={isMoving} 
+          isDead={isDead} 
+          aimAngle={aimAngle}
+        />
+        {!isDead && !isPaused && (
+          <div className="weapon-aim-indicator-player">
+            <img 
+              src={`/assets/weapons/weapon direction/${getWeaponDirection(aimAngle)}.png`} 
+              alt="aim"
+              className="weapon-aim-image"
+            />
+          </div>
+        )}
+      </div>
+    );
 
     // 3. Other Players
-    if (cellEntities && cellEntities.players.length > 0) {
-      cellEntities.players.forEach(p => {
-        // En zona segura, otros jugadores también tienen 100 HP visualmente
-        const h = isSafeZone ? 100 : (p.health !== undefined ? p.health : 100);
-        const dead = isSafeZone ? false : (h <= 0);
-        
-        elements.push(
-          <div key={`other-${p.playerId}`} className="player-sprite" style={{ zIndex: y * 10 + 12 }}>
-            <HealthBar health={h} />
-            <SpritePlayer characterId={p.playerId} direction={p.action || 'abajo'} isMoving={true} isDead={dead} aimAngle={p.aimAngle || 0} />
-          </div>
-        );
+    if (otherPlayers) {
+      Object.values(otherPlayers).forEach(p => {
+        if (p.location === location) {
+          const h = isSafeZone ? 100 : (p.health !== undefined ? p.health : 100);
+          const dead = isSafeZone ? false : (h <= 0);
+          elements.push(
+            <div 
+              key={`other-${p.playerId}`} 
+              className="player-sprite" 
+              style={{ 
+                position: 'absolute', 
+                left: `calc(${p.x} * var(--tile-size))`, 
+                top: `calc(${p.y} * var(--tile-size))`, 
+                width: 'var(--tile-size)',
+                height: 'var(--tile-size)',
+                zIndex: Math.floor(p.y) * 10 + 12 
+              }}
+            >
+              <HealthBar health={h} />
+              <SpritePlayer characterId={p.playerId} direction={p.action || 'abajo'} isMoving={true} isDead={dead} aimAngle={p.aimAngle || 0} />
+            </div>
+          );
+        }
       });
     }
 
     return elements;
   };
+
 
   return (
     <div 
@@ -465,9 +474,7 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
             {visibleTiles.map(({ x, y, cell }) => {
                 const propID = typeof cell === 'object' ? cell.p : (cell >= 10 && cell !== 99 ? cell : null);
                 const isHovered = !isDead && !isPaused && hoveredTile && hoveredTile.x === x && hoveredTile.y === y;
-                const entities = renderCellEntities(x, y);
-                
-                if (!propID && entities.length === 0 && !isHovered) return null;
+                if (!propID && !isHovered) return null;
 
                 return (
                     <div 
@@ -495,11 +502,14 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
                                 }} 
                             />
                         )}
-                        {entities}
                         {isHovered && <div className="tile-hover-highlight" style={{ zIndex: 20 }} />}
                     </div>
                 );
             })}
+            
+            {/* Render entities independently from the grid tiles to prevent DOM recreation */}
+            {renderFlatEntities()}
+
         </div>
         {/* --- PERFORMANCE FIX: INDEPENDENT BULLET LAYER --- */}
         <div className="bullet-overlay-layer" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 999 }}>
