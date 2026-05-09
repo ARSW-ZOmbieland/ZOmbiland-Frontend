@@ -99,6 +99,26 @@ function App() {
     return () => window.removeEventListener('keydown', handleGlobalKeyDown);
   }, [gameState, isPaused, roomCode, selectedCharacter]); // Correct dependencies for the key listener
 
+  // Attempt to play audio on first user interaction if the browser blocked autoplay
+  useEffect(() => {
+    const handleFirstInteraction = () => {
+      const audioEl = document.getElementById('bg-music');
+      if (audioEl && audioEl.paused && !isMuted) {
+        audioEl.play().catch(e => console.log("Audio play blocked until further interaction"));
+      }
+      document.removeEventListener('click', handleFirstInteraction);
+      document.removeEventListener('keydown', handleFirstInteraction);
+    };
+    
+    document.addEventListener('click', handleFirstInteraction);
+    document.addEventListener('keydown', handleFirstInteraction);
+    
+    return () => {
+      document.removeEventListener('click', handleFirstInteraction);
+      document.removeEventListener('keydown', handleFirstInteraction);
+    };
+  }, [isMuted]);
+
   if (authLoading || !assetsLoaded) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: '#05050A', color: 'white' }}>
@@ -128,7 +148,7 @@ function App() {
         {/* Background Music Player */}
         <audio 
            id="bg-music"
-           src="/musica/post apocalypse music vol (mp3cut.net).mp3" 
+           src="/musica/post_apocalypse.mp3" 
            autoPlay 
            loop 
            muted={isMuted}
