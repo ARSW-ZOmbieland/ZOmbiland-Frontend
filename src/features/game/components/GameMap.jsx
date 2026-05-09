@@ -322,11 +322,11 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
     const rows = matrix.length;
     const cols = matrix[0].length;
     
-    // Buffer reducido para mejor rendimiento (12 tiles a la redonda)
-    const startX = Math.max(0, Math.floor(playerPos.x - 12));
-    const endX = Math.min(cols, Math.floor(playerPos.x + 13));
-    const startY = Math.max(0, Math.floor(playerPos.y - 10));
-    const endY = Math.min(rows, Math.floor(playerPos.y + 11));
+    // Buffer ampliado para evitar desapariciones en los bordes (15 tiles a la redonda)
+    const startX = Math.max(0, Math.floor(playerPos.x - 15));
+    const endX = Math.min(cols, Math.floor(playerPos.x + 16));
+    const startY = Math.max(0, Math.floor(playerPos.y - 12));
+    const endY = Math.min(rows, Math.floor(playerPos.y + 14));
 
     const tiles = [];
     for (let y = startY; y < endY; y++) {
@@ -336,6 +336,7 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
     }
     return tiles;
   }, [Math.floor(playerPos.x), Math.floor(playerPos.y), matrix]);
+
 
   // --- PERFORMANCE FIX: PRE-INDEX ENTITIES BY POSITION ---
   const entityMap = useMemo(() => {
