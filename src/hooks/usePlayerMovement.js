@@ -114,9 +114,15 @@ export const usePlayerMovement = (initialPos, character, matrix, onCollideSpecia
     window.addEventListener('keydown', handleKeyDown);
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
-      if (moveTimer.current) clearTimeout(moveTimer.current);
     };
   }, [playerPos, character, matrix, onCollideSpecial, isPaused, health, paralyzed]);
+
+  // Cleanup timer only on component unmount
+  useEffect(() => {
+    return () => {
+      if (moveTimer.current) clearTimeout(moveTimer.current);
+    };
+  }, []);
 
   return { playerPos, playerState, setPlayerPos, handleManualMove };
 };
