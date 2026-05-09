@@ -420,7 +420,7 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
               }}
             >
               <HealthBar health={h} />
-              <SpritePlayer characterId={p.playerId} direction={p.action || 'abajo'} isMoving={true} isDead={dead} aimAngle={p.aimAngle || 0} />
+              <SpritePlayer characterId={p.playerId} direction={p.action || 'abajo'} isMoving={p.isMoving !== false} isDead={dead} aimAngle={p.aimAngle || 0} />
             </div>
           );
         }

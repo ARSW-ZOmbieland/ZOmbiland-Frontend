@@ -123,7 +123,7 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
                 
                 setOtherPlayers(prev => ({
                     ...prev,
-                    [message.playerId]: { ...prev[message.playerId], ...message }
+                    [message.playerId]: { ...prev[message.playerId], ...message, lastMoveTime: Date.now(), isMoving: true }
                 }));
             }
         });
@@ -170,7 +170,9 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
                 setOtherPlayers(prev => {
                 const newState = { ...prev };
                 playersInfo.forEach(p => {
-                    if (p.playerId !== character) newState[p.playerId] = p;
+                    if (p.playerId !== character) {
+                        newState[p.playerId] = { ...p, lastMoveTime: Date.now(), isMoving: false };
+                    }
                 });
                 return newState;
                 });
@@ -184,6 +186,25 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
     }
 
   }, [character, roomCode]);
+
+  // Multiplayer Idle Tracker: Checks if other players stopped moving
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = Date.now();
+      setOtherPlayers(prev => {
+        let changed = false;
+        const newState = { ...prev };
+        for (const id in newState) {
+          if (newState[id].isMoving && now - (newState[id].lastMoveTime || 0) > 400) {
+            newState[id] = { ...newState[id], isMoving: false };
+            changed = true;
+          }
+        }
+        return changed ? newState : prev;
+      });
+    }, 200);
+    return () => clearInterval(interval);
+  }, []);
 
   // Collisions
   const handleCollideSpecial = useCallback((x, y, cell) => {

@@ -54,7 +54,7 @@ export const usePlayerMovement = (initialPos, character, matrix, onCollideSpecia
       if (moveTimer.current) clearTimeout(moveTimer.current);
       moveTimer.current = setTimeout(() => {
         setPlayerState(prev => ({ ...prev, isMoving: false }));
-      }, 2000);
+      }, 300);
 
       if (isWalkable(matrix, newX, newY)) {
         let isOccupied = false;
