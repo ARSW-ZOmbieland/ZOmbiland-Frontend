@@ -24,6 +24,16 @@ export const usePlayerMovement = (initialPos, character, matrix, onCollideSpecia
     // No moverse si está muerto, pausado o paralizado
     if (health <= 0 || isPaused || paralyzed) return;
 
+    // Special mapping for character sprites
+    const mappedDir = (character === 'maria' && direction === 'abajo') ? 'adelante' : direction;
+
+    // Always keep animation alive if key is being pressed
+    setPlayerState(prev => ({ direction: mappedDir, isMoving: true }));
+    if (moveTimer.current) clearTimeout(moveTimer.current);
+    moveTimer.current = setTimeout(() => {
+      setPlayerState(prev => ({ ...prev, isMoving: false }));
+    }, 300);
+
     const now = Date.now();
     // Cooldown optimizado para mejor respuesta (180ms para no interferir con joystick de 200ms)
     if (now - lastMoveRef.current < 180) return;
@@ -45,17 +55,7 @@ export const usePlayerMovement = (initialPos, character, matrix, onCollideSpecia
     newX += dx;
     newY += dy;
 
-    // Special mapping for character sprites
-    const mappedDir = (character === 'maria' && direction === 'abajo') ? 'adelante' : direction;
-
     if (newX !== playerPos.x || newY !== playerPos.y) {
-      setPlayerState({ direction: mappedDir, isMoving: true });
-      
-      if (moveTimer.current) clearTimeout(moveTimer.current);
-      moveTimer.current = setTimeout(() => {
-        setPlayerState(prev => ({ ...prev, isMoving: false }));
-      }, 300);
-
       if (isWalkable(matrix, newX, newY)) {
         let isOccupied = false;
         if (otherPlayers) {
