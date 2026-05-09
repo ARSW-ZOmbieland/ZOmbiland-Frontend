@@ -431,6 +431,69 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
   };
 
 
+  // --- PERFORMANCE FIX: Memoize Static Layers ---
+  const groundLayer = useMemo(() => (
+    <div className="ground-layer" style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}>
+        {visibleTiles.map(({ x, y, cell }) => {
+            const groundID = typeof cell === 'object' ? cell.g : (cell < 10 ? cell : 0);
+            return (
+                <div 
+                    key={`ground-${x}-${y}`} 
+                    className="tile ground-tile" 
+                    style={{ 
+                        position: 'absolute', 
+                        left: `calc(${x} * var(--tile-size))`, 
+                        top: `calc(${y} * var(--tile-size))`, 
+                        zIndex: 1 
+                    }}
+                >
+                    <img src={GROUND_ASSETS[groundID] || GROUND_ASSETS[0]} alt="ground" className="tile-image" />
+                </div>
+            );
+        })}
+    </div>
+  ), [visibleTiles]);
+
+  const propsLayer = useMemo(() => (
+    <div className="props-layer" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}>
+        {visibleTiles.map(({ x, y, cell }) => {
+            const propID = typeof cell === 'object' ? cell.p : (cell >= 10 && cell !== 99 ? cell : null);
+            const isHovered = !isDead && !isPaused && hoveredTile && hoveredTile.x === x && hoveredTile.y === y;
+            if (!propID && !isHovered) return null;
+
+            return (
+                <div 
+                    key={`prop-${x}-${y}`} 
+                    style={{ 
+                        position: 'absolute', 
+                        left: `calc(${x} * var(--tile-size))`, 
+                        top: `calc(${y} * var(--tile-size))`, 
+                        width: 'var(--tile-size)',
+                        height: 'var(--tile-size)',
+                        zIndex: y * 10 + 5 
+                    }}
+                >
+                    {propID && propID !== 99 && !(roomMode === 'TORNEO' && propID === 40 && location === 'world') && (
+                        <img 
+                            src={PROP_ASSETS[propID]} 
+                            alt="prop" 
+                            className={`tile-image ${propID >= 20 && propID <= 22 ? 'bush-prop' : ''} ${propID >= 30 && propID <= 34 ? 'tree-prop' : ''} ${propID >= 40 && propID <= 49 ? 'bunker-prop' : ''} ${propID >= 50 && propID <= 59 ? 'forest-prop' : ''} ${propID >= 60 && propID <= 69 ? 'city-building' : ''} ${propID >= 70 && propID <= 89 && propID !== 72 ? 'urban-prop' : ''} ${propID === 72 ? 'street-light-prop' : ''} ${propID === 90 ? 'barricade-prop' : ''} ${(propID === 100 || propID === 101) ? 'item-pickup-prop' : ''}`} 
+                            style={{ 
+                                position: 'absolute', 
+                                zIndex: 1, 
+                                top: 0, 
+                                left: 0,
+                                opacity: (propID >= 40 && propID <= 49 && Math.floor(playerPos.x) === x && Math.floor(playerPos.y) === y) ? 0 : 1 
+                            }} 
+                        />
+                    )}
+                    {isHovered && <div className="tile-hover-highlight" style={{ zIndex: 20 }} />}
+                </div>
+            );
+        })}
+    </div>
+  ), [visibleTiles, isDead, isPaused, hoveredTile, roomMode, location, Math.floor(playerPos.x), Math.floor(playerPos.y)]);
+
   return (
     <div 
       className="game-viewport" 
@@ -449,67 +512,14 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
         }}
       >
         {/* Layer 1: Ground (Optimized Static Render) */}
-        <div className="ground-layer" style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}>
-            {visibleTiles.map(({ x, y, cell }) => {
-                const groundID = typeof cell === 'object' ? cell.g : (cell < 10 ? cell : 0);
-                return (
-                    <div 
-                        key={`ground-${x}-${y}`} 
-                        className="tile ground-tile" 
-                        style={{ 
-                            position: 'absolute', 
-                            left: `calc(${x} * var(--tile-size))`, 
-                            top: `calc(${y} * var(--tile-size))`, 
-                            zIndex: 1 
-                        }}
-                    >
-                        <img src={GROUND_ASSETS[groundID] || GROUND_ASSETS[0]} alt="ground" className="tile-image" />
-                    </div>
-                );
-            })}
-        </div>
+        {groundLayer}
 
-        {/* Layer 2: Props and Entities (Dynamic Z-indexing) */}
-        <div className="entities-layer" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}>
-            {visibleTiles.map(({ x, y, cell }) => {
-                const propID = typeof cell === 'object' ? cell.p : (cell >= 10 && cell !== 99 ? cell : null);
-                const isHovered = !isDead && !isPaused && hoveredTile && hoveredTile.x === x && hoveredTile.y === y;
-                if (!propID && !isHovered) return null;
-
-                return (
-                    <div 
-                        key={`dynamic-${x}-${y}`} 
-                        style={{ 
-                            position: 'absolute', 
-                            left: `calc(${x} * var(--tile-size))`, 
-                            top: `calc(${y} * var(--tile-size))`, 
-                            width: 'var(--tile-size)',
-                            height: 'var(--tile-size)',
-                            zIndex: y * 10 + 5 
-                        }}
-                    >
-                        {propID && propID !== 99 && !(roomMode === 'TORNEO' && propID === 40 && location === 'world') && (
-                            <img 
-                                src={PROP_ASSETS[propID]} 
-                                alt="prop" 
-                                className={`tile-image ${propID >= 20 && propID <= 22 ? 'bush-prop' : ''} ${propID >= 30 && propID <= 34 ? 'tree-prop' : ''} ${propID >= 40 && propID <= 49 ? 'bunker-prop' : ''} ${propID >= 50 && propID <= 59 ? 'forest-prop' : ''} ${propID >= 60 && propID <= 69 ? 'city-building' : ''} ${propID >= 70 && propID <= 89 && propID !== 72 ? 'urban-prop' : ''} ${propID === 72 ? 'street-light-prop' : ''} ${propID === 90 ? 'barricade-prop' : ''} ${(propID === 100 || propID === 101) ? 'item-pickup-prop' : ''}`} 
-                                style={{ 
-                                    position: 'absolute', 
-                                    zIndex: 1, 
-                                    top: 0, 
-                                    left: 0,
-                                    opacity: (propID >= 40 && propID <= 49 && Math.floor(playerPos.x) === x && Math.floor(playerPos.y) === y) ? 0 : 1 
-                                }} 
-                            />
-                        )}
-                        {isHovered && <div className="tile-hover-highlight" style={{ zIndex: 20 }} />}
-                    </div>
-                );
-            })}
-            
-            {/* Render entities independently from the grid tiles to prevent DOM recreation */}
+        {/* Layer 2: Props (Dynamic Z-indexing) */}
+        {propsLayer}
+        
+        {/* Layer 3: Entities (Dynamic Flat Render) */}
+        <div className="entities-layer" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
             {renderFlatEntities()}
-
         </div>
         {/* --- PERFORMANCE FIX: INDEPENDENT BULLET LAYER --- */}
         <div className="bullet-overlay-layer" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 999 }}>

@@ -70,7 +70,7 @@ export const usePlayerMovement = (initialPos, character, matrix, onCollideSpecia
         if (!isOccupied) {
           setPlayerPos({ x: newX, y: newY });
           
-          if (roomCode) {
+          if (roomCode && webSocketService.connected) {
               webSocketService.sendMessage('/app/game.action', {
                   playerId: character,
                   roomCode: roomCode,
