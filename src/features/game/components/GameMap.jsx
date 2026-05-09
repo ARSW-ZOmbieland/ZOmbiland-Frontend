@@ -607,9 +607,10 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
           
           {roomMode !== 'TORNEO' && (
             <p style={{ color: '#ccc', marginTop: '20px', fontSize: '0.9rem' }}>
-              Aparecerás en la entrada del mapa automáticamente.
+              Aparecerás en un lugar aleatorio del mapa.
             </p>
           )}
+
         </div>
       )}
     </div>

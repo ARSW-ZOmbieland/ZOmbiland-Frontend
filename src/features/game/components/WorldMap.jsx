@@ -207,7 +207,7 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
   }, [onExit, mapData, character, roomCode]);
 
   const { playerPos, playerState, setPlayerPos, handleManualMove } = usePlayerMovement(
-    { x: 1, y: 1 }, 
+    { x: -10, y: -10 }, 
     character, 
     mapData ? mapData.matrix : [[0]], 
     handleCollideSpecial,
@@ -222,19 +222,8 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
 
   // IA local del zombie eliminada (ahora se maneja vía WebSocket arriba)
 
-  // Update position once map is loaded (ONLY ONCE per room)
-  const initialPosSet = React.useRef(false);
-  useEffect(() => {
-      if (mapData && setPlayerPos && !initialPosSet.current) {
-          setPlayerPos({ x: mapData.startX, y: mapData.startY });
-          initialPosSet.current = true;
-      }
-  }, [mapData, setPlayerPos]);
-
-  // Reset flag when room changes
-  useEffect(() => {
-      initialPosSet.current = false;
-  }, [roomCode]);
+  // Initial position is now handled exclusively by the server via the join message broadcast
+  // which triggers a TELEPORT action in the state subscription above.
 
   // Respawn Timer Logic
   useEffect(() => {
