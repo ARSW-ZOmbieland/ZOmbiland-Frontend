@@ -319,9 +319,12 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
   const centerXValue = Math.floor(VIEWPORT_TILES / 2);
   const centerYValue = Math.floor(VIEWPORT_TILES / 2);
 
+  // Helper de seguridad contra NaN e Infinity para CSS
+  const safe = (val, fallback = 0) => (isFinite(val) && val !== null) ? val : fallback;
+
   // Lógica de Centrado Absoluto en Pantalla con seguridad contra NaN
-  const safeX = isFinite(playerPos.x) ? playerPos.x : 0;
-  const safeY = isFinite(playerPos.y) ? playerPos.y : 0;
+  const safeX = safe(playerPos.x);
+  const safeY = safe(playerPos.y);
 
   const translateX = `calc(50vw - (${safeX} * var(--tile-size)) - (var(--tile-size) / 2))`;
   const translateY = `calc(50vh - (${safeY} * var(--tile-size)) - (var(--tile-size) / 2))`;
@@ -333,10 +336,10 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
     const cols = matrix[0].length;
     
     // Buffer ampliado para evitar desapariciones en los bordes (15 tiles a la redonda)
-    const startX = Math.max(0, Math.floor(playerPos.x - 15));
-    const endX = Math.min(cols, Math.floor(playerPos.x + 16));
-    const startY = Math.max(0, Math.floor(playerPos.y - 12));
-    const endY = Math.min(rows, Math.floor(playerPos.y + 14));
+    const startX = Math.max(0, Math.floor(safeX - 15));
+    const endX = Math.min(cols, Math.floor(safeX + 16));
+    const startY = Math.max(0, Math.floor(safeY - 12));
+    const endY = Math.min(rows, Math.floor(safeY + 14));
 
     const tiles = [];
     for (let y = startY; y < endY; y++) {
@@ -345,7 +348,7 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
       }
     }
     return tiles;
-  }, [Math.floor(playerPos.x), Math.floor(playerPos.y), matrix]);
+  }, [Math.floor(safeX), Math.floor(safeY), matrix]);
 
 
   // Entities are now rendered flatly to prevent DOM recreation when moving across tiles
@@ -362,11 +365,11 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
             className={`player-sprite zombie-sprite ${hitZombies.has(z.id) ? 'zombie-hit-flash' : ''}`} 
             style={{ 
               position: 'absolute', 
-              left: `calc(${z.x} * var(--tile-size))`, 
-              top: `calc(${z.y} * var(--tile-size))`, 
+              left: `calc(${safe(z.x)} * var(--tile-size))`, 
+              top: `calc(${safe(z.y)} * var(--tile-size))`, 
               width: 'var(--tile-size)',
               height: 'var(--tile-size)',
-              zIndex: Math.floor(z.y) * 10 + 11 
+              zIndex: Math.floor(safe(z.y)) * 10 + 11 
             }}
           >
             <SpriteZombie direction={z.direction} isAttacking={z.attacking} type={z.type} />
@@ -383,11 +386,11 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
         className="player-sprite" 
         style={{ 
           position: 'absolute', 
-          left: `calc(${playerPos.x} * var(--tile-size))`, 
-          top: `calc(${playerPos.y} * var(--tile-size))`, 
+          left: `calc(${safeX} * var(--tile-size))`, 
+          top: `calc(${safeY} * var(--tile-size))`, 
           width: 'var(--tile-size)',
           height: 'var(--tile-size)',
-          zIndex: Math.floor(playerPos.y) * 10 + 12 
+          zIndex: Math.floor(safeY) * 10 + 12 
         }}
       >
         <HealthBar health={playerHealth} />
@@ -396,12 +399,12 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
           direction={direction} 
           isMoving={isMoving} 
           isDead={isDead} 
-          aimAngle={aimAngle}
+          aimAngle={safe(aimAngle)}
         />
         {!isDead && !isPaused && (
           <div className="weapon-aim-indicator-player">
             <img 
-              src={`/assets/weapons/weapon direction/${getWeaponDirection(aimAngle)}.png`} 
+              src={`/assets/weapons/weapon direction/${getWeaponDirection(safe(aimAngle))}.png`} 
               alt="aim"
               className="weapon-aim-image"
             />
@@ -422,15 +425,15 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
               className="player-sprite" 
               style={{ 
                 position: 'absolute', 
-                left: `calc(${p.x} * var(--tile-size))`, 
-                top: `calc(${p.y} * var(--tile-size))`, 
+                left: `calc(${safe(p.x)} * var(--tile-size))`, 
+                top: `calc(${safe(p.y)} * var(--tile-size))`, 
                 width: 'var(--tile-size)',
                 height: 'var(--tile-size)',
-                zIndex: Math.floor(p.y) * 10 + 12 
+                zIndex: Math.floor(safe(p.y)) * 10 + 12 
               }}
             >
               <HealthBar health={h} />
-              <SpritePlayer characterId={p.playerId} direction={p.action || 'abajo'} isMoving={p.isMoving !== false} isDead={dead} aimAngle={p.aimAngle || 0} />
+              <SpritePlayer characterId={p.playerId} direction={p.action || 'abajo'} isMoving={p.isMoving !== false} isDead={dead} aimAngle={safe(p.aimAngle)} />
             </div>
           );
         }
@@ -493,7 +496,7 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
                                 zIndex: 1, 
                                 top: 0, 
                                 left: 0,
-                                opacity: (propID >= 40 && propID <= 49 && Math.floor(playerPos.x) === x && Math.floor(playerPos.y) === y) ? 0 : 1 
+                                opacity: (propID >= 40 && propID <= 49 && Math.floor(safeX) === x && Math.floor(safeY) === y) ? 0 : 1 
                             }} 
                         />
                     )}
@@ -502,7 +505,7 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
             );
         })}
     </div>
-  ), [visibleTiles, isDead, isPaused, hoveredTile, roomMode, location, Math.floor(playerPos.x), Math.floor(playerPos.y)]);
+  ), [visibleTiles, isDead, isPaused, hoveredTile, roomMode, location, Math.floor(safeX), Math.floor(safeY)]);
 
   return (
     <div 
@@ -539,10 +542,10 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
                 className="bullet-projectile"
                 style={{
                     position: 'absolute',
-                    left: `calc(${b.startX + 0.5} * var(--tile-size))`, // Center logic
-                    top: `calc(${b.startY + 0.5} * var(--tile-size))`,
-                    '--tx': (b.endX - b.startX) * 1, // Normalized to tile units
-                    '--ty': (b.endY - b.startY) * 1
+                    left: `calc(${safe(b.startX) + 0.5} * var(--tile-size))`, 
+                    top: `calc(${safe(b.startY) + 0.5} * var(--tile-size))`,
+                    '--tx': (safe(b.endX) - safe(b.startX)) * 1,
+                    '--ty': (safe(b.endY) - safe(b.startY)) * 1
                 }}
               />
             ))}
@@ -552,9 +555,9 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
                 className="muzzle-flash"
                 style={{
                   position: 'absolute',
-                  left: `calc(${(f.x || playerPos.x) + 0.5} * var(--tile-size))`,
-                  top: `calc(${(f.y || playerPos.y) + 0.5} * var(--tile-size))`,
-                  transform: `translate(-50%, -50%) rotate(${f.angle !== undefined ? f.angle : aimAngle}deg) translate(25px, 0)`
+                  left: `calc(${(safe(f.x || safeX)) + 0.5} * var(--tile-size))`,
+                  top: `calc(${(safe(f.y || safeY)) + 0.5} * var(--tile-size))`,
+                  transform: `translate(-50%, -50%) rotate(${safe(f.angle !== undefined ? f.angle : aimAngle)}deg) translate(25px, 0)`
                 }}
               />
             ))}
@@ -578,7 +581,7 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
                             <circle 
                                 cx={`calc(32.5 * var(--tile-size))`} 
                                 cy={`calc(32.5 * var(--tile-size))`} 
-                                r={`calc(${zoneData.radius} * var(--tile-size))`} 
+                                r={`calc(${safe(zoneData.radius, 50)} * var(--tile-size))`} 
                                 fill="black" 
                             />
                         </mask>
@@ -594,7 +597,7 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
                     <circle 
                         cx={`calc(32.5 * var(--tile-size))`} 
                         cy={`calc(32.5 * var(--tile-size))`} 
-                        r={`calc(${zoneData.radius} * var(--tile-size))`} 
+                        r={`calc(${safe(zoneData.radius, 50)} * var(--tile-size))`} 
                         fill="none" 
                         stroke="rgba(255, 0, 0, 0.8)" 
                         strokeWidth="10"
@@ -603,7 +606,7 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
                     <circle 
                         cx={`calc(32.5 * var(--tile-size))`} 
                         cy={`calc(32.5 * var(--tile-size))`} 
-                        r={`calc(${zoneData.radius} * var(--tile-size))`} 
+                        r={`calc(${safe(zoneData.radius, 50)} * var(--tile-size))`} 
                         fill="none" 
                         stroke="white" 
                         strokeWidth="2"
