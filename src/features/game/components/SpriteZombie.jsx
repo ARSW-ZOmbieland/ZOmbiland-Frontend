@@ -18,15 +18,12 @@ const SpriteZombie = memo(({ direction, isAttacking, type = 'comun' }) => {
     } else if (type === 'tanke') {
       folder = 'tanque';
       basePath = '/villanos';
-    } else if (type === 'llorona') {
-      folder = 'llorona';
-      basePath = '/villanos';
-    }
+
     
     const isChasqueador = type === 'chasqueador';
     const isHunter = type === 'hunter';
     const isTanke = type === 'tanke';
-    const isLlorona = type === 'llorona';
+
 
     if (mode === 'walk') {
       if (isChasqueador && dir === 'derecha') return `${basePath}/${folder}/dercha.gif`;
@@ -41,7 +38,7 @@ const SpriteZombie = memo(({ direction, isAttacking, type = 'comun' }) => {
           'adelante': 'ataque frente'
         };
         return `${basePath}/${folder}/${attackMap[dir] || 'ataque frente'}.gif`;
-      } else if (isHunter || isLlorona) {
+      } else if (isHunter) {
         return `${basePath}/${folder}/ataque.gif`;
       } else if (isTanke) {
         const tankeAttackMap = {
