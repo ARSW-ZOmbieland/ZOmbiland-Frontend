@@ -18,6 +18,7 @@ const SpriteZombie = memo(({ direction, isAttacking, type = 'comun' }) => {
     } else if (type === 'tanke') {
       folder = 'tanque';
       basePath = '/villanos';
+    }
 
     
     const isChasqueador = type === 'chasqueador';
