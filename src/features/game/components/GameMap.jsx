@@ -65,27 +65,34 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
     
     // Si el puntero está capturado (Pointer Lock)
     if (document.pointerLockElement) {
-        // Actualizamos la posición virtual sumando el movimiento
-        virtualMouse.current.x += e.movementX;
-        virtualMouse.current.y += e.movementY;
+        // Actualizamos la posición virtual sumando el movimiento (con fallback a 0)
+        const mx = e.movementX || 0;
+        const my = e.movementY || 0;
+        
+        virtualMouse.current.x += mx;
+        virtualMouse.current.y += my;
         
         // Mantener el puntero virtual dentro de un rango razonable (ej. 400px de radio)
         const dist = Math.sqrt(virtualMouse.current.x**2 + virtualMouse.current.y**2);
-        if (dist > 400) {
+        if (dist > 400 && dist !== 0) {
             const ratio = 400 / dist;
             virtualMouse.current.x *= ratio;
             virtualMouse.current.y *= ratio;
         }
     } else {
-        // Modo normal si no está bloqueado (aunque el usuario quiere bloqueo siempre)
+        // Modo normal si no está bloqueado
         const rect = e.currentTarget.getBoundingClientRect();
         const centerX = rect.width / 2;
         const centerY = rect.height / 2;
-        virtualMouse.current.x = e.clientX - rect.left - centerX;
-        virtualMouse.current.y = e.clientY - rect.top - centerY;
+        virtualMouse.current.x = (e.clientX - rect.left - centerX) || 0;
+        virtualMouse.current.y = (e.clientY - rect.top - centerY) || 0;
     }
 
-    const angle = Math.atan2(virtualMouse.current.y, virtualMouse.current.x) * 180 / Math.PI;
+    let angle = Math.atan2(virtualMouse.current.y, virtualMouse.current.x) * 180 / Math.PI;
+    
+    // Safety check for NaN or Infinity
+    if (!isFinite(angle)) angle = 0;
+
     setAimAngle(angle);
     if (onAimChange) onAimChange(angle);
   }, [isDead, isPaused, onAimChange]);
@@ -312,9 +319,12 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
   const centerXValue = Math.floor(VIEWPORT_TILES / 2);
   const centerYValue = Math.floor(VIEWPORT_TILES / 2);
 
-  // Lógica de Centrado Absoluto en Pantalla
-  const translateX = `calc(50vw - (${playerPos.x} * var(--tile-size)) - (var(--tile-size) / 2))`;
-  const translateY = `calc(50vh - (${playerPos.y} * var(--tile-size)) - (var(--tile-size) / 2))`;
+  // Lógica de Centrado Absoluto en Pantalla con seguridad contra NaN
+  const safeX = isFinite(playerPos.x) ? playerPos.x : 0;
+  const safeY = isFinite(playerPos.y) ? playerPos.y : 0;
+
+  const translateX = `calc(50vw - (${safeX} * var(--tile-size)) - (var(--tile-size) / 2))`;
+  const translateY = `calc(50vh - (${safeY} * var(--tile-size)) - (var(--tile-size) / 2))`;
 
   // --- OPTIMIZATION: Memoize Viewport Calculation ---
   const visibleTiles = useMemo(() => {
