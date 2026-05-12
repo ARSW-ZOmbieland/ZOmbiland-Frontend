@@ -20,7 +20,7 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
   const [cooldown, setCooldown] = useState(15);
   const aimAngleRef = useRef(0); // High-frequency value in ref to avoid map re-renders
   const weaponImgRef = useRef(null); // Direct DOM ref for the weapon image
-  const [hoveredTile, setHoveredTile] = useState(null);
+  const hoverTileRef = useRef(null); // Direct DOM ref for the highlight box
   const [bullets, setBullets] = useState([]);
   const [flashes, setFlashes] = useState([]);
   const virtualMouse = useRef({ x: 0, y: 0 }); 
@@ -122,12 +122,10 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
     const nextX = Math.floor(playerPos.x) + ox;
     const nextY = Math.floor(playerPos.y) + oy;
 
-    setHoveredTile(prev => {
-        if (!prev || prev.x !== nextX || prev.y !== nextY) {
-            return { x: nextX, y: nextY };
-        }
-        return prev;
-    });
+    if (hoverTileRef.current) {
+        hoverTileRef.current.style.left = `calc(${nextX} * var(--tile-size))`;
+        hoverTileRef.current.style.top = `calc(${nextY} * var(--tile-size))`;
+    }
   }, [isDead, isPaused, onAimChange, playerPos.x, playerPos.y]);
 
   // Sincronizar el ángulo del joystick móvil con el estado interno
@@ -141,13 +139,12 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
     }
   }, [mobileAimAngle]);
 
-  // OPTIMIZADO: Actualizar la baldosa vecina solo cuando cambia el objetivo (Reduce re-renders masivamente)
+  // OPTIMIZADO: Actualizar la baldosa vecina solo cuando el personaje se mueve (La puntería ya se maneja en handleMouseMove)
   useEffect(() => {
     if (isDead || isPaused) return;
 
     const currentA = (aimAngleRef.current + 360) % 360;
     let ox = 0, oy = 0;
-    
     if (currentA >= 337.5 || currentA < 22.5) { ox = 1; oy = 0; }
     else if (currentA >= 22.5 && currentA < 67.5) { ox = 1; oy = 1; }
     else if (currentA >= 67.5 && currentA < 112.5) { ox = 0; oy = 1; }
@@ -160,12 +157,10 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
     const nextX = Math.floor(playerPos.x) + ox;
     const nextY = Math.floor(playerPos.y) + oy;
 
-    if (!hoveredTile || hoveredTile.x !== nextX || hoveredTile.y !== nextY) {
-      setHoveredTile({ x: nextX, y: nextY });
+    if (hoverTileRef.current) {
+        hoverTileRef.current.style.left = `calc(${nextX} * var(--tile-size))`;
+        hoverTileRef.current.style.top = `calc(${nextY} * var(--tile-size))`;
     }
-    // No usamos aimAngleRef.current en la dependencia para evitar bucles, 
-    // pero este efecto se ejecutará cuando playerPos cambie o cuando queramos forzarlo.
-    // Para que reaccione al movimiento del mouse, lo llamaremos desde handleMouseMove.
   }, [playerPos.x, playerPos.y, isDead, isPaused]);
 
   // Disparo al hacer clic (Memoizado para rendimiento)
@@ -436,7 +431,6 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
           direction={direction} 
           isMoving={isMoving} 
           isDead={isDead} 
-          aimAngle={safe(aimAngleRef.current)}
         />
         {!isDead && !isPaused && (
           <div className="weapon-aim-indicator-player">
@@ -538,12 +532,11 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
                             }} 
                         />
                     )}
-                    {isHovered && <div className="tile-hover-highlight" style={{ zIndex: 20 }} />}
                 </div>
             );
         })}
     </div>
-  ), [visibleTiles, isDead, isPaused, hoveredTile, roomMode, location, Math.floor(safeX), Math.floor(safeY)]);
+  ), [visibleTiles, isDead, isPaused, roomMode, location, Math.floor(safeX), Math.floor(safeY)]);
 
   return (
     <div 
@@ -567,6 +560,20 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
 
         {/* Layer 2: Props (Dynamic Z-indexing) */}
         {propsLayer}
+
+        {/* --- PERFORMANCE FIX: STANDALONE HIGHLIGHT LAYER --- */}
+        <div 
+          ref={hoverTileRef}
+          className="tile-hover-highlight" 
+          style={{ 
+            position: 'absolute',
+            width: 'var(--tile-size)',
+            height: 'var(--tile-size)',
+            zIndex: 20,
+            pointerEvents: 'none',
+            display: (isDead || isPaused) ? 'none' : 'block'
+          }} 
+        />
         
         {/* Layer 3: Entities (Dynamic Flat Render) */}
         <div className="entities-layer" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
