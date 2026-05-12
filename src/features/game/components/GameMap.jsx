@@ -231,13 +231,9 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
   }, [isDead, isPaused, playerPos, onShoot, ammo]);
 
   // NUEVO: Escuchar disparos desde controles móviles (Con control de duplicados)
-  const lastProcessedShot = useRef(0);
   useEffect(() => {
-    if (mobileShotTrigger && mobileShotTrigger.timestamp > lastProcessedShot.current && !isPaused && !isDead) {
-      console.log(">> GAME_MAP: Executing mobile shot", mobileShotTrigger.angle);
-      lastProcessedShot.current = mobileShotTrigger.timestamp;
-      
-      setAimAngle(mobileShotTrigger.angle);
+    if (mobileShotTrigger && !isPaused && !isDead) {
+      aimAngleRef.current = mobileShotTrigger.angle;
       if (onAimChange) onAimChange(mobileShotTrigger.angle);
       
       // Ejecutar el disparo físico
@@ -254,7 +250,7 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
         viewport.requestPointerLock();
     }
     
-    executeShot(aimAngle);
+    executeShot(aimAngleRef.current);
   };
 
   // --- NUEVA LÓGICA DE DISPARO POR TECLADO NUMÉRICO ---
@@ -284,7 +280,7 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [executeShot, playerPos, isDead, isPaused, aimAngle]);
+  }, [executeShot, playerPos, isDead, isPaused]);
 
   // Manejar cambios en el estado de Pointer Lock y Liberación por Pausa
   useEffect(() => {
