@@ -10,6 +10,18 @@ import ErrorBoundary from './components/ErrorBoundary';
 import { useAssetPreload } from './hooks/useAssetPreload';
 import webSocketService from './core/WebSocketService';
 
+// Global patch to prevent crashes in browser extensions (like Project Naptha) 
+// that pass non-finite values to elementFromPoint during Pointer Lock.
+const originalElementFromPoint = document.elementFromPoint;
+document.elementFromPoint = function(x, y) {
+  if (!isFinite(x) || !isFinite(y)) return null;
+  try {
+    return originalElementFromPoint.apply(document, [x, y]);
+  } catch (e) {
+    return null;
+  }
+};
+
 function App() {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
