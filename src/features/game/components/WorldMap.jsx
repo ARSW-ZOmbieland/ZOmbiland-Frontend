@@ -52,7 +52,14 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
         img.src = `/zombies/chasqueador/${state}.gif`;
     });
     
-    console.log(">> Preloading assets for better performance (Players, Zombies & Chasqueadores)...");
+    // Weapon direction preloading
+    const weaponDirs = ['derecha', 'abajo_derecha', 'abajo', 'abajo_izquierda', 'izquierda', 'arriba_izquierda', 'arriba', 'arriba_derecha'];
+    weaponDirs.forEach(dir => {
+        const img = new Image();
+        img.src = `/assets/weapons/weapon direction/${dir}.png`;
+    });
+
+    console.log(">> Preloading assets for better performance (Players, Zombies, Chasqueadores & Weapons)...");
   }, []);
 
   useEffect(() => {
@@ -301,7 +308,7 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
                 lastSentAngle = currentAngle;
             }
         }
-    }, 200); // 200ms = 5Hz
+    }, 100); // 100ms = 10Hz (Mejor respuesta sin saturar el servidor)
     
     return () => clearInterval(interval);
   }, [roomCode, character, playerPos.x, playerPos.y, playerState.direction, health]);
