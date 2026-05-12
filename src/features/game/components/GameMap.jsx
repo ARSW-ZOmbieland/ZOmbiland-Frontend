@@ -18,7 +18,8 @@ const HealthBar = ({ health }) => {
 
 const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zombies = [], onRestart, onShoot, lastExternalShot, onAimChange, isPaused, mobileShotTrigger, mobileAimAngle, ammo, isSafeZone = false, location = 'world', zoneData = { radius: 50 }, roomMode = 'TRADICIONAL' }) => {
   const [cooldown, setCooldown] = useState(15);
-  const [aimAngle, setAimAngle] = useState(0);
+  const aimAngleRef = useRef(0); // High-frequency value in ref to avoid map re-renders
+  const weaponImgRef = useRef(null); // Direct DOM ref for the weapon image
   const [hoveredTile, setHoveredTile] = useState(null);
   const [bullets, setBullets] = useState([]);
   const [flashes, setFlashes] = useState([]);
@@ -93,39 +94,79 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
     // Safety check for NaN or Infinity
     if (!isFinite(angle)) angle = 0;
 
-    setAimAngle(angle);
+    aimAngleRef.current = angle;
+    
+    // Direct DOM update for weapon image (Maximum performance)
+    if (weaponImgRef.current) {
+        const dir = getWeaponDirection(angle);
+        const newSrc = `/assets/weapons/weapon direction/${dir}.png`;
+        if (weaponImgRef.current.getAttribute('src') !== newSrc) {
+            weaponImgRef.current.src = newSrc;
+        }
+    }
+
     if (onAimChange) onAimChange(angle);
-  }, [isDead, isPaused, onAimChange]);
+
+    // Actualizar highlight de baldosa si es necesario (sin disparar re-render de todo si no cambia de baldosa)
+    const currentA = (angle + 360) % 360;
+    let ox = 0, oy = 0;
+    if (currentA >= 337.5 || currentA < 22.5) { ox = 1; oy = 0; }
+    else if (currentA >= 22.5 && currentA < 67.5) { ox = 1; oy = 1; }
+    else if (currentA >= 67.5 && currentA < 112.5) { ox = 0; oy = 1; }
+    else if (currentA >= 112.5 && currentA < 157.5) { ox = -1; oy = 1; }
+    else if (currentA >= 157.5 && currentA < 202.5) { ox = -1; oy = 0; }
+    else if (currentA >= 202.5 && currentA < 247.5) { ox = -1; oy = -1; }
+    else if (currentA >= 247.5 && currentA < 292.5) { ox = 0; oy = -1; }
+    else if (currentA >= 292.5 && currentA < 337.5) { ox = 1; oy = -1; }
+
+    const nextX = Math.floor(playerPos.x) + ox;
+    const nextY = Math.floor(playerPos.y) + oy;
+
+    setHoveredTile(prev => {
+        if (!prev || prev.x !== nextX || prev.y !== nextY) {
+            return { x: nextX, y: nextY };
+        }
+        return prev;
+    });
+  }, [isDead, isPaused, onAimChange, playerPos.x, playerPos.y]);
 
   // Sincronizar el ángulo del joystick móvil con el estado interno
   useEffect(() => {
     if (mobileAimAngle !== undefined) {
-      setAimAngle(mobileAimAngle);
+      aimAngleRef.current = mobileAimAngle;
+      if (weaponImgRef.current) {
+          const dir = getWeaponDirection(mobileAimAngle);
+          weaponImgRef.current.src = `/assets/weapons/weapon direction/${dir}.png`;
+      }
     }
   }, [mobileAimAngle]);
 
-  // NUEVO: Efecto reactivo para actualizar la baldosa vecina (hoveredTile) cuando el personaje se mueva o cambie el ángulo
+  // OPTIMIZADO: Actualizar la baldosa vecina solo cuando cambia el objetivo (Reduce re-renders masivamente)
   useEffect(() => {
     if (isDead || isPaused) return;
 
-    // Calcular la baldosa vecina EXACTAMENTE con la misma lógica de 45 grados
-    const a = (aimAngle + 360) % 360;
+    const currentA = (aimAngleRef.current + 360) % 360;
     let ox = 0, oy = 0;
     
-    if (a >= 337.5 || a < 22.5) { ox = 1; oy = 0; }
-    else if (a >= 22.5 && a < 67.5) { ox = 1; oy = 1; }
-    else if (a >= 67.5 && a < 112.5) { ox = 0; oy = 1; }
-    else if (a >= 112.5 && a < 157.5) { ox = -1; oy = 1; }
-    else if (a >= 157.5 && a < 202.5) { ox = -1; oy = 0; }
-    else if (a >= 202.5 && a < 247.5) { ox = -1; oy = -1; }
-    else if (a >= 247.5 && a < 292.5) { ox = 0; oy = -1; }
-    else if (a >= 292.5 && a < 337.5) { ox = 1; oy = -1; }
+    if (currentA >= 337.5 || currentA < 22.5) { ox = 1; oy = 0; }
+    else if (currentA >= 22.5 && currentA < 67.5) { ox = 1; oy = 1; }
+    else if (currentA >= 67.5 && currentA < 112.5) { ox = 0; oy = 1; }
+    else if (currentA >= 112.5 && currentA < 157.5) { ox = -1; oy = 1; }
+    else if (currentA >= 157.5 && currentA < 202.5) { ox = -1; oy = 0; }
+    else if (currentA >= 202.5 && currentA < 247.5) { ox = -1; oy = -1; }
+    else if (currentA >= 247.5 && currentA < 292.5) { ox = 0; oy = -1; }
+    else if (currentA >= 292.5 && currentA < 337.5) { ox = 1; oy = -1; }
 
-    setHoveredTile({
-      x: Math.floor(playerPos.x) + ox,
-      y: Math.floor(playerPos.y) + oy
-    });
-  }, [aimAngle, playerPos.x, playerPos.y, isDead, isPaused]);
+    const nextX = Math.floor(playerPos.x) + ox;
+    const nextY = Math.floor(playerPos.y) + oy;
+
+    if (!hoveredTile || hoveredTile.x !== nextX || hoveredTile.y !== nextY) {
+      setHoveredTile({ x: nextX, y: nextY });
+    }
+    // No usamos aimAngleRef.current en la dependencia para evitar bucles, 
+    // pero este efecto se ejecutará cuando playerPos cambie o cuando queramos forzarlo.
+    // Para que reaccione al movimiento del mouse, lo llamaremos desde handleMouseMove.
+  }, [playerPos.x, playerPos.y, isDead, isPaused]);
 
   // Disparo al hacer clic (Memoizado para rendimiento)
   const executeShot = React.useCallback((input) => {
@@ -399,12 +440,13 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
           direction={direction} 
           isMoving={isMoving} 
           isDead={isDead} 
-          aimAngle={safe(aimAngle)}
+          aimAngle={safe(aimAngleRef.current)}
         />
         {!isDead && !isPaused && (
           <div className="weapon-aim-indicator-player">
             <img 
-              src={`/assets/weapons/weapon direction/${getWeaponDirection(safe(aimAngle))}.png`} 
+              ref={weaponImgRef}
+              src={`/assets/weapons/weapon direction/${getWeaponDirection(safe(aimAngleRef.current))}.png`} 
               alt="aim"
               className="weapon-aim-image"
             />
@@ -557,7 +599,7 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
                   position: 'absolute',
                   left: `calc(${(safe(f.x || safeX)) + 0.5} * var(--tile-size))`,
                   top: `calc(${(safe(f.y || safeY)) + 0.5} * var(--tile-size))`,
-                  transform: `translate(-50%, -50%) rotate(${safe(f.angle !== undefined ? f.angle : aimAngle)}deg) translate(25px, 0)`
+                  transform: `translate(-50%, -50%) rotate(${safe(f.angle !== undefined ? f.angle : aimAngleRef.current)}deg) translate(25px, 0)`
                 }}
               />
             ))}
