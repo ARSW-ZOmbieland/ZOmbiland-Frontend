@@ -13,6 +13,7 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
   const [zombies, setZombies] = useState([]);
   const [health, setHealth] = useState(100);
   const [ammo, setAmmo] = useState(30);
+  const [kills, setKills] = useState(0);
   const [lastExternalShot, setLastExternalShot] = useState(null);
   const [myAimAngle, setMyAimAngle] = useState(0);
   const [respawnTimeLeft, setRespawnTimeLeft] = useState(30);
@@ -109,10 +110,11 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
             }
 
             if (message.playerId === character) {
-                // Actualizar vida y munición propia desde el servidor
+                // Actualizar vida, munición y kills propias desde el servidor
                 if (message.health !== undefined) setHealth(message.health);
                 if (message.ammo !== undefined) setAmmo(message.ammo);
                 if (message.paralyzed !== undefined) setParalyzed(message.paralyzed);
+                if (message.kills !== undefined) setKills(message.kills);
                 
                 // FORCE local position update on teleport (random exit)
                 if (message.action === 'TELEPORT') {
@@ -229,10 +231,10 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
         });
         
         // Pequeño retardo para asegurar que el mensaje se envíe antes de desmontar el componente
-        setTimeout(() => onExit(), 50);
+        setTimeout(() => onExit({ kills }), 50);
       }
     }
-  }, [onExit, mapData, character, roomCode]);
+  }, [onExit, mapData, character, roomCode, kills]);
 
   const { playerPos, playerState, setPlayerPos, handleManualMove } = usePlayerMovement(
     { x: 1, y: 1 }, 

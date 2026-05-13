@@ -11,6 +11,7 @@ function GameRoom({ onConfirm }) {
     const [selectedCharacter, setSelectedCharacter] = useState(null);
     const [takenCharacters, setTakenCharacters] = useState([]);
     const [joinError, setJoinError] = useState('');
+    const [gameMode, setGameMode] = useState('coop'); // 'coop' or 'torneo'
 
     useEffect(() => {
         if (view === 'character-selection') {
@@ -143,6 +144,7 @@ function GameRoom({ onConfirm }) {
                                 <button className="game-btn secondary-btn" onClick={() => setView('joining')}>
                                     Unirse con Código
                                 </button>
+                            </div>
                             </div>
                         </div>
                     )}
