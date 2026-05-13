@@ -10,7 +10,7 @@ import webSocketService from '../core/WebSocketService';
  * @param {Function} onCollideSpecial - Callback for special tiles (doors, exits)
  * @param {string} roomCode - The active room code
  */
-export const usePlayerMovement = (initialPos, character, matrix, onCollideSpecial, roomCode, otherPlayers = {}, health = 100, isPaused = false, ammo = 30, location = 'world') => {
+export const usePlayerMovement = (initialPos, character, matrix, onCollideSpecial, roomCode, otherPlayers = {}, health = 100, isPaused = false, ammo = 30, location = 'world', paralyzed = false) => {
   const [playerPos, setPlayerPos] = useState(initialPos);
   const [playerState, setPlayerState] = useState({
     direction: 'abajo',
@@ -21,12 +21,22 @@ export const usePlayerMovement = (initialPos, character, matrix, onCollideSpecia
   const lastMoveRef = useRef(0);
 
   const handleManualMove = (direction) => {
-    // No moverse si está muerto o pausado
-    if (health <= 0 || isPaused) return;
+    // No moverse si está muerto, pausado o paralizado
+    if (health <= 0 || isPaused || paralyzed) return;
+
+    // Special mapping for character sprites
+    const mappedDir = (character === 'maria' && direction === 'abajo') ? 'adelante' : direction;
+
+    // Always keep animation alive if key is being pressed
+    setPlayerState(prev => ({ direction: mappedDir, isMoving: true }));
+    if (moveTimer.current) clearTimeout(moveTimer.current);
+    moveTimer.current = setTimeout(() => {
+      setPlayerState(prev => ({ ...prev, isMoving: false }));
+    }, 500);
 
     const now = Date.now();
-    // Cooldown optimizado para mejor respuesta (200ms)
-    if (now - lastMoveRef.current < 200) return;
+    // Cooldown optimizado para mejor respuesta (180ms para no interferir con joystick de 200ms)
+    if (now - lastMoveRef.current < 180) return;
     lastMoveRef.current = now;
     
     let newX = playerPos.x;
@@ -45,17 +55,7 @@ export const usePlayerMovement = (initialPos, character, matrix, onCollideSpecia
     newX += dx;
     newY += dy;
 
-    // Special mapping for character sprites
-    const mappedDir = (character === 'maria' && direction === 'abajo') ? 'adelante' : direction;
-
     if (newX !== playerPos.x || newY !== playerPos.y) {
-      setPlayerState({ direction: mappedDir, isMoving: true });
-      
-      if (moveTimer.current) clearTimeout(moveTimer.current);
-      moveTimer.current = setTimeout(() => {
-        setPlayerState(prev => ({ ...prev, isMoving: false }));
-      }, 2000);
-
       if (isWalkable(matrix, newX, newY)) {
         let isOccupied = false;
         if (otherPlayers) {
@@ -70,7 +70,7 @@ export const usePlayerMovement = (initialPos, character, matrix, onCollideSpecia
         if (!isOccupied) {
           setPlayerPos({ x: newX, y: newY });
           
-          if (roomCode) {
+          if (roomCode && webSocketService.connected) {
               webSocketService.sendMessage('/app/game.action', {
                   playerId: character,
                   roomCode: roomCode,
@@ -114,9 +114,15 @@ export const usePlayerMovement = (initialPos, character, matrix, onCollideSpecia
     window.addEventListener('keydown', handleKeyDown);
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [playerPos, character, matrix, onCollideSpecial, isPaused, health, paralyzed]);
+
+  // Cleanup timer only on component unmount
+  useEffect(() => {
+    return () => {
       if (moveTimer.current) clearTimeout(moveTimer.current);
     };
-  }, [playerPos, character, matrix, onCollideSpecial, isPaused]);
+  }, []);
 
   return { playerPos, playerState, setPlayerPos, handleManualMove };
 };

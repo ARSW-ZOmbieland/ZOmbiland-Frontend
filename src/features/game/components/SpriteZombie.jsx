@@ -1,23 +1,36 @@
-import React from 'react';
-import './SpritePlayer.css'; // Reutilizamos los estilos base de posicionamiento
+import React, { memo } from 'react';
+import './SpritePlayer.css';
 
 /**
- * SpriteZombie: Optimiza el renderizado de zombies para evitar el parpadeo en combate.
- * Mantiene las 9 animaciones (caminar + ataque) cargadas en el DOM.
+ * SpriteZombie: Optimizado con React.memo para evitar saturación del DOM.
  */
-const SpriteZombie = ({ direction, isAttacking, type = 'comun' }) => {
-  const walkDirections = ['abajo', 'arriba', 'derecha', 'izquierda'];
-  
+const SpriteZombie = memo(({ direction, isAttacking, type = 'comun' }) => {
   // Mapping logic for different asset naming conventions
   const getAssetPath = (dir, mode) => {
-    const folder = type === 'chasqueador' ? 'chasqueador' : 'comun';
+    let folder = 'comun';
+    let basePath = '/zombies';
+
+    if (type === 'chasqueador') {
+      folder = 'chasqueador';
+    } else if (type === 'hunter') {
+      folder = 'hunter';
+      basePath = '/villanos';
+    } else if (type === 'tanke') {
+      folder = 'tanque';
+      basePath = '/villanos';
+    }
+
     
+    const isChasqueador = type === 'chasqueador';
+    const isHunter = type === 'hunter';
+    const isTanke = type === 'tanke';
+
+
     if (mode === 'walk') {
-      if (type === 'chasqueador' && dir === 'derecha') return `/zombies/${folder}/dercha.gif`;
-      return `/zombies/${folder}/${dir}.gif`;
+      if (isChasqueador && dir === 'derecha') return `${basePath}/${folder}/dercha.gif`;
+      return `${basePath}/${folder}/${dir}.gif`;
     } else {
-      // Attack mapping
-      if (type === 'chasqueador') {
+      if (isChasqueador) {
         const attackMap = {
           'abajo': 'ataque frente',
           'arriba': 'ataque atras',
@@ -25,7 +38,18 @@ const SpriteZombie = ({ direction, isAttacking, type = 'comun' }) => {
           'izquierda': 'ataque izquierda',
           'adelante': 'ataque frente'
         };
-        return `/zombies/${folder}/${attackMap[dir] || 'ataque frente'}.gif`;
+        return `${basePath}/${folder}/${attackMap[dir] || 'ataque frente'}.gif`;
+      } else if (isHunter) {
+        return `${basePath}/${folder}/ataque.gif`;
+      } else if (isTanke) {
+        const tankeAttackMap = {
+          'abajo': 'ataqueabajo',
+          'arriba': 'ataquearriba',
+          'derecha': 'ataquederecho',
+          'izquierda': 'ataqueizquierdo',
+          'adelante': 'ataqueabajo'
+        };
+        return `${basePath}/${folder}/${tankeAttackMap[dir] || 'ataqueabajo'}.gif`;
       } else {
         const commonAttackMap = {
           'abajo': 'ataque_adelante',
@@ -34,44 +58,23 @@ const SpriteZombie = ({ direction, isAttacking, type = 'comun' }) => {
           'izquierda': 'ataque_izquierda',
           'adelante': 'ataque_adelante'
         };
-        return `/zombies/${folder}/${commonAttackMap[dir] || 'ataque'}.gif`;
+        return `${basePath}/${folder}/${commonAttackMap[dir] || 'ataque'}.gif`;
       }
     }
   };
 
   const currentDir = direction || 'abajo';
+  const assetPath = isAttacking ? getAssetPath(currentDir, 'attack') : getAssetPath(currentDir, 'walk');
 
   return (
     <div className="sprite-player-container zombie-sprite-container">
-      {/* Capas de Caminar */}
-      {walkDirections.map(dir => {
-        const isActive = !isAttacking && currentDir === dir;
-        return (
-          <img
-            key={`walk-${dir}`}
-            src={getAssetPath(dir, 'walk')}
-            alt={`zombie-walk-${dir}`}
-            className={`sprite-layer ${isActive ? 'active' : ''}`}
-            style={{ display: isActive ? 'block' : 'none' }}
-          />
-        );
-      })}
-
-      {/* Capas de Ataque */}
-      {['abajo', 'arriba', 'derecha', 'izquierda', 'adelante'].map(dir => {
-        const isActive = isAttacking && currentDir === dir;
-        return (
-          <img
-            key={`attack-${dir}`}
-            src={getAssetPath(dir, 'attack')}
-            alt={`zombie-attack-${dir}`}
-            className={`sprite-layer ${isActive ? 'active' : ''}`}
-            style={{ display: isActive ? 'block' : 'none' }}
-          />
-        );
-      })}
+      <img
+        src={assetPath}
+        alt={`zombie-${isAttacking ? 'attack' : 'walk'}-${currentDir}`}
+        className="sprite-layer active"
+      />
     </div>
   );
-};
+});
 
 export default SpriteZombie;

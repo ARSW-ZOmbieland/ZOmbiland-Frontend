@@ -1,3 +1,4 @@
+// Trigger redeploy: Tournament victory logic synchronized
 import { useState, useEffect } from 'react';
 import Login from './pages/Login/Login';
 import GameRoom from './pages/Game/GameRoom';
@@ -9,6 +10,8 @@ import ErrorBoundary from './components/ErrorBoundary';
 import { useAssetPreload } from './hooks/useAssetPreload';
 import webSocketService from './core/WebSocketService';
 
+
+
 function App() {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -17,6 +20,7 @@ function App() {
   const [selectedCharacter, setSelectedCharacter] = useState(null);
   const [roomCode, setRoomCode] = useState(null);
   const [isPaused, setIsPaused] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
 
   // Player Stats for HUD
   const [stats, setStats] = useState({
@@ -97,6 +101,26 @@ function App() {
     return () => window.removeEventListener('keydown', handleGlobalKeyDown);
   }, [gameState, isPaused, roomCode, selectedCharacter]); // Correct dependencies for the key listener
 
+  // Attempt to play audio on first user interaction if the browser blocked autoplay
+  useEffect(() => {
+    const handleFirstInteraction = () => {
+      const audioEl = document.getElementById('bg-music');
+      if (audioEl && audioEl.paused && !isMuted) {
+        audioEl.play().catch(e => console.log("Audio play blocked until further interaction"));
+      }
+      document.removeEventListener('click', handleFirstInteraction);
+      document.removeEventListener('keydown', handleFirstInteraction);
+    };
+    
+    document.addEventListener('click', handleFirstInteraction);
+    document.addEventListener('keydown', handleFirstInteraction);
+    
+    return () => {
+      document.removeEventListener('click', handleFirstInteraction);
+      document.removeEventListener('keydown', handleFirstInteraction);
+    };
+  }, [isMuted]);
+
   if (authLoading || !assetsLoaded) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: '#05050A', color: 'white' }}>
@@ -122,6 +146,44 @@ function App() {
 
     return (
       <div style={{ position: 'relative', height: '100vh', width: '100%', backgroundColor: '#000', overflow: 'hidden' }}>
+        
+        {/* Background Music Player */}
+        <audio 
+           id="bg-music"
+           src="/musica/post_apocalypse.mp3" 
+           autoPlay 
+           loop 
+           muted={isMuted}
+           ref={(audio) => { if (audio) audio.volume = 0.3; }}
+        />
+
+        {/* Global Mute Button (Top Left) */}
+        <div style={{ position: 'absolute', top: '15px', left: '15px', zIndex: 10000 }}>
+          <button 
+             onClick={() => setIsMuted(!isMuted)} 
+             title={isMuted ? "Activar música" : "Silenciar música"}
+             style={{ 
+               background: 'rgba(0,0,0,0.6)', 
+               border: '1px solid #32CD32', 
+               color: 'white', 
+               borderRadius: '50%', 
+               width: '45px', 
+               height: '45px', 
+               cursor: 'pointer', 
+               display: 'flex', 
+               justifyContent: 'center', 
+               alignItems: 'center',
+               fontSize: '1.2rem',
+               boxShadow: '0 0 10px rgba(50, 205, 50, 0.3)',
+               transition: 'all 0.3s ease'
+             }}
+             onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
+             onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+          >
+             {isMuted ? '🔇' : '🔊'}
+          </button>
+        </div>
+
         {/* User overlay widget */}
         {selectedCharacter && isPlaying && (
           <div className="room-code-badge pop-in">

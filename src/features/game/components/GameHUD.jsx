@@ -6,6 +6,11 @@ const GameHUD = ({ character, health, roomCode }) => {
   const isWarning = health <= 60 && health > 30;
   const isDanger = health <= 30;
 
+  const safeWidth = (val) => {
+    const n = parseFloat(val);
+    return (Number.isFinite(n)) ? n : 0;
+  };
+
   const getHealthColor = () => {
     if (isHealthy) return '#32CD32'; // LimeGreen
     if (isWarning) return '#FFD700'; // Gold
@@ -29,7 +34,7 @@ const GameHUD = ({ character, health, roomCode }) => {
             <div className="health-track">
               <div 
                 className={`health-fill ${isDanger ? 'pulse-danger' : ''}`} 
-                style={{ width: `${health}%`, backgroundColor: getHealthColor() }}
+                style={{ width: `${safeWidth(health)}%`, backgroundColor: getHealthColor() }}
               >
                 <div className="health-inner-highlight"></div>
               </div>

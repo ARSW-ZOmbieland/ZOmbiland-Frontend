@@ -6,6 +6,7 @@ function GameRoom({ onConfirm }) {
     const [view, setView] = useState('menu'); // 'menu', 'creating', 'joining', 'character-selection'
     const [roomCode, setRoomCode] = useState('');
     const [joinCode, setJoinCode] = useState('');
+    const [roomMode, setRoomMode] = useState('TRADICIONAL'); // 'TRADICIONAL' or 'TORNEO'
     const characters = ['andres', 'juanpablo', 'maria', 'tomas'];
     const [selectedCharacter, setSelectedCharacter] = useState(null);
     const [takenCharacters, setTakenCharacters] = useState([]);
@@ -47,7 +48,10 @@ function GameRoom({ onConfirm }) {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
-                body: JSON.stringify({ roomCode: newCode })
+                body: JSON.stringify({ 
+                    roomCode: newCode,
+                    mode: roomMode 
+                })
             }).then(() => {
                 setRoomCode(newCode);
                 setTimeout(() => setView('character-selection'), 2000);
@@ -117,6 +121,21 @@ function GameRoom({ onConfirm }) {
                             <p className="subtitle">¿Crearás un nuevo refugio o te unirás a uno?</p>
                             
                             <div className="menu-options">
+                                <div className="mode-selector">
+                                    <button 
+                                        className={`mode-btn ${roomMode === 'TRADICIONAL' ? 'active' : ''}`} 
+                                        onClick={() => setRoomMode('TRADICIONAL')}
+                                    >
+                                        Supervivencia
+                                    </button>
+                                    <button 
+                                        className={`mode-btn ${roomMode === 'TORNEO' ? 'active' : ''}`} 
+                                        onClick={() => setRoomMode('TORNEO')}
+                                    >
+                                        Torneo (BR)
+                                    </button>
+                                </div>
+
                                 <button className="game-btn primary-btn" onClick={handleCreateRoom}>
                                     Crear Nueva Sala
                                 </button>

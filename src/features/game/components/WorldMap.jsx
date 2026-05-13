@@ -16,6 +16,10 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
   const [lastExternalShot, setLastExternalShot] = useState(null);
   const [myAimAngle, setMyAimAngle] = useState(0);
   const [respawnTimeLeft, setRespawnTimeLeft] = useState(30);
+  const [paralyzed, setParalyzed] = useState(false);
+  const [roomMode, setRoomMode] = useState('TRADICIONAL');
+  const [zoneData, setZoneData] = useState({ radius: 50, timeLeft: 300 });
+  const [tournamentOutcome, setTournamentOutcome] = useState(null); // 'WIN', 'LOSS', 'END'
 
   // Asset Preloading: Force browser to cache all GIFs at once
   useEffect(() => {
@@ -48,7 +52,14 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
         img.src = `/zombies/chasqueador/${state}.gif`;
     });
     
-    console.log(">> Preloading assets for better performance (Players, Zombies & Chasqueadores)...");
+    // Weapon direction preloading
+    const weaponDirs = ['derecha', 'abajo_derecha', 'abajo', 'abajo_izquierda', 'izquierda', 'arriba_izquierda', 'arriba', 'arriba_derecha'];
+    weaponDirs.forEach(dir => {
+        const img = new Image();
+        img.src = `/assets/weapons/weapon direction/${dir}.png`;
+    });
+
+    console.log(">> Preloading assets for better performance (Players, Zombies, Chasqueadores & Weapons)...");
   }, []);
 
   useEffect(() => {
@@ -56,6 +67,12 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
     
     // Configurar WebSockets para la sala
     webSocketService.connect(() => {
+        // Obtenemos el modo de la sala
+        fetch(`${API_BASE_URL}/api/game/rooms/${roomCode}/mode`, { credentials: 'include' })
+        .then(res => res.json())
+        .then(data => setRoomMode(data.mode || 'TRADICIONAL'))
+        .catch(err => console.error("Error fetching room mode", err));
+
         // Obtenemos el mapa
         fetch(`${API_BASE_URL}/api/game/rooms/${roomCode}/map`, { credentials: 'include' })
         .then(res => res.json())
@@ -78,12 +95,16 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
         // Suscribirse a los movimientos y estados (incluyendo vida y munición)
         const topic = `/topic/game.state.${roomCode}`;
         webSocketService.subscribe(topic, (message) => {
-            if (message.action === 'PAUSE') {
-                if (onPauseSync) onPauseSync(true);
+            if (message.action === 'TOURNAMENT_WIN') {
+                if (message.winnerId === character) {
+                    setTournamentOutcome('WIN');
+                } else {
+                    setTournamentOutcome('LOSS');
+                }
                 return;
             }
-            if (message.action === 'RESUME') {
-                if (onPauseSync) onPauseSync(false);
+            if (message.action === 'TOURNAMENT_END') {
+                setTournamentOutcome('END');
                 return;
             }
 
@@ -91,6 +112,13 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
                 // Actualizar vida y munición propia desde el servidor
                 if (message.health !== undefined) setHealth(message.health);
                 if (message.ammo !== undefined) setAmmo(message.ammo);
+                if (message.paralyzed !== undefined) setParalyzed(message.paralyzed);
+                
+                // FORCE local position update on teleport (random exit)
+                if (message.action === 'TELEPORT') {
+                    console.log(">> TELEPORTING LOCAL PLAYER:", message.x, message.y);
+                    setPlayerPos({ x: message.x, y: message.y });
+                }
             } else if (message.playerId) {
                 // Si es un ataque externo, capturamos el evento para visualizarlo
                 if (message.action === 'ATTACK') {
@@ -102,8 +130,20 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
                 
                 setOtherPlayers(prev => ({
                     ...prev,
-                    [message.playerId]: { ...prev[message.playerId], ...message }
+                    [message.playerId]: { ...prev[message.playerId], ...message, lastMoveTime: Date.now(), isMoving: true }
                 }));
+            }
+        });
+        
+        // Suscribirse a la zona del torneo
+        const zoneTopic = `/topic/game.zone.${roomCode}`;
+        webSocketService.subscribe(zoneTopic, (data) => {
+            if (data && data.radius !== undefined) {
+                // Solo actualizar si hay un cambio real para evitar re-renders innecesarios
+                setZoneData(prev => {
+                    if (Math.abs(prev.radius - data.radius) < 0.1 && prev.timeLeft === data.timeLeft) return prev;
+                    return data;
+                });
             }
         });
 
@@ -137,7 +177,9 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
                 setOtherPlayers(prev => {
                 const newState = { ...prev };
                 playersInfo.forEach(p => {
-                    if (p.playerId !== character) newState[p.playerId] = p;
+                    if (p.playerId !== character) {
+                        newState[p.playerId] = { ...p, lastMoveTime: Date.now(), isMoving: false };
+                    }
                 });
                 return newState;
                 });
@@ -151,6 +193,25 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
     }
 
   }, [character, roomCode]);
+
+  // Multiplayer Idle Tracker: Checks if other players stopped moving
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = Date.now();
+      setOtherPlayers(prev => {
+        let changed = false;
+        const newState = { ...prev };
+        for (const id in newState) {
+          if (newState[id].isMoving && now - (newState[id].lastMoveTime || 0) > 600) {
+            newState[id] = { ...newState[id], isMoving: false };
+            changed = true;
+          }
+        }
+        return changed ? newState : prev;
+      });
+    }, 200);
+    return () => clearInterval(interval);
+  }, []);
 
   // Collisions
   const handleCollideSpecial = useCallback((x, y, cell) => {
@@ -183,7 +244,8 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
     health,
     isPaused,
     ammo,
-    'world'
+    'world',
+    paralyzed
   );
 
   // IA local del zombie eliminada (ahora se maneja vía WebSocket arriba)
@@ -205,7 +267,7 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
   // Respawn Timer Logic
   useEffect(() => {
     let timer;
-    if (health <= 0) {
+    if (health <= 0 && roomMode === 'TRADICIONAL') {
       setRespawnTimeLeft(30);
       timer = setInterval(() => {
         setRespawnTimeLeft(prev => {
@@ -220,34 +282,36 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
       setRespawnTimeLeft(30);
     }
     return () => clearInterval(timer);
-  }, [health]);
+  }, [health, roomMode]);
   
-  // Broadcast de Puntería (Aim Angle) - Throttled a 10Hz
+  // Broadcast de Puntería (Aim Angle) - Throttled a 5Hz (Más lento para estabilidad)
   useEffect(() => {
     if (!roomCode || health <= 0) return;
     
     let lastSentAngle = -999;
     const interval = setInterval(() => {
-        // Obtenemos el ángulo actual desde el componente a través de window (hack rápido y eficiente)
         const currentAngle = window.currentAimAngle || 0;
         
-        if (Math.abs(currentAngle - lastSentAngle) > 2) { // Variación mínima para enviar
-            webSocketService.sendMessage('/app/game.action', {
-                playerId: character,
-                roomCode: roomCode,
-                x: playerPos.x,
-                y: playerPos.y,
-                aimAngle: currentAngle,
-                action: playerState.direction, // Mantener dirección actual
-                health: health,
-                location: 'world' // <--- IMPORTANTE: Mantener la ubicación
-            });
-            lastSentAngle = currentAngle;
+        // Solo enviar si el ángulo cambió más de 5 grados (Menos spam al servidor)
+        if (Math.abs(currentAngle - lastSentAngle) > 5) { 
+            if (webSocketService.connected) {
+                webSocketService.sendMessage('/app/game.action', {
+                    playerId: character,
+                    roomCode: roomCode,
+                    x: playerPos.x,
+                    y: playerPos.y,
+                    aimAngle: currentAngle,
+                    action: playerState.direction,
+                    health: health,
+                    location: 'world'
+                });
+                lastSentAngle = currentAngle;
+            }
         }
-    }, 100); // 100ms = 10Hz
+    }, 100); // 100ms = 10Hz (Mejor respuesta sin saturar el servidor)
     
     return () => clearInterval(interval);
-  }, [roomCode, character, playerPos, playerState.direction, health]);
+  }, [roomCode, character, playerPos.x, playerPos.y, playerState.direction, health]);
 
 
   // Combat Handling
@@ -312,13 +376,55 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
         mobileShotTrigger={mobileShotTrigger}
         ammo={ammo}
         location="world"
+        zoneData={zoneData}
+        roomMode={roomMode}
       />
       
+      {/* Tournament Timer */}
+      {roomMode === 'TORNEO' && (
+        <div className="tournament-hud fade-in">
+          <div className="timer-box">
+            <span className="timer-label">MUERTE SÚBITA EN:</span>
+            <span className="timer-value">
+              {Math.floor(zoneData.timeLeft / 60)}:{String(zoneData.timeLeft % 60).padStart(2, '0')}
+            </span>
+          </div>
+          <div className="zone-status">ZONA AL {Math.round((zoneData.radius / 50) * 100)}%</div>
+        </div>
+      )}
+
       <TouchControls 
         onMove={handleManualMove} 
         onShoot={handleMobileShoot}
         onAimChange={(angle) => { window.currentAimAngle = angle; }}
       />
+
+      {/* Tournament Win/Loss Overlay */}
+      {tournamentOutcome && (
+        <div className="death-overlay tournament-end-overlay fade-in">
+          {tournamentOutcome === 'WIN' && (
+            <div className="victory-box pop-in">
+              <h1 className="victory-title">¡VICTORIA MAGISTRAL!</h1>
+              <p>Eres el último superviviente en pie.</p>
+            </div>
+          )}
+          {tournamentOutcome === 'LOSS' && (
+            <div className="eliminated-box pop-in">
+              <h1 className="text-danger">TORNEO FINALIZADO</h1>
+              <p>Alguien más ha reclamado la victoria.</p>
+            </div>
+          )}
+          {tournamentOutcome === 'END' && (
+            <div className="eliminated-box pop-in">
+              <h1>TIEMPO AGOTADO</h1>
+              <p>Nadie logró sobrevivir a la zona tóxica.</p>
+            </div>
+          )}
+          <button className="game-btn primary-btn mt-4" onClick={onRestart}>
+            VOLVER AL MENÚ
+          </button>
+        </div>
+      )}
     </div>
   );
 };

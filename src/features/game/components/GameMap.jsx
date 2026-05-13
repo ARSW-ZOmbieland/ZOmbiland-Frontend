@@ -16,10 +16,11 @@ const HealthBar = ({ health }) => {
   );
 };
 
-const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zombies = [], onRestart, onShoot, lastExternalShot, onAimChange, isPaused, mobileShotTrigger, ammo, isSafeZone = false, location = 'world' }) => {
-  const [cooldown, setCooldown] = useState(30);
-  const [aimAngle, setAimAngle] = useState(0);
-  const [hoveredTile, setHoveredTile] = useState(null);
+const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zombies = [], onRestart, onShoot, lastExternalShot, onAimChange, isPaused, mobileShotTrigger, mobileAimAngle, ammo, isSafeZone = false, location = 'world', zoneData = { radius: 50 }, roomMode = 'TRADICIONAL' }) => {
+  const [cooldown, setCooldown] = useState(15);
+  const aimAngleRef = useRef(0); // High-frequency value in ref to avoid map re-renders
+  const weaponImgRef = useRef(null); // Direct DOM ref for the weapon image
+  const hoverTileRef = useRef(null); // Direct DOM ref for the highlight box
   const [bullets, setBullets] = useState([]);
   const [flashes, setFlashes] = useState([]);
   const virtualMouse = useRef({ x: 0, y: 0 }); 
@@ -65,53 +66,102 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
     
     // Si el puntero está capturado (Pointer Lock)
     if (document.pointerLockElement) {
-        // Actualizamos la posición virtual sumando el movimiento
-        virtualMouse.current.x += e.movementX;
-        virtualMouse.current.y += e.movementY;
+        // Actualizamos la posición virtual sumando el movimiento (con fallback a 0)
+        const mx = e.movementX || 0;
+        const my = e.movementY || 0;
+        
+        virtualMouse.current.x += mx;
+        virtualMouse.current.y += my;
         
         // Mantener el puntero virtual dentro de un rango razonable (ej. 400px de radio)
         const dist = Math.sqrt(virtualMouse.current.x**2 + virtualMouse.current.y**2);
-        if (dist > 400) {
+        if (dist > 400 && dist !== 0) {
             const ratio = 400 / dist;
             virtualMouse.current.x *= ratio;
             virtualMouse.current.y *= ratio;
         }
     } else {
-        // Modo normal si no está bloqueado (aunque el usuario quiere bloqueo siempre)
+        // Modo normal si no está bloqueado
         const rect = e.currentTarget.getBoundingClientRect();
         const centerX = rect.width / 2;
         const centerY = rect.height / 2;
-        virtualMouse.current.x = e.clientX - rect.left - centerX;
-        virtualMouse.current.y = e.clientY - rect.top - centerY;
+        virtualMouse.current.x = (e.clientX - rect.left - centerX) || 0;
+        virtualMouse.current.y = (e.clientY - rect.top - centerY) || 0;
     }
 
-    const angle = Math.atan2(virtualMouse.current.y, virtualMouse.current.x) * 180 / Math.PI;
-    setAimAngle(angle);
-    if (onAimChange) onAimChange(angle);
-  }, [isDead, isPaused, onAimChange]);
+    let angle = Math.atan2(virtualMouse.current.y, virtualMouse.current.x) * 180 / Math.PI;
+    
+    // Safety check for NaN or Infinity
+    if (!isFinite(angle)) angle = 0;
 
-  // NUEVO: Efecto reactivo para actualizar la baldosa vecina (hoveredTile) cuando el personaje se mueva o cambie el ángulo
+    aimAngleRef.current = angle;
+    
+    // Direct DOM update for weapon image (Maximum performance)
+    if (weaponImgRef.current) {
+        const dir = getWeaponDirection(angle);
+        const newSrc = `/assets/weapons/weapon direction/${dir}.png`;
+        if (weaponImgRef.current.getAttribute('src') !== newSrc) {
+            weaponImgRef.current.src = newSrc;
+        }
+    }
+
+    if (onAimChange) onAimChange(angle);
+
+    // Actualizar highlight de baldosa si es necesario (sin disparar re-render de todo si no cambia de baldosa)
+    const currentA = (angle + 360) % 360;
+    let ox = 0, oy = 0;
+    if (currentA >= 337.5 || currentA < 22.5) { ox = 1; oy = 0; }
+    else if (currentA >= 22.5 && currentA < 67.5) { ox = 1; oy = 1; }
+    else if (currentA >= 67.5 && currentA < 112.5) { ox = 0; oy = 1; }
+    else if (currentA >= 112.5 && currentA < 157.5) { ox = -1; oy = 1; }
+    else if (currentA >= 157.5 && currentA < 202.5) { ox = -1; oy = 0; }
+    else if (currentA >= 202.5 && currentA < 247.5) { ox = -1; oy = -1; }
+    else if (currentA >= 247.5 && currentA < 292.5) { ox = 0; oy = -1; }
+    else if (currentA >= 292.5 && currentA < 337.5) { ox = 1; oy = -1; }
+
+    const nextX = Math.floor(safe(playerPos.x)) + ox;
+    const nextY = Math.floor(safe(playerPos.y)) + oy;
+
+    if (hoverTileRef.current) {
+        hoverTileRef.current.style.left = `calc(${nextX} * var(--tile-size))`;
+        hoverTileRef.current.style.top = `calc(${nextY} * var(--tile-size))`;
+    }
+  }, [isDead, isPaused, onAimChange, playerPos.x, playerPos.y]);
+
+  // Sincronizar el ángulo del joystick móvil con el estado interno
+  useEffect(() => {
+    if (mobileAimAngle !== undefined) {
+      aimAngleRef.current = mobileAimAngle;
+      if (weaponImgRef.current) {
+          const dir = getWeaponDirection(mobileAimAngle);
+          weaponImgRef.current.src = `/assets/weapons/weapon direction/${dir}.png`;
+      }
+    }
+  }, [mobileAimAngle]);
+
+  // OPTIMIZADO: Actualizar la baldosa vecina solo cuando el personaje se mueve (La puntería ya se maneja en handleMouseMove)
   useEffect(() => {
     if (isDead || isPaused) return;
 
-    // Calcular la baldosa vecina EXACTAMENTE con la misma lógica de 45 grados
-    const a = (aimAngle + 360) % 360;
+    const currentA = (aimAngleRef.current + 360) % 360;
     let ox = 0, oy = 0;
-    
-    if (a >= 337.5 || a < 22.5) { ox = 1; oy = 0; }
-    else if (a >= 22.5 && a < 67.5) { ox = 1; oy = 1; }
-    else if (a >= 67.5 && a < 112.5) { ox = 0; oy = 1; }
-    else if (a >= 112.5 && a < 157.5) { ox = -1; oy = 1; }
-    else if (a >= 157.5 && a < 202.5) { ox = -1; oy = 0; }
-    else if (a >= 202.5 && a < 247.5) { ox = -1; oy = -1; }
-    else if (a >= 247.5 && a < 292.5) { ox = 0; oy = -1; }
-    else if (a >= 292.5 && a < 337.5) { ox = 1; oy = -1; }
+    if (currentA >= 337.5 || currentA < 22.5) { ox = 1; oy = 0; }
+    else if (currentA >= 22.5 && currentA < 67.5) { ox = 1; oy = 1; }
+    else if (currentA >= 67.5 && currentA < 112.5) { ox = 0; oy = 1; }
+    else if (currentA >= 112.5 && currentA < 157.5) { ox = -1; oy = 1; }
+    else if (currentA >= 157.5 && currentA < 202.5) { ox = -1; oy = 0; }
+    else if (currentA >= 202.5 && currentA < 247.5) { ox = -1; oy = -1; }
+    else if (currentA >= 247.5 && currentA < 292.5) { ox = 0; oy = -1; }
+    else if (currentA >= 292.5 && currentA < 337.5) { ox = 1; oy = -1; }
 
-    setHoveredTile({
-      x: Math.floor(playerPos.x) + ox,
-      y: Math.floor(playerPos.y) + oy
-    });
-  }, [aimAngle, playerPos.x, playerPos.y, isDead, isPaused]);
+    const nextX = Math.floor(safe(playerPos.x)) + ox;
+    const nextY = Math.floor(safe(playerPos.y)) + oy;
+
+    if (hoverTileRef.current) {
+        hoverTileRef.current.style.left = `calc(${nextX} * var(--tile-size))`;
+        hoverTileRef.current.style.top = `calc(${nextY} * var(--tile-size))`;
+    }
+  }, [playerPos.x, playerPos.y, isDead, isPaused]);
 
   // Disparo al hacer clic (Memoizado para rendimiento)
   const executeShot = React.useCallback((input) => {
@@ -173,16 +223,12 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
     if (onShoot) {
         onShoot(targetX, targetY);
     }
-  }, [isDead, isPaused, playerPos, onShoot]);
+  }, [isDead, isPaused, playerPos, onShoot, ammo]);
 
   // NUEVO: Escuchar disparos desde controles móviles (Con control de duplicados)
-  const lastProcessedShot = useRef(0);
   useEffect(() => {
-    if (mobileShotTrigger && mobileShotTrigger.timestamp > lastProcessedShot.current && !isPaused && !isDead) {
-      console.log(">> GAME_MAP: Executing mobile shot", mobileShotTrigger.angle);
-      lastProcessedShot.current = mobileShotTrigger.timestamp;
-      
-      setAimAngle(mobileShotTrigger.angle);
+    if (mobileShotTrigger && !isPaused && !isDead) {
+      aimAngleRef.current = mobileShotTrigger.angle;
       if (onAimChange) onAimChange(mobileShotTrigger.angle);
       
       // Ejecutar el disparo físico
@@ -199,7 +245,7 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
         viewport.requestPointerLock();
     }
     
-    executeShot(aimAngle);
+    executeShot(aimAngleRef.current);
   };
 
   // --- NUEVA LÓGICA DE DISPARO POR TECLADO NUMÉRICO ---
@@ -229,7 +275,7 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [executeShot, playerPos, isDead, isPaused, aimAngle]);
+  }, [executeShot, playerPos, isDead, isPaused]);
 
   // Manejar cambios en el estado de Pointer Lock y Liberación por Pausa
   useEffect(() => {
@@ -263,7 +309,8 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
         
         // Remote flash calculations
         const flashId = bulletId + "_flash";
-        const rAngle = Math.atan2(lastExternalShot.targetY - lastExternalShot.y, lastExternalShot.targetX - lastExternalShot.x) * 180 / Math.PI;
+        const rAngleRaw = Math.atan2(lastExternalShot.targetY - lastExternalShot.y, lastExternalShot.targetX - lastExternalShot.x) * 180 / Math.PI;
+        const rAngle = safe(rAngleRaw);
         
         setFlashes(prev => [...prev.slice(-10), { id: flashId, x: lastExternalShot.x, y: lastExternalShot.y, angle: rAngle }]);
         
@@ -279,7 +326,7 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
         setCooldown(prev => Math.max(0, prev - 1));
       }, 1000);
     } else {
-      setCooldown(30);
+      setCooldown(15);
     }
     return () => clearInterval(timer);
   }, [isDead]);
@@ -305,9 +352,18 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
   const centerXValue = Math.floor(VIEWPORT_TILES / 2);
   const centerYValue = Math.floor(VIEWPORT_TILES / 2);
 
-  // Lógica de Centrado Absoluto en Pantalla
-  const translateX = `calc(50vw - (${playerPos.x} * var(--tile-size)) - (var(--tile-size) / 2))`;
-  const translateY = `calc(50vh - (${playerPos.y} * var(--tile-size)) - (var(--tile-size) / 2))`;
+  // Helper de seguridad contra NaN e Infinity para CSS (Hardened)
+  const safe = (val, fallback = 0) => {
+    const n = typeof val === 'number' ? val : parseFloat(val);
+    return (Number.isFinite(n)) ? n : fallback;
+  };
+
+  // Lógica de Centrado Absoluto en Pantalla con seguridad contra NaN
+  const safeX = safe(playerPos.x);
+  const safeY = safe(playerPos.y);
+
+  const translateX = `calc(50vw - (${safeX} * var(--tile-size)) - (var(--tile-size) / 2))`;
+  const translateY = `calc(50vh - (${safeY} * var(--tile-size)) - (var(--tile-size) / 2))`;
 
   // --- OPTIMIZATION: Memoize Viewport Calculation ---
   const visibleTiles = useMemo(() => {
@@ -315,11 +371,11 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
     const rows = matrix.length;
     const cols = matrix[0].length;
     
-    // Buffer reducido para mejor rendimiento (12 tiles a la redonda)
-    const startX = Math.max(0, Math.floor(playerPos.x - 12));
-    const endX = Math.min(cols, Math.floor(playerPos.x + 13));
-    const startY = Math.max(0, Math.floor(playerPos.y - 10));
-    const endY = Math.min(rows, Math.floor(playerPos.y + 11));
+    // Buffer ampliado para evitar desapariciones en los bordes (15 tiles a la redonda)
+    const startX = Math.max(0, Math.floor(safeX - 15));
+    const endX = Math.min(cols, Math.floor(safeX + 16));
+    const startY = Math.max(0, Math.floor(safeY - 12));
+    const endY = Math.min(rows, Math.floor(safeY + 14));
 
     const tiles = [];
     for (let y = startY; y < endY; y++) {
@@ -328,41 +384,30 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
       }
     }
     return tiles;
-  }, [Math.floor(playerPos.x), Math.floor(playerPos.y), matrix]);
+  }, [Math.floor(safeX), Math.floor(safeY), matrix]);
 
-  // --- PERFORMANCE FIX: PRE-INDEX ENTITIES BY POSITION ---
-  const entityMap = useMemo(() => {
-    const map = new Map();
-    if (zombies) {
-      zombies.forEach(z => {
-        const key = `${Math.floor(z.x)}-${Math.floor(z.y)}`;
-        if (!map.has(key)) map.set(key, { zombies: [], players: [] });
-        map.get(key).zombies.push(z);
-      });
-    }
-    if (otherPlayers) {
-      Object.values(otherPlayers).forEach(p => {
-        // Solo dibujar si están en la misma ubicación que el jugador local
-        if (p.location === location) {
-          const key = `${Math.floor(p.x)}-${Math.floor(p.y)}`;
-          if (!map.has(key)) map.set(key, { zombies: [], players: [] });
-          map.get(key).players.push(p);
-        }
-      });
-    }
-    return map;
-  }, [zombies, otherPlayers]);
 
-  const renderCellEntities = (x, y) => {
-    const key = `${x}-${y}`;
-    const cellEntities = entityMap.get(key);
+  // Entities are now rendered flatly to prevent DOM recreation when moving across tiles
+
+  const renderFlatEntities = () => {
     const elements = [];
 
     // 1. Zombies
-    if (cellEntities && cellEntities.zombies.length > 0) {
-      cellEntities.zombies.forEach(z => {
+    if (zombies) {
+      zombies.forEach(z => {
         elements.push(
-          <div key={`zombie-${z.id}`} className={`player-sprite zombie-sprite ${hitZombies.has(z.id) ? 'zombie-hit-flash' : ''}`} style={{ zIndex: y * 10 + 11 }}>
+          <div 
+            key={`zombie-${z.id}`} 
+            className={`player-sprite zombie-sprite ${hitZombies.has(z.id) ? 'zombie-hit-flash' : ''}`} 
+            style={{ 
+              position: 'absolute', 
+              left: `calc(${safe(z.x)} * var(--tile-size))`, 
+              top: `calc(${safe(z.y)} * var(--tile-size))`, 
+              width: 'var(--tile-size)',
+              height: 'var(--tile-size)',
+              zIndex: Math.floor(safe(z.y)) * 10 + 11 
+            }}
+          >
             <SpriteZombie direction={z.direction} isAttacking={z.attacking} type={z.type} />
           </div>
         );
@@ -370,49 +415,131 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
     }
 
     // 2. Main Player
-    if (Math.floor(playerPos.x) === x && Math.floor(playerPos.y) === y) {
-      const { character, direction, isMoving } = playerSprite;
-      elements.push(
-        <div key="main-player" className="player-sprite" style={{ zIndex: y * 10 + 12 }}>
-          <HealthBar health={playerHealth} />
-          <SpritePlayer 
-            characterId={character} 
-            direction={direction} 
-            isMoving={isMoving} 
-            isDead={isDead} 
-            aimAngle={aimAngle}
-          />
-          {!isDead && !isPaused && (
-            <div className="weapon-aim-indicator-player">
-              <img 
-                src={`/assets/weapons/weapon direction/${getWeaponDirection(aimAngle)}.png`} 
-                alt="aim"
-                className="weapon-aim-image"
-              />
-            </div>
-          )}
-        </div>
-      );
-    }
+    const { character, direction, isMoving } = playerSprite;
+    elements.push(
+      <div 
+        key="main-player" 
+        className="player-sprite" 
+        style={{ 
+          position: 'absolute', 
+          left: `calc(${safeX} * var(--tile-size))`, 
+          top: `calc(${safeY} * var(--tile-size))`, 
+          width: 'var(--tile-size)',
+          height: 'var(--tile-size)',
+          zIndex: Math.floor(safeY) * 10 + 12 
+        }}
+      >
+        <HealthBar health={playerHealth} />
+        <SpritePlayer 
+          characterId={character} 
+          direction={direction} 
+          isMoving={isMoving} 
+          isDead={isDead} 
+        />
+        {!isDead && !isPaused && (
+          <div className="weapon-aim-indicator-player">
+            <img 
+              ref={weaponImgRef}
+              src={`/assets/weapons/weapon direction/${getWeaponDirection(safe(aimAngleRef.current))}.png`} 
+              alt="aim"
+              className="weapon-aim-image"
+            />
+          </div>
+        )}
+      </div>
+    );
 
     // 3. Other Players
-    if (cellEntities && cellEntities.players.length > 0) {
-      cellEntities.players.forEach(p => {
-        // En zona segura, otros jugadores también tienen 100 HP visualmente
-        const h = isSafeZone ? 100 : (p.health !== undefined ? p.health : 100);
-        const dead = isSafeZone ? false : (h <= 0);
-        
-        elements.push(
-          <div key={`other-${p.playerId}`} className="player-sprite" style={{ zIndex: y * 10 + 12 }}>
-            <HealthBar health={h} />
-            <SpritePlayer characterId={p.playerId} direction={p.action || 'abajo'} isMoving={true} isDead={dead} aimAngle={p.aimAngle || 0} />
-          </div>
-        );
+    if (otherPlayers) {
+      Object.values(otherPlayers).forEach(p => {
+        if (p.location === location) {
+          const h = isSafeZone ? 100 : (p.health !== undefined ? p.health : 100);
+          const dead = isSafeZone ? false : (h <= 0);
+          elements.push(
+            <div 
+              key={`other-${p.playerId}`} 
+              className="player-sprite" 
+              style={{ 
+                position: 'absolute', 
+                left: `calc(${safe(p.x)} * var(--tile-size))`, 
+                top: `calc(${safe(p.y)} * var(--tile-size))`, 
+                width: 'var(--tile-size)',
+                height: 'var(--tile-size)',
+                zIndex: Math.floor(safe(p.y)) * 10 + 12 
+              }}
+            >
+              <HealthBar health={h} />
+              <SpritePlayer characterId={p.playerId} direction={p.action || 'abajo'} isMoving={p.isMoving !== false} isDead={dead} aimAngle={safe(p.aimAngle)} />
+            </div>
+          );
+        }
       });
     }
 
     return elements;
   };
+
+
+  // --- PERFORMANCE FIX: Memoize Static Layers ---
+  const groundLayer = useMemo(() => (
+    <div className="ground-layer" style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}>
+        {visibleTiles.map(({ x, y, cell }) => {
+            const groundID = typeof cell === 'object' ? cell.g : (cell < 10 ? cell : 0);
+            return (
+                <div 
+                    key={`ground-${x}-${y}`} 
+                    className="tile ground-tile" 
+                    style={{ 
+                        position: 'absolute', 
+                        left: `calc(${x} * var(--tile-size))`, 
+                        top: `calc(${y} * var(--tile-size))`, 
+                        zIndex: 1 
+                    }}
+                >
+                    <img src={GROUND_ASSETS[groundID] || GROUND_ASSETS[0]} alt="ground" className="tile-image" />
+                </div>
+            );
+        })}
+    </div>
+  ), [visibleTiles]);
+
+  const propsLayer = useMemo(() => (
+    <div className="props-layer" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}>
+        {visibleTiles.map(({ x, y, cell }) => {
+            const propID = typeof cell === 'object' ? cell.p : (cell >= 10 && cell !== 99 ? cell : null);
+            if (!propID) return null;
+
+            return (
+                <div 
+                    key={`prop-${x}-${y}`} 
+                    style={{ 
+                        position: 'absolute', 
+                        left: `calc(${x} * var(--tile-size))`, 
+                        top: `calc(${y} * var(--tile-size))`, 
+                        width: 'var(--tile-size)',
+                        height: 'var(--tile-size)',
+                        zIndex: y * 10 + 5 
+                    }}
+                >
+                    {propID && propID !== 99 && !(roomMode === 'TORNEO' && propID === 40 && location === 'world') && (
+                        <img 
+                            src={PROP_ASSETS[propID]} 
+                            alt="prop" 
+                            className={`tile-image ${propID >= 20 && propID <= 22 ? 'bush-prop' : ''} ${propID >= 30 && propID <= 34 ? 'tree-prop' : ''} ${propID >= 40 && propID <= 49 ? 'bunker-prop' : ''} ${propID >= 50 && propID <= 59 ? 'forest-prop' : ''} ${propID >= 60 && propID <= 69 ? 'city-building' : ''} ${propID >= 70 && propID <= 89 && propID !== 72 ? 'urban-prop' : ''} ${propID === 72 ? 'street-light-prop' : ''} ${propID === 90 ? 'barricade-prop' : ''} ${(propID === 100 || propID === 101) ? 'item-pickup-prop' : ''}`} 
+                            style={{ 
+                                position: 'absolute', 
+                                zIndex: 1, 
+                                top: 0, 
+                                left: 0,
+                                opacity: (propID >= 40 && propID <= 49 && Math.floor(safeX) === x && Math.floor(safeY) === y) ? 0 : 1 
+                            }} 
+                        />
+                    )}
+                </div>
+            );
+        })}
+    </div>
+  ), [visibleTiles, isDead, isPaused, roomMode, location, Math.floor(safeX), Math.floor(safeY)]);
 
   return (
     <div 
@@ -427,46 +554,34 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
           width: `calc(${cols} * var(--tile-size))`,
           height: `calc(${rows} * var(--tile-size))`,
           transform: `translate(${translateX}, ${translateY})`,
-          position: 'relative'
+          position: 'relative',
+          willChange: 'transform'
         }}
       >
-        {/* Pass 1: Unified Map Render (Ground + Props + Entities + Aim) */}
-        {visibleTiles.map(({ x, y, cell }) => {
-          const groundID = typeof cell === 'object' ? cell.g : (cell < 10 ? cell : 0);
-          const propID = typeof cell === 'object' ? cell.p : (cell >= 10 && cell !== 99 ? cell : null);
-          const isHovered = !isDead && !isPaused && hoveredTile && hoveredTile.x === x && hoveredTile.y === y;
-          
-          return (
-            <React.Fragment key={`tile-group-${x}-${y}`}>
-              {/* Ground */}
-              <div className="tile ground-tile" style={{ position: 'absolute', left: `calc(${x} * var(--tile-size))`, top: `calc(${y} * var(--tile-size))`, zIndex: 1 }}>
-                <img src={GROUND_ASSETS[groundID] || GROUND_ASSETS[0]} alt="ground" className="tile-image" />
-              </div>
-              
-              {/* Entities and Props */}
-              <div className="entity-tile" style={{ position: 'absolute', left: `calc(${x} * var(--tile-size))`, top: `calc(${y} * var(--tile-size))`, zIndex: y * 10 + 5, pointerEvents: 'none' }}>
-                {propID && propID !== 99 && (
-                  <img 
-                    src={PROP_ASSETS[propID]} 
-                    alt="prop" 
-                    className={`tile-image ${propID >= 20 && propID <= 22 ? 'bush-prop' : ''} ${propID >= 30 && propID <= 34 ? 'tree-prop' : ''} ${propID >= 40 && propID <= 49 ? 'bunker-prop' : ''} ${propID >= 50 && propID <= 59 ? 'forest-prop' : ''} ${propID >= 60 && propID <= 69 ? 'city-building' : ''} ${propID >= 70 && propID <= 89 && propID !== 72 ? 'urban-prop' : ''} ${propID === 72 ? 'street-light-prop' : ''} ${propID === 90 ? 'barricade-prop' : ''} ${(propID === 100 || propID === 101) ? 'item-pickup-prop' : ''}`} 
-                    style={{ 
-                      position: 'absolute', 
-                      zIndex: 1, 
-                      top: 0, 
-                      left: 0,
-                      opacity: (propID >= 40 && propID <= 49 && Math.floor(playerPos.x) === x && Math.floor(playerPos.y) === y) ? 0 : 1 
-                    }} 
-                  />
-                )}
-                {renderCellEntities(x, y)}
-              </div>
+        {/* Layer 1: Ground (Optimized Static Render) */}
+        {groundLayer}
 
-              {/* Aim Layer (Eliminado a petición del usuario para dejar solo la del centro) */}
-            </React.Fragment>
-          );
-        })}
+        {/* Layer 2: Props (Dynamic Z-indexing) */}
+        {propsLayer}
 
+        {/* --- PERFORMANCE FIX: STANDALONE HIGHLIGHT LAYER --- */}
+        <div 
+          ref={hoverTileRef}
+          className="tile-hover-highlight" 
+          style={{ 
+            position: 'absolute',
+            width: 'var(--tile-size)',
+            height: 'var(--tile-size)',
+            zIndex: 20,
+            pointerEvents: 'none',
+            display: (isDead || isPaused) ? 'none' : 'block'
+          }} 
+        />
+        
+        {/* Layer 3: Entities (Dynamic Flat Render) */}
+        <div className="entities-layer" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
+            {renderFlatEntities()}
+        </div>
         {/* --- PERFORMANCE FIX: INDEPENDENT BULLET LAYER --- */}
         <div className="bullet-overlay-layer" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 999 }}>
             {bullets.map(b => (
@@ -475,10 +590,10 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
                 className="bullet-projectile"
                 style={{
                     position: 'absolute',
-                    left: `calc(${b.startX + 0.5} * var(--tile-size))`, // Center logic
-                    top: `calc(${b.startY + 0.5} * var(--tile-size))`,
-                    '--tx': (b.endX - b.startX) * 1, // Normalized to tile units
-                    '--ty': (b.endY - b.startY) * 1
+                    left: `calc(${safe(b.startX) + 0.5} * var(--tile-size))`, 
+                    top: `calc(${safe(b.startY) + 0.5} * var(--tile-size))`,
+                    '--tx': (safe(b.endX) - safe(b.startX)) * 1,
+                    '--ty': (safe(b.endY) - safe(b.startY)) * 1
                 }}
               />
             ))}
@@ -488,30 +603,96 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
                 className="muzzle-flash"
                 style={{
                   position: 'absolute',
-                  left: `calc(${(f.x || playerPos.x) + 0.5} * var(--tile-size))`,
-                  top: `calc(${(f.y || playerPos.y) + 0.5} * var(--tile-size))`,
-                  transform: `translate(-50%, -50%) rotate(${f.angle !== undefined ? f.angle : aimAngle}deg) translate(25px, 0)`
+                  left: `calc(${(safe(f.x || safeX)) + 0.5} * var(--tile-size))`,
+                  top: `calc(${(safe(f.y || safeY)) + 0.5} * var(--tile-size))`,
+                  transform: `translate(-50%, -50%) rotate(${safe(f.angle !== undefined ? f.angle : aimAngleRef.current)}deg) translate(25px, 0)`
                 }}
               />
             ))}
         </div>
+
+        {/* --- TOURNAMENT ZONE LAYER --- */}
+        {roomMode === 'TORNEO' && location === 'world' && (
+            <div className="zone-overlay-layer" style={{ 
+                position: 'absolute', 
+                top: 0, 
+                left: 0, 
+                width: '100%', 
+                height: '100%', 
+                zIndex: 900,
+                pointerEvents: 'none'
+            }}>
+                <svg width="100%" height="100%" style={{ overflow: 'visible' }}>
+                    <defs>
+                        <mask id="zone-mask">
+                            <rect width="100%" height="100%" fill="white" />
+                            <circle 
+                                cx={`calc(32.5 * var(--tile-size))`} 
+                                cy={`calc(32.5 * var(--tile-size))`} 
+                                r={`calc(${safe(zoneData.radius, 50)} * var(--tile-size))`} 
+                                fill="black" 
+                            />
+                        </mask>
+                    </defs>
+                    {/* Dark overlay outside the safe zone */}
+                    <rect 
+                        width="100%" 
+                        height="100%" 
+                        fill="rgba(255, 0, 0, 0.2)" 
+                        mask="url(#zone-mask)"
+                    />
+                    {/* The glowing border of the zone */}
+                    <circle 
+                        cx={`calc(32.5 * var(--tile-size))`} 
+                        cy={`calc(32.5 * var(--tile-size))`} 
+                        r={`calc(${safe(zoneData.radius, 50)} * var(--tile-size))`} 
+                        fill="none" 
+                        stroke="rgba(255, 0, 0, 0.8)" 
+                        strokeWidth="10"
+                        style={{ filter: 'blur(4px)', transition: 'r 0.5s ease-out' }}
+                    />
+                    <circle 
+                        cx={`calc(32.5 * var(--tile-size))`} 
+                        cy={`calc(32.5 * var(--tile-size))`} 
+                        r={`calc(${safe(zoneData.radius, 50)} * var(--tile-size))`} 
+                        fill="none" 
+                        stroke="white" 
+                        strokeWidth="2"
+                        style={{ transition: 'r 0.5s ease-out' }}
+                    />
+                </svg>
+            </div>
+        )}
+        <div className="vision-vignette"></div>
       </div>
-      <div className="vision-vignette"></div>
       
       {isDead && (
         <div className="death-overlay">
           <div className="death-message pop-in">HAS MUERTO</div>
-          <div className="lobby-restart-btn">
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px' }}>
-              <span>REAPARECIENDO EN</span>
-              <span style={{ fontSize: '2rem', fontWeight: 'bold' }}>
-                {cooldown}s
-              </span>
+          
+          {roomMode === 'TORNEO' ? (
+            <div className="eliminated-box fade-in">
+              <h2 className="text-danger">ELIMINADO</h2>
+              <p>No puedes reaparecer en modo Torneo.</p>
+              <p>Espera a que termine la partida para ver los resultados.</p>
             </div>
-          </div>
-          <p style={{ color: '#ccc', marginTop: '20px', fontSize: '0.9rem' }}>
-            Aparecerás en la entrada del mapa automáticamente.
-          </p>
+          ) : (
+            <div className="lobby-restart-btn">
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px' }}>
+                <span>REAPARECIENDO EN</span>
+                <span style={{ fontSize: '2rem', fontWeight: 'bold' }}>
+                  {cooldown}s
+                </span>
+              </div>
+            </div>
+          )}
+          
+          {roomMode !== 'TORNEO' && (
+            <p style={{ color: '#ccc', marginTop: '20px', fontSize: '0.9rem' }}>
+              Aparecerás en un lugar aleatorio del mapa.
+            </p>
+          )}
+
         </div>
       )}
     </div>

@@ -17,6 +17,11 @@ const HUD = ({ health = 100, stamina = 100, medkits = 2, weapons = 1, roomCode }
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
+  const safeWidth = (val) => {
+    const n = parseFloat(val);
+    return (Number.isFinite(n)) ? n : 0;
+  };
+
   return (
     <div className="game-hud">
       {/* Top Center: Room Code */}
@@ -59,14 +64,14 @@ const HUD = ({ health = 100, stamina = 100, medkits = 2, weapons = 1, roomCode }
           <div className="bar-wrapper">
             <div className="bar-label">SALUD</div>
             <div className="bar-container health-bg">
-              <div className="bar-fill health-fill" style={{ width: `${health}%` }}></div>
+              <div className="bar-fill health-fill" style={{ width: `${safeWidth(health)}%` }}></div>
             </div>
           </div>
           
           <div className="bar-wrapper">
             <div className="bar-label">ESTAMINA</div>
             <div className="bar-container stamina-bg">
-              <div className="bar-fill stamina-fill" style={{ width: `${stamina}%` }}></div>
+              <div className="bar-fill stamina-fill" style={{ width: `${safeWidth(stamina)}%` }}></div>
             </div>
           </div>
         </div>
