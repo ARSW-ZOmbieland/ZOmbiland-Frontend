@@ -503,8 +503,7 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
     <div className="props-layer" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}>
         {visibleTiles.map(({ x, y, cell }) => {
             const propID = typeof cell === 'object' ? cell.p : (cell >= 10 && cell !== 99 ? cell : null);
-            const isHovered = !isDead && !isPaused && hoveredTile && hoveredTile.x === x && hoveredTile.y === y;
-            if (!propID && !isHovered) return null;
+            if (!propID) return null;
 
             return (
                 <div 
