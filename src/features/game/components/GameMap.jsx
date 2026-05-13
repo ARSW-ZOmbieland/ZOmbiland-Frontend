@@ -119,8 +119,8 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
     else if (currentA >= 247.5 && currentA < 292.5) { ox = 0; oy = -1; }
     else if (currentA >= 292.5 && currentA < 337.5) { ox = 1; oy = -1; }
 
-    const nextX = Math.floor(playerPos.x) + ox;
-    const nextY = Math.floor(playerPos.y) + oy;
+    const nextX = Math.floor(safe(playerPos.x)) + ox;
+    const nextY = Math.floor(safe(playerPos.y)) + oy;
 
     if (hoverTileRef.current) {
         hoverTileRef.current.style.left = `calc(${nextX} * var(--tile-size))`;
@@ -154,8 +154,8 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
     else if (currentA >= 247.5 && currentA < 292.5) { ox = 0; oy = -1; }
     else if (currentA >= 292.5 && currentA < 337.5) { ox = 1; oy = -1; }
 
-    const nextX = Math.floor(playerPos.x) + ox;
-    const nextY = Math.floor(playerPos.y) + oy;
+    const nextX = Math.floor(safe(playerPos.x)) + ox;
+    const nextY = Math.floor(safe(playerPos.y)) + oy;
 
     if (hoverTileRef.current) {
         hoverTileRef.current.style.left = `calc(${nextX} * var(--tile-size))`;
@@ -309,7 +309,8 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
         
         // Remote flash calculations
         const flashId = bulletId + "_flash";
-        const rAngle = Math.atan2(lastExternalShot.targetY - lastExternalShot.y, lastExternalShot.targetX - lastExternalShot.x) * 180 / Math.PI;
+        const rAngleRaw = Math.atan2(lastExternalShot.targetY - lastExternalShot.y, lastExternalShot.targetX - lastExternalShot.x) * 180 / Math.PI;
+        const rAngle = safe(rAngleRaw);
         
         setFlashes(prev => [...prev.slice(-10), { id: flashId, x: lastExternalShot.x, y: lastExternalShot.y, angle: rAngle }]);
         
@@ -351,8 +352,11 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
   const centerXValue = Math.floor(VIEWPORT_TILES / 2);
   const centerYValue = Math.floor(VIEWPORT_TILES / 2);
 
-  // Helper de seguridad contra NaN e Infinity para CSS
-  const safe = (val, fallback = 0) => (isFinite(val) && val !== null) ? val : fallback;
+  // Helper de seguridad contra NaN e Infinity para CSS (Hardened)
+  const safe = (val, fallback = 0) => {
+    const n = typeof val === 'number' ? val : parseFloat(val);
+    return (Number.isFinite(n)) ? n : fallback;
+  };
 
   // Lógica de Centrado Absoluto en Pantalla con seguridad contra NaN
   const safeX = safe(playerPos.x);

@@ -11,6 +11,20 @@
       if (typeof global === 'undefined') {
         window.global = window;
       }
+      
+      // Global patch to prevent crashes in browser extensions (like Project Naptha) 
+      // that pass non-finite values to elementFromPoint during Pointer Lock.
+      (function() {
+        const wrap = (original) => {
+          if (typeof original !== 'function') return original;
+          return function(x, y) {
+            if (!Number.isFinite(parseFloat(x)) || !Number.isFinite(parseFloat(y))) return null;
+            try { return original.apply(this, arguments); } catch (e) { return null; }
+          };
+        };
+        document.elementFromPoint = wrap(document.elementFromPoint);
+        document.elementsFromPoint = wrap(document.elementsFromPoint);
+      })();
     </script>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
