@@ -145,9 +145,7 @@ function GameRoom({ onConfirm }) {
                                     Unirse con Código
                                 </button>
                             </div>
-                            </div>
-                        </div>
-                    )}
+                        )}
 
                     {/* CREATING ROOM VIEW */}
                     {view === 'creating' && (
