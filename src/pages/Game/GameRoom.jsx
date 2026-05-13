@@ -145,6 +145,7 @@ function GameRoom({ onConfirm }) {
                                     Unirse con Código
                                 </button>
                             </div>
+                            </div>
                         )}
 
                     {/* CREATING ROOM VIEW */}
