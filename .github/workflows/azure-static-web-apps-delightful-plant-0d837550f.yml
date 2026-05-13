@@ -35,10 +35,9 @@ jobs:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_DELIGHTFUL_PLANT_0D837550F }}
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: "upload"
-          app_location: "/"
+          app_location: "dist" # Point directly to the built files
           api_location: ""
-          output_location: "dist"
-          skip_app_build: true # Skip Azure's build because we already did it
+          skip_app_build: true # We already built it in the previous step
           ###### End of Repository/Build Configurations ######
 
   close_pull_request_job:
