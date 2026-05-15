@@ -1,5 +1,23 @@
 {
   "navigationFallback": {
     "rewrite": "/index.html"
-  }
+  },
+  "routes": [
+    {
+      "route": "/api/*",
+      "rewrite": "https://zombieland-api-test.azurewebsites.net/api/$1"
+    },
+    {
+      "route": "/oauth2/*",
+      "rewrite": "https://zombieland-api-test.azurewebsites.net/oauth2/$1"
+    },
+    {
+      "route": "/login/oauth2/*",
+      "rewrite": "https://zombieland-api-test.azurewebsites.net/login/oauth2/$1"
+    },
+    {
+      "route": "/logout",
+      "rewrite": "https://zombieland-api-test.azurewebsites.net/logout"
+    }
+  ]
 }
