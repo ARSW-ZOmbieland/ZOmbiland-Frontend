@@ -4,24 +4,39 @@ import './styles/index.css'
 import App from './App.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
 
-// Monkey-patch for elementFromPoint to prevent crashes from browser extensions (like Project Naptha)
+// Hardened Monkey-patch for elementFromPoint to prevent crashes from browser extensions (like Project Naptha)
 // that might provide non-finite coordinates.
-const _originalElementFromPoint = document.elementFromPoint.bind(document);
-document.elementFromPoint = (x, y) => {
-    if (!Number.isFinite(x) || !Number.isFinite(y)) {
-        // Silently fail or warn to prevent extension crash from bubbling up
-        return null;
-    }
-    return _originalElementFromPoint(x, y);
-};
+(function() {
+    const _originalElementFromPoint = document.elementFromPoint.bind(document);
+    const _originalElementsFromPoint = document.elementsFromPoint.bind(document);
 
-const _originalElementsFromPoint = document.elementsFromPoint.bind(document);
-document.elementsFromPoint = (x, y) => {
-    if (!Number.isFinite(x) || !Number.isFinite(y)) {
-        return [];
+    const safeElementFromPoint = (x, y) => {
+        if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
+        try {
+            return _originalElementFromPoint(x, y);
+        } catch (e) {
+            return null;
+        }
+    };
+
+    const safeElementsFromPoint = (x, y) => {
+        if (!Number.isFinite(x) || !Number.isFinite(y)) return [];
+        try {
+            return _originalElementsFromPoint(x, y);
+        } catch (e) {
+            return [];
+        }
+    };
+
+    Object.defineProperty(document, 'elementFromPoint', { value: safeElementFromPoint, configurable: true });
+    Object.defineProperty(document, 'elementsFromPoint', { value: safeElementsFromPoint, configurable: true });
+    
+    // Also patch the prototype to catch calls from other contexts
+    if (window.Document && Document.prototype) {
+        Document.prototype.elementFromPoint = safeElementFromPoint;
+        Document.prototype.elementsFromPoint = safeElementsFromPoint;
     }
-    return _originalElementsFromPoint(x, y);
-};
+})();
 
 
 createRoot(document.getElementById('root')).render(
