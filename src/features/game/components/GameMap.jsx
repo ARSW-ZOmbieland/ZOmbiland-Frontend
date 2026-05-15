@@ -3,6 +3,7 @@ import './GameMap.css';
 import SpritePlayer from './SpritePlayer';
 import SpriteZombie from './SpriteZombie';
 import { TILE_SIZE, VIEWPORT_TILES, GROUND_ASSETS, PROP_ASSETS } from '../../../config/constants';
+import { safe } from '../../../utils/safe';
 
 const HealthBar = ({ health }) => {
   const color = health > 50 ? '#00ff00' : health > 20 ? '#ffff00' : '#ff0000';
@@ -349,14 +350,6 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
 
   const rows = matrix.length;
   const cols = matrix[0].length;
-  const centerXValue = Math.floor(VIEWPORT_TILES / 2);
-  const centerYValue = Math.floor(VIEWPORT_TILES / 2);
-
-  // Helper de seguridad contra NaN e Infinity para CSS (Hardened)
-  const safe = (val, fallback = 0) => {
-    const n = typeof val === 'number' ? val : parseFloat(val);
-    return (Number.isFinite(n)) ? n : fallback;
-  };
 
   // Lógica de Centrado Absoluto en Pantalla con seguridad contra NaN
   const safeX = safe(playerPos.x);

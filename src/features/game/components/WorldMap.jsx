@@ -5,6 +5,7 @@ import { TILE_TYPES } from '../../../core/GameEngine';
 import { usePlayerMovement } from '../../../hooks/usePlayerMovement';
 import { API_BASE_URL } from '../../../config/constants';
 import webSocketService from '../../../core/WebSocketService';
+import { safe } from '../../../utils/safe';
 // IA local elinidada para usar Sincronización de Servidor
 
 const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSync }) => {
@@ -300,9 +301,9 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
                 webSocketService.sendMessage('/app/game.action', {
                     playerId: character,
                     roomCode: roomCode,
-                    x: playerPos.x,
-                    y: playerPos.y,
-                    aimAngle: currentAngle,
+                    x: safe(playerPos.x),
+                    y: safe(playerPos.y),
+                    aimAngle: safe(currentAngle),
                     action: playerState.direction,
                     health: health,
                     location: 'world'
@@ -323,10 +324,10 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
     webSocketService.sendMessage('/app/game.action', {
         playerId: character,
         roomCode: roomCode,
-        x: playerPos.x,
-        y: playerPos.y,
-        targetX: targetX,
-        targetY: targetY,
+        x: safe(playerPos.x),
+        y: safe(playerPos.y),
+        targetX: safe(targetX),
+        targetY: safe(targetY),
         action: 'ATTACK',
         health: health,
         ammo: ammo
