@@ -61,5 +61,6 @@ export const ALL_ASSETS = {
     ...PROP_ASSETS
 };
 
-export const API_BASE_URL = ''; // Usar rutas relativas para el proxy de Azure
+export const API_BASE_URL = ''; // Ruta relativa para el túnel de Azure
+
 
