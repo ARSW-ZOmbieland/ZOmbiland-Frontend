@@ -382,7 +382,7 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
 
   // Entities are now rendered flatly to prevent DOM recreation when moving across tiles
 
-  const renderFlatEntities = () => {
+  const entitiesLayer = useMemo(() => {
     const elements = [];
 
     // 1. Zombies
@@ -470,7 +470,7 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
     }
 
     return elements;
-  };
+  }, [zombies, playerSprite, otherPlayers, hitZombies, playerHealth, isDead, isPaused, safeX, safeY, location, isSafeZone]);
 
 
   // --- PERFORMANCE FIX: Memoize Static Layers ---
@@ -573,7 +573,7 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
         
         {/* Layer 3: Entities (Dynamic Flat Render) */}
         <div className="entities-layer" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
-            {renderFlatEntities()}
+            {entitiesLayer}
         </div>
         {/* --- PERFORMANCE FIX: INDEPENDENT BULLET LAYER --- */}
         <div className="bullet-overlay-layer" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 999 }}>

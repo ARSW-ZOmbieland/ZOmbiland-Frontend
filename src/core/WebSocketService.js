@@ -66,7 +66,11 @@ class WebSocketService {
         
         const subscription = this.client.subscribe(topic, (message) => {
             if (message.body) {
-                callback(JSON.parse(message.body));
+                try {
+                    callback(JSON.parse(message.body));
+                } catch (e) {
+                    console.error("Failed to parse WebSocket message body:", message.body, e);
+                }
             }
         });
         

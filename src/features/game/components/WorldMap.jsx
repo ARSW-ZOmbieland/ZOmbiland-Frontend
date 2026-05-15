@@ -23,46 +23,6 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
   const [zoneData, setZoneData] = useState({ radius: 50, timeLeft: 300 });
   const [tournamentOutcome, setTournamentOutcome] = useState(null); // 'WIN', 'LOSS', 'END'
 
-  // Asset Preloading: Force browser to cache all GIFs at once
-  useEffect(() => {
-    const characters = ['andres', 'juanpablo', 'maria', 'tomas'];
-    const directions = ['abajo', 'arriba', 'derecha', 'izquierda'];
-    
-    characters.forEach(charId => {
-      directions.forEach(dir => {
-        const img = new Image();
-        img.src = `/personajes/${charId}/${dir}.gif`;
-      });
-      // Death image
-      const death = new Image();
-      death.src = `/personajes/${charId}/${
-        charId === 'andres' ? 'juanandres_muerto.png' : 
-        charId === 'maria' ? 'maria_muerta.png' : 
-        `${charId}_muerto.png`
-      }`;
-    });
-
-    // Zombie preloading
-    const zombieStates = [
-        'abajo', 'arriba', 'derecha', 'izquierda',
-        'ataque_adelante', 'ataque_atras', 'ataque_derecha', 'ataque_izquierda', 'ataque'
-    ];
-    // Chasqueador preloading
-    const chasqueadorStates = ['abajo', 'arriba', 'dercha', 'izquierda', 'ataque atras', 'ataque derecha', 'ataque frente', 'ataque izquierda'];
-    chasqueadorStates.forEach(state => {
-        const img = new Image();
-        img.src = `/zombies/chasqueador/${state}.gif`;
-    });
-    
-    // Weapon direction preloading
-    const weaponDirs = ['derecha', 'abajo_derecha', 'abajo', 'abajo_izquierda', 'izquierda', 'arriba_izquierda', 'arriba', 'arriba_derecha'];
-    weaponDirs.forEach(dir => {
-        const img = new Image();
-        img.src = `/assets/weapons/weapon direction/${dir}.png`;
-    });
-
-    console.log(">> Preloading assets for better performance (Players, Zombies, Chasqueadores & Weapons)...");
-  }, []);
 
   useEffect(() => {
     if (!roomCode) return;
@@ -432,4 +392,4 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
   );
 };
 
-export default WorldMap;
+export default React.memo(WorldMap);
