@@ -383,6 +383,12 @@ const WorldMap = ({ onExit, character, roomCode, onRestart, isPaused, onPauseSyn
               <p>Nadie logró sobrevivir a la zona tóxica.</p>
             </div>
           )}
+          
+          <div style={{ padding: '15px', backgroundColor: 'rgba(50, 205, 50, 0.2)', border: '2px solid #32CD32', borderRadius: '10px', marginTop: '20px', minWidth: '250px' }}>
+             <h3 style={{ fontSize: '1.5rem', color: '#fff', margin: '0', textAlign: 'center' }}>Estadísticas Finales</h3>
+             <p style={{ fontSize: '1.2rem', color: '#32CD32', fontWeight: 'bold', margin: '10px 0 0 0', textAlign: 'center' }}>Bajas confirmadas: {kills}</p>
+          </div>
+
           <button className="game-btn primary-btn mt-4" onClick={onRestart}>
             VOLVER AL MENÚ
           </button>

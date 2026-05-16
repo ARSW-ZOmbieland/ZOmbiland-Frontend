@@ -30,8 +30,11 @@ const TouchControls = ({ onMove, onShoot, onAimChange }) => {
 
   const handleStart = (e, action, type) => {
     if (type === 'move') {
-      // Intentamos preventDefault para evitar scroll, pero si falla no bloqueamos
-      try { if (e.cancelable) e.preventDefault(); } catch(err) {}
+      // Intentamos preventDefault para evitar scroll, y stopPropagation para evitar clics accidentales
+      try { 
+        if (e.cancelable) e.preventDefault(); 
+        e.stopPropagation();
+      } catch(err) {}
       setActiveMove(action);
     } else if (type === 'shoot') {
       action();
@@ -39,7 +42,10 @@ const TouchControls = ({ onMove, onShoot, onAimChange }) => {
   };
 
   const handleEnd = (e) => {
-    try { if (e.cancelable) e.preventDefault(); } catch(err) {}
+    try { 
+      if (e.cancelable) e.preventDefault(); 
+      e.stopPropagation();
+    } catch(err) {}
     setActiveMove(null);
   };
 
@@ -99,42 +105,33 @@ const TouchControls = ({ onMove, onShoot, onAimChange }) => {
       <div className="control-group shoot-group">
         <div className="shoot-grid">
           <button className="s-btn" 
-            onTouchStart={(e) => { e.preventDefault(); handleShootDirection(-1, -1); }}
-            onMouseDown={(e) => { e.preventDefault(); handleShootDirection(-1, -1); }}
+            onPointerDown={(e) => { try { if (e.cancelable) e.preventDefault(); e.stopPropagation(); } catch(err) {} handleShootDirection(-1, -1); }}
           >◤</button>
           <button className="s-btn" 
-            onTouchStart={(e) => { e.preventDefault(); handleShootDirection(0, -1); }}
-            onMouseDown={(e) => { e.preventDefault(); handleShootDirection(0, -1); }}
+            onPointerDown={(e) => { try { if (e.cancelable) e.preventDefault(); e.stopPropagation(); } catch(err) {} handleShootDirection(0, -1); }}
           >▲</button>
           <button className="s-btn" 
-            onTouchStart={(e) => { e.preventDefault(); handleShootDirection(1, -1); }}
-            onMouseDown={(e) => { e.preventDefault(); handleShootDirection(1, -1); }}
+            onPointerDown={(e) => { try { if (e.cancelable) e.preventDefault(); e.stopPropagation(); } catch(err) {} handleShootDirection(1, -1); }}
           >◥</button>
           
           <button className="s-btn" 
-            onTouchStart={(e) => { e.preventDefault(); handleShootDirection(-1, 0); }}
-            onMouseDown={(e) => { e.preventDefault(); handleShootDirection(-1, 0); }}
+            onPointerDown={(e) => { try { if (e.cancelable) e.preventDefault(); e.stopPropagation(); } catch(err) {} handleShootDirection(-1, 0); }}
           >◀</button>
           <button className="s-btn center-fire" 
-            onTouchStart={(e) => { e.preventDefault(); handleCenterShoot(); }}
-            onMouseDown={(e) => { e.preventDefault(); handleCenterShoot(); }}
+            onPointerDown={(e) => { try { if (e.cancelable) e.preventDefault(); e.stopPropagation(); } catch(err) {} handleCenterShoot(); }}
           >🔥</button>
           <button className="s-btn" 
-            onTouchStart={(e) => { e.preventDefault(); handleShootDirection(1, 0); }}
-            onMouseDown={(e) => { e.preventDefault(); handleShootDirection(1, 0); }}
+            onPointerDown={(e) => { try { if (e.cancelable) e.preventDefault(); e.stopPropagation(); } catch(err) {} handleShootDirection(1, 0); }}
           >▶</button>
           
           <button className="s-btn" 
-            onTouchStart={(e) => { e.preventDefault(); handleShootDirection(-1, 1); }}
-            onMouseDown={(e) => { e.preventDefault(); handleShootDirection(-1, 1); }}
+            onPointerDown={(e) => { try { if (e.cancelable) e.preventDefault(); e.stopPropagation(); } catch(err) {} handleShootDirection(-1, 1); }}
           >◣</button>
           <button className="s-btn" 
-            onTouchStart={(e) => { e.preventDefault(); handleShootDirection(0, 1); }}
-            onMouseDown={(e) => { e.preventDefault(); handleShootDirection(0, 1); }}
+            onPointerDown={(e) => { try { if (e.cancelable) e.preventDefault(); e.stopPropagation(); } catch(err) {} handleShootDirection(0, 1); }}
           >▼</button>
           <button className="s-btn" 
-            onTouchStart={(e) => { e.preventDefault(); handleShootDirection(1, 1); }}
-            onMouseDown={(e) => { e.preventDefault(); handleShootDirection(1, 1); }}
+            onPointerDown={(e) => { try { if (e.cancelable) e.preventDefault(); e.stopPropagation(); } catch(err) {} handleShootDirection(1, 1); }}
           >◢</button>
         </div>
         <span className="control-label">Disparar</span>
