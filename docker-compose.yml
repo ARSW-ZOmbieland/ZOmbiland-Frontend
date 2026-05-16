@@ -40,17 +40,17 @@ services:
   frontend:
     build:
       context: ./ZOmbiland-Frontend
-      dockerfile: Dockerfile.dev
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=https://zombiland.duckdns.org:8080
+        - VITE_WEBSOCKET_URL=https://zombiland.duckdns.org:8080/ws-game
     container_name: zombiland-frontend
     restart: unless-stopped
     ports:
-      - "8081:5173"
+      - "8081:80"
     volumes:
       - ./ZOmbiland-Frontend:/app
       - /app/node_modules
-    environment:
-      - VITE_API_URL=https://zombiland.duckdns.org:8080
-    command: sh -c "npm install && npm run dev -- --host"
 
   nginx:
     image: nginx:alpine
