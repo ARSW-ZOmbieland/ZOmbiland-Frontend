@@ -61,8 +61,17 @@ const TouchControls = ({ onMove, onShoot, onAimChange }) => {
     if (onShoot) onShoot(angle);
   };
 
+  const stopAllPropagation = (e) => {
+    e.stopPropagation();
+  };
+
   return (
-    <div className="touch-controls-container">
+    <div 
+      className="touch-controls-container"
+      onMouseDown={stopAllPropagation}
+      onTouchStart={stopAllPropagation}
+      onPointerDown={stopAllPropagation}
+    >
       {/* PANEL DE MOVIMIENTO */}
       <div className="control-group move-group">
         <div className="d-pad">
