@@ -226,9 +226,15 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
     }
   }, [isDead, isPaused, playerPos, onShoot, ammo]);
 
-  // NUEVO: Escuchar disparos desde controles móviles (Con control de duplicados)
+  // NUEVO: Escuchar disparos desde controles móviles (Con control de duplicados estrictos)
+  const lastProcessedShot = useRef(null);
+
   useEffect(() => {
     if (mobileShotTrigger && !isPaused && !isDead) {
+      // Evitar que re-renderizados (ej. playerPos) disparen balas viejas repetidamente
+      if (lastProcessedShot.current === mobileShotTrigger.timestamp) return;
+      lastProcessedShot.current = mobileShotTrigger.timestamp;
+
       aimAngleRef.current = mobileShotTrigger.angle;
       if (onAimChange) onAimChange(mobileShotTrigger.angle);
       
