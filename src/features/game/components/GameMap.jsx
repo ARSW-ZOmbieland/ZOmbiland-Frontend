@@ -239,6 +239,13 @@ const GameMap = memo(({ matrix, playerPos, playerSprite, otherPlayers = {}, zomb
   const handleMouseDown = (e) => {
     if (isDead || !onRestart) return;
     
+    // Si estamos en un dispositivo móvil (controles táctiles visibles),
+    // ignoramos cualquier tap en el fondo para evitar disparos accidentales.
+    // El usuario debe usar exclusivamente el panel de disparo derecho.
+    if (window.innerWidth <= 1024) {
+        return;
+    }
+    
     // Solicitar Pointer Lock al presionar el ratón (Más fiable que click)
     const viewport = e.currentTarget;
     if (!isPaused && viewport.requestPointerLock) {
