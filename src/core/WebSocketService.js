@@ -24,7 +24,7 @@ class WebSocketService {
             webSocketFactory: () => new SockJS(socketUrl),
             debug: (str) => {
                 // Uncomment to see STOMP debugging
-                // console.log('STOMP: ' + str);
+                console.log('STOMP: ' + str);
             },
             reconnectDelay: 5000,
             heartbeatIncoming: 10000,
